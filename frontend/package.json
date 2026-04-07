@@ -1,0 +1,73 @@
+{
+  "name": "frontend",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc -b && vite build",
+    "preview": "vite preview",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{js,ts,tsx,vue}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,css,scss,yml,yaml}": [
+      "prettier --write"
+    ]
+  },
+  "dependencies": {
+    "@ai-sdk/vue": "^2.0.0",
+    "@tailwindcss/typography": "^0.5.19",
+    "@tanstack/vue-query": "^5.90.6",
+    "@types/dompurify": "^3.0.5",
+    "@vueuse/core": "^13.9.0",
+    "ai": "^5.0.100",
+    "autoprefixer": "^10.4.21",
+    "axios": "^1.13.5",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "dompurify": "^3.3.0",
+    "echarts": "^6.0.0",
+    "highlight.js": "^11.11.1",
+    "lucide-vue-next": "^0.575.0",
+    "mammoth": "^1.11.0",
+    "marked": "^16.4.1",
+    "pdfjs-dist": "^5.4.449",
+    "pinia": "^3.0.3",
+    "postcss": "^8.5.6",
+    "radix-vue": "^1.9.17",
+    "read-excel-file": "^6.0.3",
+    "reka-ui": "^2.8.2",
+    "tailwind-merge": "^3.5.0",
+    "tailwindcss": "3.4",
+    "tailwindcss-animate": "^1.0.7",
+    "vue": "^3.5.22",
+    "vue-echarts": "^8.0.1",
+    "vue-router": "^4.5.1",
+    "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "@types/node": "^24.6.0",
+    "@typescript-eslint/eslint-plugin": "^8.46.1",
+    "@typescript-eslint/parser": "^8.46.1",
+    "@vitejs/plugin-vue": "^6.0.1",
+    "@vue/tsconfig": "^0.8.1",
+    "eslint": "^9.37.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-vue": "^10.5.1",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.2",
+    "prettier": "^3.6.2",
+    "terser": "^5.44.0",
+    "typescript": "~5.9.3",
+    "vite": "^7.1.7",
+    "vue-tsc": "^3.1.0"
+  }
+}

@@ -1,0 +1,2220 @@
+{
+  "summary": {
+    "total": 34,
+    "passed": 34,
+    "failed": 0,
+    "all_passed": true,
+    "base_url": "http://127.0.0.1:8000",
+    "provider": "deepseek",
+    "model": "deepseek-chat",
+    "executed_at": "2026-03-31 18:32:13"
+  },
+  "checks": [
+    {
+      "name": "health",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "body": {
+          "status": "healthy",
+          "api_version": "v2"
+        }
+      }
+    },
+    {
+      "name": "provider_ready",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "provider": {
+          "provider": "deepseek",
+          "name": "DeepSeek",
+          "available": true,
+          "models": [
+            "deepseek-chat",
+            "deepseek-reasoner"
+          ],
+          "default_base_url": "https://api.deepseek.com",
+          "custom_base_url": "",
+          "protocol": "openai_compat"
+        }
+      }
+    },
+    {
+      "name": "provider_connection",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "body": {
+          "success": true,
+          "status": "ok",
+          "message": "连接成功，响应时间 945ms",
+          "latency_ms": 945
+        }
+      }
+    },
+    {
+      "name": "world_create",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "world_id": "5f32183d-49c8-46f8-abdd-4b0f1eadb257"
+      }
+    },
+    {
+      "name": "location_create_top",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "entry_id": "c04b55ae-224d-41f1-922e-ac8bae9c9c01"
+      }
+    },
+    {
+      "name": "location_create_warehouse",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "entry_id": "41702920-b756-4257-a69e-27a1904be012"
+      }
+    },
+    {
+      "name": "character_create_zhangsan",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "entry_id": "849c46df-dd9b-451f-9fd9-377cf0580d30"
+      }
+    },
+    {
+      "name": "character_create_lisi",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "entry_id": "ac417266-abfc-4226-add3-79d97b125cc7"
+      }
+    },
+    {
+      "name": "story_create",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "story_id": "3dee714e-8c59-4f5f-a32d-578803208ba9"
+      }
+    },
+    {
+      "name": "session_create",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "body": {
+          "session_id": "story-3dee714e-8c59-4f5f-a32d-578803208ba9-v2",
+          "world_id": "5f32183d-49c8-46f8-abdd-4b0f1eadb257",
+          "character_card_id": null,
+          "persona_id": null,
+          "first_message": null,
+          "created_at": "2026-03-31T18:31:42.589706"
+        }
+      }
+    },
+    {
+      "name": "generate_response_entity_snapshot",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "snapshot_total": 2,
+        "zhangsan": {
+          "story_id": "3dee714e-8c59-4f5f-a32d-578803208ba9",
+          "session_id": "story-3dee714e-8c59-4f5f-a32d-578803208ba9-v2",
+          "entity_id": "849c46df-dd9b-451f-9fd9-377cf0580d30",
+          "entity_type": "character",
+          "display_name": "张三",
+          "current_location": "钟楼顶层",
+          "inventory": [
+            "绷带",
+            "火折子"
+          ],
+          "status_tags": [
+            "受伤",
+            "警觉",
+            "紧张"
+          ],
+          "companions": [
+            "ac417266-abfc-4226-add3-79d97b125cc7"
+          ],
+          "short_goal": "寻找机关入口",
+          "state_summary": "地点=钟楼顶层；状态=受伤,警觉,紧张；携带物=绷带,火折子",
+          "evidence": [
+            "张三和李四在钟楼顶层会合。张三受伤但警觉地拿着铜钥匙，李四紧张地拿着火折子。张三决定寻找机关入口。",
+            "钟楼顶层的风很大，吹得李四手中的火折子忽明忽暗。张三靠在石栏边，左臂的伤口还在渗血，但他握紧那把铜钥匙，目光锐利地扫视着脚下的石板地面。\n\n“老张，你确定入口在这儿？”李四压低声音，火光映出他额头的汗珠，“这地方除了钟和石头，啥也没有。”\n\n张三没有立刻回答。他蹲下身，用没受伤的右手轻敲地面，石板发出沉闷的回响。突然，他停在一块边缘有细微磨损的石板前。\n\n“你看这里。”张三指着石板边缘几乎看不见的凹槽，“形状和钥匙吻合。”\n\n李四凑近，火光照亮了那个凹槽——确实是一个锁孔的形"
+          ],
+          "last_source_turn": 1,
+          "updated_at": "2026-03-31T18:31:52.008972",
+          "version": 1,
+          "metadata": {
+            "source": "lorebook_seed"
+          }
+        },
+        "lisi": {
+          "story_id": "3dee714e-8c59-4f5f-a32d-578803208ba9",
+          "session_id": "story-3dee714e-8c59-4f5f-a32d-578803208ba9-v2",
+          "entity_id": "ac417266-abfc-4226-add3-79d97b125cc7",
+          "entity_type": "character",
+          "display_name": "李四",
+          "current_location": "钟楼顶层",
+          "inventory": [
+            "火折子"
+          ],
+          "status_tags": [
+            "受伤",
+            "警觉",
+            "紧张"
+          ],
+          "companions": [
+            "849c46df-dd9b-451f-9fd9-377cf0580d30"
+          ],
+          "short_goal": null,
+          "state_summary": "地点=钟楼顶层；状态=受伤,警觉,紧张；携带物=火折子",
+          "evidence": [
+            "张三和李四在钟楼顶层会合。张三受伤但警觉地拿着铜钥匙，李四紧张地拿着火折子。张三决定寻找机关入口。",
+            "钟楼顶层的风很大，吹得李四手中的火折子忽明忽暗。张三靠在石栏边，左臂的伤口还在渗血，但他握紧那把铜钥匙，目光锐利地扫视着脚下的石板地面。\n\n“老张，你确定入口在这儿？”李四压低声音，火光映出他额头的汗珠，“这地方除了钟和石头，啥也没有。”\n\n张三没有立刻回答。他蹲下身，用没受伤的右手轻敲地面，石板发出沉闷的回响。突然，他停在一块边缘有细微磨损的石板前。\n\n“你看这里。”张三指着石板边缘几乎看不见的凹槽，“形状和钥匙吻合。”\n\n李四凑近，火光照亮了那个凹槽——确实是一个锁孔的形"
+          ],
+          "last_source_turn": 1,
+          "updated_at": "2026-03-31T18:31:52.008972",
+          "version": 1,
+          "metadata": {
+            "source": "lorebook_seed"
+          }
+        }
+      }
+    },
+    {
+      "name": "generate_memory_updates_contains_entity_state",
+      "passed": true,
+      "detail": {
+        "memory_updates": [
+          {
+            "event_id": "eed11354-45b5-48fd-a817-8dfbc36d1460",
+            "session_id": "story-3dee714e-8c59-4f5f-a32d-578803208ba9-v2",
+            "operation_id": "generate:55ee5587-ebaf-449b-b349-d89082f32ff9",
+            "sequence": 1,
+            "display_kind": "write",
+            "memory_layer": "episodic",
+            "action": "updated",
+            "source": "generate",
+            "source_turn": 1,
+            "memory_key": "story_session_messages",
+            "title": "原始会话消息已写入",
+            "reason": null,
+            "before": null,
+            "after": {
+              "roles": [
+                "user",
+                "assistant"
+              ],
+              "user_input_preview": "张三和李四在钟楼顶层会合。张三受伤但警觉地拿着铜钥匙，李四紧张地拿着火折子。张三决定寻找机关入口。",
+              "assistant_output_preview": "钟楼顶层的风很大，吹得李四手中的火折子忽明忽暗。张三靠在石栏边，左臂的伤口还在渗血，但他握紧那把铜钥匙，目光锐利地扫视着脚下的石板地面。\n\n“老张，你确定入口在这儿？”李四压低声音，火光映出他额头的汗珠，“这地方除了钟和石头，啥也没有。”\n"
+            },
+            "status": "committed",
+            "committed_at": "2026-03-31T18:31:51.983648"
+          },
+          {
+            "event_id": "1006ca9a-7c86-4433-a40f-3e619b5f5382",
+            "session_id": "story-3dee714e-8c59-4f5f-a32d-578803208ba9-v2",
+            "operation_id": "generate:55ee5587-ebaf-449b-b349-d89082f32ff9",
+            "sequence": 2,
+            "display_kind": "write",
+            "memory_layer": "entity_state",
+            "action": "created",
+            "source": "generate",
+            "source_turn": 1,
+            "memory_key": "849c46df-dd9b-451f-9fd9-377cf0580d30",
+            "title": "实体状态已建立: 张三",
+            "reason": null,
+            "before": null,
+            "after": {
+              "display_name": "张三",
+              "current_location": "钟楼顶层",
+              "inventory": [
+                "绷带",
+                "火折子"
+              ],
+              "status_tags": [
+                "受伤",
+                "警觉",
+                "紧张"
+              ],
+              "companions": [
+                "ac417266-abfc-4226-add3-79d97b125cc7"
+              ],
+              "short_goal": "寻找机关入口",
+              "last_source_turn": 1
+            },
+            "status": "committed",
+            "committed_at": "2026-03-31T18:31:52.009973"
+          },
+          {
+            "event_id": "83b5e973-b21b-45c2-932c-63dbc096d403",
+            "session_id": "story-3dee714e-8c59-4f5f-a32d-578803208ba9-v2",
+            "operation_id": "generate:55ee5587-ebaf-449b-b349-d89082f32ff9",
+            "sequence": 3,
+            "display_kind": "write",
+            "memory_layer": "entity_state",
+            "action": "created",
+            "source": "generate",
+            "source_turn": 1,
+            "memory_key": "ac417266-abfc-4226-add3-79d97b125cc7",
+            "title": "实体状态已建立: 李四",
+            "reason": null,
+            "before": null,
+            "after": {
+              "display_name": "李四",
+              "current_location": "钟楼顶层",
+              "inventory": [
+                "火折子"
+              ],
+              "status_tags": [
+                "受伤",
+                "警觉",
+                "紧张"
+              ],
+              "companions": [
+                "849c46df-dd9b-451f-9fd9-377cf0580d30"
+              ],
+              "short_goal": null,
+              "last_source_turn": 1
+            },
+            "status": "committed",
+            "committed_at": "2026-03-31T18:31:52.009973"
+          }
+        ]
+      }
+    },
+    {
+      "name": "generate_operation_chain_aligned",
+      "passed": true,
+      "detail": {
+        "episodic_operation_ids": [
+          "generate:55ee5587-ebaf-449b-b349-d89082f32ff9"
+        ],
+        "entity_operation_ids": [
+          "generate:55ee5587-ebaf-449b-b349-d89082f32ff9"
+        ],
+        "shared_operation_ids": [
+          "generate:55ee5587-ebaf-449b-b349-d89082f32ff9"
+        ]
+      }
+    },
+    {
+      "name": "session_entity_state_read",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "total": 2,
+        "zhangsan": {
+          "story_id": "3dee714e-8c59-4f5f-a32d-578803208ba9",
+          "session_id": "story-3dee714e-8c59-4f5f-a32d-578803208ba9-v2",
+          "entity_id": "849c46df-dd9b-451f-9fd9-377cf0580d30",
+          "entity_type": "character",
+          "display_name": "张三",
+          "current_location": "钟楼顶层",
+          "inventory": [
+            "绷带",
+            "火折子"
+          ],
+          "status_tags": [
+            "受伤",
+            "警觉",
+            "紧张"
+          ],
+          "companions": [
+            "ac417266-abfc-4226-add3-79d97b125cc7"
+          ],
+          "short_goal": "寻找机关入口",
+          "state_summary": "地点=钟楼顶层；状态=受伤,警觉,紧张；携带物=绷带,火折子",
+          "evidence": [
+            "张三和李四在钟楼顶层会合。张三受伤但警觉地拿着铜钥匙，李四紧张地拿着火折子。张三决定寻找机关入口。",
+            "钟楼顶层的风很大，吹得李四手中的火折子忽明忽暗。张三靠在石栏边，左臂的伤口还在渗血，但他握紧那把铜钥匙，目光锐利地扫视着脚下的石板地面。\n\n“老张，你确定入口在这儿？”李四压低声音，火光映出他额头的汗珠，“这地方除了钟和石头，啥也没有。”\n\n张三没有立刻回答。他蹲下身，用没受伤的右手轻敲地面，石板发出沉闷的回响。突然，他停在一块边缘有细微磨损的石板前。\n\n“你看这里。”张三指着石板边缘几乎看不见的凹槽，“形状和钥匙吻合。”\n\n李四凑近，火光照亮了那个凹槽——确实是一个锁孔的形"
+          ],
+          "last_source_turn": 1,
+          "updated_at": "2026-03-31T18:31:52.008972",
+          "version": 1,
+          "metadata": {
+            "source": "lorebook_seed"
+          }
+        }
+      }
+    },
+    {
+      "name": "story_entity_state_read",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "total": 2,
+        "zhangsan": {
+          "story_id": "3dee714e-8c59-4f5f-a32d-578803208ba9",
+          "session_id": "story-3dee714e-8c59-4f5f-a32d-578803208ba9-v2",
+          "entity_id": "849c46df-dd9b-451f-9fd9-377cf0580d30",
+          "entity_type": "character",
+          "display_name": "张三",
+          "current_location": "钟楼顶层",
+          "inventory": [
+            "绷带",
+            "火折子"
+          ],
+          "status_tags": [
+            "受伤",
+            "警觉",
+            "紧张"
+          ],
+          "companions": [
+            "ac417266-abfc-4226-add3-79d97b125cc7"
+          ],
+          "short_goal": "寻找机关入口",
+          "state_summary": "地点=钟楼顶层；状态=受伤,警觉,紧张；携带物=绷带,火折子",
+          "evidence": [
+            "张三和李四在钟楼顶层会合。张三受伤但警觉地拿着铜钥匙，李四紧张地拿着火折子。张三决定寻找机关入口。",
+            "钟楼顶层的风很大，吹得李四手中的火折子忽明忽暗。张三靠在石栏边，左臂的伤口还在渗血，但他握紧那把铜钥匙，目光锐利地扫视着脚下的石板地面。\n\n“老张，你确定入口在这儿？”李四压低声音，火光映出他额头的汗珠，“这地方除了钟和石头，啥也没有。”\n\n张三没有立刻回答。他蹲下身，用没受伤的右手轻敲地面，石板发出沉闷的回响。突然，他停在一块边缘有细微磨损的石板前。\n\n“你看这里。”张三指着石板边缘几乎看不见的凹槽，“形状和钥匙吻合。”\n\n李四凑近，火光照亮了那个凹槽——确实是一个锁孔的形"
+          ],
+          "last_source_turn": 1,
+          "updated_at": "2026-03-31T18:31:52.008972",
+          "version": 1,
+          "metadata": {
+            "source": "lorebook_seed"
+          }
+        }
+      }
+    },
+    {
+      "name": "timeline_contains_generate_entity_events",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "entity_sources": [
+          "generate"
+        ]
+      }
+    },
+    {
+      "name": "stream_done_contains_entity_snapshot",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "chunk_count": 191,
+        "snapshot_total": 2
+      }
+    },
+    {
+      "name": "stream_state_transition_applied",
+      "passed": true,
+      "detail": {
+        "zhangsan": {
+          "story_id": "3dee714e-8c59-4f5f-a32d-578803208ba9",
+          "session_id": "story-3dee714e-8c59-4f5f-a32d-578803208ba9-v2",
+          "entity_id": "849c46df-dd9b-451f-9fd9-377cf0580d30",
+          "entity_type": "character",
+          "display_name": "张三",
+          "current_location": "地下仓库",
+          "inventory": [
+            "绷带",
+            "火折子"
+          ],
+          "status_tags": [
+            "受伤",
+            "警觉",
+            "紧张"
+          ],
+          "companions": [
+            "ac417266-abfc-4226-add3-79d97b125cc7"
+          ],
+          "short_goal": "封住入口",
+          "state_summary": "地点=地下仓库；状态=受伤,警觉,紧张；携带物=绷带,火折子",
+          "evidence": [
+            "张三和李四在钟楼顶层会合。张三受伤但警觉地拿着铜钥匙，李四紧张地拿着火折子。张三决定寻找机关入口。",
+            "钟楼顶层的风很大，吹得李四手中的火折子忽明忽暗。张三靠在石栏边，左臂的伤口还在渗血，但他握紧那把铜钥匙，目光锐利地扫视着脚下的石板地面。\n\n“老张，你确定入口在这儿？”李四压低声音，火光映出他额头的汗珠，“这地方除了钟和石头，啥也没有。”\n\n张三没有立刻回答。他蹲下身，用没受伤的右手轻敲地面，石板发出沉闷的回响。突然，他停在一块边缘有细微磨损的石板前。\n\n“你看这里。”张三指着石板边缘几乎看不见的凹槽，“形状和钥匙吻合。”\n\n李四凑近，火光照亮了那个凹槽——确实是一个锁孔的形",
+            "张三和李四赶到地下仓库。张三丢下了铜钥匙，李四警觉地握着火折子。张三准备封住入口。",
+            "（张三将铜钥匙塞进凹槽，用力一拧）\n\n石板下方传来沉闷的齿轮转动声。整块石板缓缓下沉，露出一个向下的石阶入口，一股潮湿的霉味扑面而来。李四的火折子照亮了狭窄的阶梯，石壁上布满青苔。\n\n“快走。”张三率先踏入，伤口让他动作有些踉跄。\n\n两人沿着螺旋石阶向下走了约莫三分钟，终于抵达一个堆满旧木箱的地下空间。空气阴冷潮湿，木箱上覆盖着厚厚的灰尘。\n\n张三靠在最近的木箱上喘了口气，突然将手中的铜钥匙扔向角落的阴影里。钥匙在石地上发出清脆的撞击声。\n\n“你疯了？”李四压低声音，火折子猛"
+          ],
+          "last_source_turn": 2,
+          "updated_at": "2026-03-31T18:31:59.835106",
+          "version": 1,
+          "metadata": {
+            "source": "lorebook_seed"
+          }
+        },
+        "stream_done_preview": "（张三将铜钥匙塞进凹槽，用力一拧）\n\n石板下方传来沉闷的齿轮转动声。整块石板缓缓下沉，露出一个向下的石阶入口，一股潮湿的霉味扑面而来。李四的火折子照亮了狭窄的阶梯，石壁上布满青苔。\n\n“快走。”张三率先踏入，伤口让他动作有些踉跄。\n\n两人沿着螺旋石阶向下走了约莫三分钟，终于抵达一个堆满旧木箱的地下空间。空气阴冷潮湿，木箱上覆盖着厚厚的灰尘。\n\n张三靠在最近的"
+      }
+    },
+    {
+      "name": "rollback_delete_last_message",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "body": {
+          "deleted": true,
+          "session_id": "story-3dee714e-8c59-4f5f-a32d-578803208ba9-v2",
+          "detail": "Last message deleted",
+          "memory_updates": [
+            {
+              "event_id": "77ecc193-a742-4d4e-99af-63c8c44f46a8",
+              "session_id": "story-3dee714e-8c59-4f5f-a32d-578803208ba9-v2",
+              "operation_id": "rollback:e6acac18-77d7-45f7-864c-9c22eec8bfb6",
+              "sequence": 1,
+              "display_kind": "session_rebuild",
+              "memory_layer": "episodic",
+              "action": "rebuilt",
+              "source": "rollback",
+              "source_turn": null,
+              "memory_key": "story_session_messages",
+              "title": "会话上下文已根据最新消息重建",
+              "reason": null,
+              "before": null,
+              "after": {
+                "message_count": 3
+              },
+              "status": "committed",
+              "committed_at": "2026-03-31T18:31:59.879333"
+            },
+            {
+              "event_id": "ac2c2554-325e-4c75-9fb9-bf0b11d2a221",
+              "session_id": "story-3dee714e-8c59-4f5f-a32d-578803208ba9-v2",
+              "operation_id": "rollback:e6acac18-77d7-45f7-864c-9c22eec8bfb6",
+              "sequence": 2,
+              "display_kind": "index_rebuild",
+              "memory_layer": "episodic",
+              "action": "reindexed",
+              "source": "rollback",
+              "source_turn": null,
+              "memory_key": "conversation_history_index",
+              "title": "历史向量索引已重建",
+              "reason": null,
+              "before": null,
+              "after": {
+                "indexed_message_count": 3
+              },
+              "status": "committed",
+              "committed_at": "2026-03-31T18:32:00.250771"
+            },
+            {
+              "event_id": "3372c553-a5de-4b67-ad81-df4d905d46b3",
+              "session_id": "story-3dee714e-8c59-4f5f-a32d-578803208ba9-v2",
+              "operation_id": "rollback:3791fd36-51e1-483a-90a8-d6686abb65ee",
+              "sequence": 3,
+              "display_kind": "write",
+              "memory_layer": "entity_state",
+              "action": "rebuilt",
+              "source": "rollback",
+              "source_turn": 2,
+              "memory_key": "849c46df-dd9b-451f-9fd9-377cf0580d30",
+              "title": "实体状态已重建: 张三",
+              "reason": null,
+              "before": {
+                "display_name": "张三",
+                "current_location": "地下仓库",
+                "inventory": [
+                  "绷带",
+                  "火折子"
+                ],
+                "status_tags": [
+                  "受伤",
+                  "警觉",
+                  "紧张"
+                ],
+                "companions": [
+                  "ac417266-abfc-4226-add3-79d97b125cc7"
+                ],
+                "short_goal": "封住入口",
+                "last_source_turn": 2
+              },
+              "after": {
+                "display_name": "张三",
+                "current_location": "地下仓库",
+                "inventory": [
+                  "绷带",
+                  "火折子"
+                ],
+                "status_tags": [
+                  "受伤",
+                  "警觉",
+                  "紧张"
+                ],
+                "companions": [
+                  "ac417266-abfc-4226-add3-79d97b125cc7"
+                ],
+                "short_goal": "封住入口",
+                "last_source_turn": 2
+              },
+              "status": "committed",
+              "committed_at": "2026-03-31T18:32:00.260771"
+            },
+            {
+              "event_id": "8da8ee6f-8d00-402f-a954-7b73aed79926",
+              "session_id": "story-3dee714e-8c59-4f5f-a32d-578803208ba9-v2",
+              "operation_id": "rollback:3791fd36-51e1-483a-90a8-d6686abb65ee",
+              "sequence": 4,
+              "display_kind": "write",
+              "memory_layer": "entity_state",
+              "action": "rebuilt",
+              "source": "rollback",
+              "source_turn": 2,
+              "memory_key": "ac417266-abfc-4226-add3-79d97b125cc7",
+              "title": "实体状态已重建: 李四",
+              "reason": null,
+              "before": {
+                "display_name": "李四",
+                "current_location": "地下仓库",
+                "inventory": [
+                  "火折子"
+                ],
+                "status_tags": [
+                  "受伤",
+                  "警觉",
+                  "紧张"
+                ],
+                "companions": [
+                  "849c46df-dd9b-451f-9fd9-377cf0580d30"
+                ],
+                "short_goal": null,
+                "last_source_turn": 2
+              },
+              "after": {
+                "display_name": "李四",
+                "current_location": "地下仓库",
+                "inventory": [
+                  "火折子"
+                ],
+                "status_tags": [
+                  "受伤",
+                  "警觉",
+                  "紧张"
+                ],
+                "companions": [
+                  "849c46df-dd9b-451f-9fd9-377cf0580d30"
+                ],
+                "short_goal": null,
+                "last_source_turn": 2
+              },
+              "status": "committed",
+              "committed_at": "2026-03-31T18:32:00.260771"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "rollback_rebuilds_entity_state",
+      "passed": true,
+      "detail": {
+        "memory_updates": [
+          {
+            "event_id": "77ecc193-a742-4d4e-99af-63c8c44f46a8",
+            "session_id": "story-3dee714e-8c59-4f5f-a32d-578803208ba9-v2",
+            "operation_id": "rollback:e6acac18-77d7-45f7-864c-9c22eec8bfb6",
+            "sequence": 1,
+            "display_kind": "session_rebuild",
+            "memory_layer": "episodic",
+            "action": "rebuilt",
+            "source": "rollback",
+            "source_turn": null,
+            "memory_key": "story_session_messages",
+            "title": "会话上下文已根据最新消息重建",
+            "reason": null,
+            "before": null,
+            "after": {
+              "message_count": 3
+            },
+            "status": "committed",
+            "committed_at": "2026-03-31T18:31:59.879333"
+          },
+          {
+            "event_id": "ac2c2554-325e-4c75-9fb9-bf0b11d2a221",
+            "session_id": "story-3dee714e-8c59-4f5f-a32d-578803208ba9-v2",
+            "operation_id": "rollback:e6acac18-77d7-45f7-864c-9c22eec8bfb6",
+            "sequence": 2,
+            "display_kind": "index_rebuild",
+            "memory_layer": "episodic",
+            "action": "reindexed",
+            "source": "rollback",
+            "source_turn": null,
+            "memory_key": "conversation_history_index",
+            "title": "历史向量索引已重建",
+            "reason": null,
+            "before": null,
+            "after": {
+              "indexed_message_count": 3
+            },
+            "status": "committed",
+            "committed_at": "2026-03-31T18:32:00.250771"
+          },
+          {
+            "event_id": "3372c553-a5de-4b67-ad81-df4d905d46b3",
+            "session_id": "story-3dee714e-8c59-4f5f-a32d-578803208ba9-v2",
+            "operation_id": "rollback:3791fd36-51e1-483a-90a8-d6686abb65ee",
+            "sequence": 3,
+            "display_kind": "write",
+            "memory_layer": "entity_state",
+            "action": "rebuilt",
+            "source": "rollback",
+            "source_turn": 2,
+            "memory_key": "849c46df-dd9b-451f-9fd9-377cf0580d30",
+            "title": "实体状态已重建: 张三",
+            "reason": null,
+            "before": {
+              "display_name": "张三",
+              "current_location": "地下仓库",
+              "inventory": [
+                "绷带",
+                "火折子"
+              ],
+              "status_tags": [
+                "受伤",
+                "警觉",
+                "紧张"
+              ],
+              "companions": [
+                "ac417266-abfc-4226-add3-79d97b125cc7"
+              ],
+              "short_goal": "封住入口",
+              "last_source_turn": 2
+            },
+            "after": {
+              "display_name": "张三",
+              "current_location": "地下仓库",
+              "inventory": [
+                "绷带",
+                "火折子"
+              ],
+              "status_tags": [
+                "受伤",
+                "警觉",
+                "紧张"
+              ],
+              "companions": [
+                "ac417266-abfc-4226-add3-79d97b125cc7"
+              ],
+              "short_goal": "封住入口",
+              "last_source_turn": 2
+            },
+            "status": "committed",
+            "committed_at": "2026-03-31T18:32:00.260771"
+          },
+          {
+            "event_id": "8da8ee6f-8d00-402f-a954-7b73aed79926",
+            "session_id": "story-3dee714e-8c59-4f5f-a32d-578803208ba9-v2",
+            "operation_id": "rollback:3791fd36-51e1-483a-90a8-d6686abb65ee",
+            "sequence": 4,
+            "display_kind": "write",
+            "memory_layer": "entity_state",
+            "action": "rebuilt",
+            "source": "rollback",
+            "source_turn": 2,
+            "memory_key": "ac417266-abfc-4226-add3-79d97b125cc7",
+            "title": "实体状态已重建: 李四",
+            "reason": null,
+            "before": {
+              "display_name": "李四",
+              "current_location": "地下仓库",
+              "inventory": [
+                "火折子"
+              ],
+              "status_tags": [
+                "受伤",
+                "警觉",
+                "紧张"
+              ],
+              "companions": [
+                "849c46df-dd9b-451f-9fd9-377cf0580d30"
+              ],
+              "short_goal": null,
+              "last_source_turn": 2
+            },
+            "after": {
+              "display_name": "李四",
+              "current_location": "地下仓库",
+              "inventory": [
+                "火折子"
+              ],
+              "status_tags": [
+                "受伤",
+                "警觉",
+                "紧张"
+              ],
+              "companions": [
+                "849c46df-dd9b-451f-9fd9-377cf0580d30"
+              ],
+              "short_goal": null,
+              "last_source_turn": 2
+            },
+            "status": "committed",
+            "committed_at": "2026-03-31T18:32:00.260771"
+          }
+        ]
+      }
+    },
+    {
+      "name": "session_entity_state_read_after_rollback",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "body": {
+          "story_id": null,
+          "session_id": "story-3dee714e-8c59-4f5f-a32d-578803208ba9-v2",
+          "entity_type": null,
+          "items": [
+            {
+              "story_id": "3dee714e-8c59-4f5f-a32d-578803208ba9",
+              "session_id": "story-3dee714e-8c59-4f5f-a32d-578803208ba9-v2",
+              "entity_id": "849c46df-dd9b-451f-9fd9-377cf0580d30",
+              "entity_type": "character",
+              "display_name": "张三",
+              "current_location": "地下仓库",
+              "inventory": [
+                "绷带",
+                "火折子"
+              ],
+              "status_tags": [
+                "受伤",
+                "警觉",
+                "紧张"
+              ],
+              "companions": [
+                "ac417266-abfc-4226-add3-79d97b125cc7"
+              ],
+              "short_goal": "封住入口",
+              "state_summary": "地点=地下仓库；状态=受伤,警觉,紧张；携带物=绷带,火折子",
+              "evidence": [
+                "钟楼顶层的风很大，吹得李四手中的火折子忽明忽暗。张三靠在石栏边，左臂的伤口还在渗血，但他握紧那把铜钥匙，目光锐利地扫视着脚下的石板地面。\n\n“老张，你确定入口在这儿？”李四压低声音，火光映出他额头的汗珠，“这地方除了钟和石头，啥也没有。”\n\n张三没有立刻回答。他蹲下身，用没受伤的右手轻敲地面，石板发出沉闷的回响。突然，他停在一块边缘有细微磨损的石板前。\n\n“你看这里。”张三指着石板边缘几乎看不见的凹槽，“形状和钥匙吻合。”\n\n李四凑近，火光照亮了那个凹槽——确实是一个锁孔的形",
+                "张三和李四在钟楼顶层会合。张三受伤但警觉地拿着铜钥匙，李四紧张地拿着火折子。张三决定寻找机关入口。",
+                "张三和李四赶到地下仓库。张三丢下了铜钥匙，李四警觉地握着火折子。张三准备封住入口。"
+              ],
+              "last_source_turn": 2,
+              "updated_at": "2026-03-31T18:32:00.259770",
+              "version": 1,
+              "metadata": {
+                "source": "lorebook_seed"
+              }
+            },
+            {
+              "story_id": "3dee714e-8c59-4f5f-a32d-578803208ba9",
+              "session_id": "story-3dee714e-8c59-4f5f-a32d-578803208ba9-v2",
+              "entity_id": "ac417266-abfc-4226-add3-79d97b125cc7",
+              "entity_type": "character",
+              "display_name": "李四",
+              "current_location": "地下仓库",
+              "inventory": [
+                "火折子"
+              ],
+              "status_tags": [
+                "受伤",
+                "警觉",
+                "紧张"
+              ],
+              "companions": [
+                "849c46df-dd9b-451f-9fd9-377cf0580d30"
+              ],
+              "short_goal": null,
+              "state_summary": "地点=地下仓库；状态=受伤,警觉,紧张；携带物=火折子",
+              "evidence": [
+                "钟楼顶层的风很大，吹得李四手中的火折子忽明忽暗。张三靠在石栏边，左臂的伤口还在渗血，但他握紧那把铜钥匙，目光锐利地扫视着脚下的石板地面。\n\n“老张，你确定入口在这儿？”李四压低声音，火光映出他额头的汗珠，“这地方除了钟和石头，啥也没有。”\n\n张三没有立刻回答。他蹲下身，用没受伤的右手轻敲地面，石板发出沉闷的回响。突然，他停在一块边缘有细微磨损的石板前。\n\n“你看这里。”张三指着石板边缘几乎看不见的凹槽，“形状和钥匙吻合。”\n\n李四凑近，火光照亮了那个凹槽——确实是一个锁孔的形",
+                "张三和李四在钟楼顶层会合。张三受伤但警觉地拿着铜钥匙，李四紧张地拿着火折子。张三决定寻找机关入口。",
+                "张三和李四赶到地下仓库。张三丢下了铜钥匙，李四警觉地握着火折子。张三准备封住入口。"
+              ],
+              "last_source_turn": 2,
+              "updated_at": "2026-03-31T18:32:00.259770",
+              "version": 1,
+              "metadata": {
+                "source": "lorebook_seed"
+              }
+            }
+          ],
+          "total": 2
+        }
+      }
+    },
+    {
+      "name": "regenerate_response_entity_snapshot",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "snapshot_total": 2
+      }
+    },
+    {
+      "name": "regenerate_memory_updates_contains_entity_state",
+      "passed": true,
+      "detail": {
+        "memory_updates": [
+          {
+            "event_id": "b1f5d2d0-262b-46f9-894c-55b9790c29de",
+            "session_id": "story-3dee714e-8c59-4f5f-a32d-578803208ba9-v2",
+            "operation_id": "regenerate:edca196a-65fc-4766-bf65-cdf57e764904",
+            "sequence": 1,
+            "display_kind": "session_rebuild",
+            "memory_layer": "episodic",
+            "action": "rebuilt",
+            "source": "regenerate",
+            "source_turn": null,
+            "memory_key": "story_session_messages",
+            "title": "会话上下文已根据最新消息重建",
+            "reason": null,
+            "before": null,
+            "after": {
+              "message_count": 2
+            },
+            "status": "committed",
+            "committed_at": "2026-03-31T18:32:00.340835"
+          },
+          {
+            "event_id": "d3d41201-8c1a-40b2-abbc-d122f0064b2d",
+            "session_id": "story-3dee714e-8c59-4f5f-a32d-578803208ba9-v2",
+            "operation_id": "regenerate:edca196a-65fc-4766-bf65-cdf57e764904",
+            "sequence": 2,
+            "display_kind": "index_rebuild",
+            "memory_layer": "episodic",
+            "action": "reindexed",
+            "source": "regenerate",
+            "source_turn": null,
+            "memory_key": "conversation_history_index",
+            "title": "历史向量索引已重建",
+            "reason": null,
+            "before": null,
+            "after": {
+              "indexed_message_count": 2
+            },
+            "status": "committed",
+            "committed_at": "2026-03-31T18:32:00.623571"
+          },
+          {
+            "event_id": "b20296de-2093-44ec-be14-0e722d4ab294",
+            "session_id": "story-3dee714e-8c59-4f5f-a32d-578803208ba9-v2",
+            "operation_id": "regenerate:edca196a-65fc-4766-bf65-cdf57e764904",
+            "sequence": 3,
+            "display_kind": "write",
+            "memory_layer": "entity_state",
+            "action": "rebuilt",
+            "source": "regenerate",
+            "source_turn": 2,
+            "memory_key": "849c46df-dd9b-451f-9fd9-377cf0580d30",
+            "title": "实体状态已重建: 张三",
+            "reason": null,
+            "before": {
+              "display_name": "张三",
+              "current_location": "地下仓库",
+              "inventory": [
+                "绷带",
+                "火折子"
+              ],
+              "status_tags": [
+                "受伤",
+                "警觉",
+                "紧张"
+              ],
+              "companions": [
+                "ac417266-abfc-4226-add3-79d97b125cc7"
+              ],
+              "short_goal": "封住入口",
+              "last_source_turn": 2
+            },
+            "after": {
+              "display_name": "张三",
+              "current_location": "地下仓库",
+              "inventory": [
+                "绷带",
+                "火折子"
+              ],
+              "status_tags": [
+                "受伤",
+                "警觉",
+                "紧张"
+              ],
+              "companions": [
+                "ac417266-abfc-4226-add3-79d97b125cc7"
+              ],
+              "short_goal": "封住入口",
+              "last_source_turn": 2
+            },
+            "status": "committed",
+            "committed_at": "2026-03-31T18:32:00.635945"
+          },
+          {
+            "event_id": "fbf83d39-723a-425f-a153-e46ded677eb8",
+            "session_id": "story-3dee714e-8c59-4f5f-a32d-578803208ba9-v2",
+            "operation_id": "regenerate:edca196a-65fc-4766-bf65-cdf57e764904",
+            "sequence": 4,
+            "display_kind": "write",
+            "memory_layer": "entity_state",
+            "action": "rebuilt",
+            "source": "regenerate",
+            "source_turn": 2,
+            "memory_key": "ac417266-abfc-4226-add3-79d97b125cc7",
+            "title": "实体状态已重建: 李四",
+            "reason": null,
+            "before": {
+              "display_name": "李四",
+              "current_location": "地下仓库",
+              "inventory": [
+                "火折子"
+              ],
+              "status_tags": [
+                "受伤",
+                "警觉",
+                "紧张"
+              ],
+              "companions": [
+                "849c46df-dd9b-451f-9fd9-377cf0580d30"
+              ],
+              "short_goal": null,
+              "last_source_turn": 2
+            },
+            "after": {
+              "display_name": "李四",
+              "current_location": "地下仓库",
+              "inventory": [
+                "火折子"
+              ],
+              "status_tags": [
+                "受伤",
+                "警觉",
+                "紧张"
+              ],
+              "companions": [
+                "849c46df-dd9b-451f-9fd9-377cf0580d30"
+              ],
+              "short_goal": null,
+              "last_source_turn": 2
+            },
+            "status": "committed",
+            "committed_at": "2026-03-31T18:32:00.635945"
+          },
+          {
+            "event_id": "41571f1f-b8e3-4dfe-bff4-6600d0350ab4",
+            "session_id": "story-3dee714e-8c59-4f5f-a32d-578803208ba9-v2",
+            "operation_id": "regenerate:edca196a-65fc-4766-bf65-cdf57e764904",
+            "sequence": 5,
+            "display_kind": "write",
+            "memory_layer": "episodic",
+            "action": "updated",
+            "source": "generate",
+            "source_turn": 2,
+            "memory_key": "story_session_messages",
+            "title": "原始会话消息已写入",
+            "reason": null,
+            "before": null,
+            "after": {
+              "roles": [
+                "user",
+                "assistant"
+              ],
+              "user_input_preview": "张三和李四赶到地下仓库。张三丢下了铜钥匙，李四警觉地握着火折子。张三准备封住入口。",
+              "assistant_output_preview": "地下仓库的霉味扑面而来，混杂着海水的咸腥和木头腐朽的气息。李四手中的火折子摇曳着，在潮湿的墙壁上投下晃动的阴影。张三迅速扫视四周——这里比他们预想的更拥挤，旧木箱堆叠如山，几乎堵住了所有通路。\n\n“钥匙扔了？”李四压低声音，火光照亮他额角的"
+            },
+            "status": "committed",
+            "committed_at": "2026-03-31T18:32:12.183650"
+          },
+          {
+            "event_id": "5419e3cf-3697-4de9-aa2d-5ab137d12cd8",
+            "session_id": "story-3dee714e-8c59-4f5f-a32d-578803208ba9-v2",
+            "operation_id": "regenerate:edca196a-65fc-4766-bf65-cdf57e764904",
+            "sequence": 6,
+            "display_kind": "write",
+            "memory_layer": "entity_state",
+            "action": "rebuilt",
+            "source": "generate",
+            "source_turn": 3,
+            "memory_key": "849c46df-dd9b-451f-9fd9-377cf0580d30",
+            "title": "实体状态已重建: 张三",
+            "reason": null,
+            "before": {
+              "display_name": "张三",
+              "current_location": "地下仓库",
+              "inventory": [
+                "绷带",
+                "火折子"
+              ],
+              "status_tags": [
+                "受伤",
+                "警觉",
+                "紧张"
+              ],
+              "companions": [
+                "ac417266-abfc-4226-add3-79d97b125cc7"
+              ],
+              "short_goal": "封住入口",
+              "last_source_turn": 2
+            },
+            "after": {
+              "display_name": "张三",
+              "current_location": "地下仓库",
+              "inventory": [
+                "绷带",
+                "火折子"
+              ],
+              "status_tags": [
+                "受伤",
+                "警觉",
+                "紧张"
+              ],
+              "companions": [
+                "ac417266-abfc-4226-add3-79d97b125cc7"
+              ],
+              "short_goal": "封住入口",
+              "last_source_turn": 3
+            },
+            "status": "committed",
+            "committed_at": "2026-03-31T18:32:12.205435"
+          },
+          {
+            "event_id": "c53129bc-514d-4435-81c2-b481e66b2845",
+            "session_id": "story-3dee714e-8c59-4f5f-a32d-578803208ba9-v2",
+            "operation_id": "regenerate:edca196a-65fc-4766-bf65-cdf57e764904",
+            "sequence": 7,
+            "display_kind": "write",
+            "memory_layer": "entity_state",
+            "action": "rebuilt",
+            "source": "generate",
+            "source_turn": 3,
+            "memory_key": "ac417266-abfc-4226-add3-79d97b125cc7",
+            "title": "实体状态已重建: 李四",
+            "reason": null,
+            "before": {
+              "display_name": "李四",
+              "current_location": "地下仓库",
+              "inventory": [
+                "火折子"
+              ],
+              "status_tags": [
+                "受伤",
+                "警觉",
+                "紧张"
+              ],
+              "companions": [
+                "849c46df-dd9b-451f-9fd9-377cf0580d30"
+              ],
+              "short_goal": null,
+              "last_source_turn": 2
+            },
+            "after": {
+              "display_name": "李四",
+              "current_location": "地下仓库",
+              "inventory": [
+                "火折子"
+              ],
+              "status_tags": [
+                "受伤",
+                "警觉",
+                "紧张"
+              ],
+              "companions": [
+                "849c46df-dd9b-451f-9fd9-377cf0580d30"
+              ],
+              "short_goal": null,
+              "last_source_turn": 3
+            },
+            "status": "committed",
+            "committed_at": "2026-03-31T18:32:12.205435"
+          }
+        ]
+      }
+    },
+    {
+      "name": "session_entity_rebuild_api",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "body": {
+          "story_id": "3dee714e-8c59-4f5f-a32d-578803208ba9",
+          "session_id": "story-3dee714e-8c59-4f5f-a32d-578803208ba9-v2",
+          "rebuilt": true,
+          "entity_count": 2,
+          "memory_updates": [
+            {
+              "event_id": "ef6b0683-988a-42c3-8868-e0fcad92ff3c",
+              "session_id": "story-3dee714e-8c59-4f5f-a32d-578803208ba9-v2",
+              "operation_id": "entity_state_session_rebuild_api:ef65132c-c44d-4d33-9257-36d3837fbccb",
+              "sequence": 1,
+              "display_kind": "write",
+              "memory_layer": "entity_state",
+              "action": "rebuilt",
+              "source": "entity_state_session_rebuild_api",
+              "source_turn": 3,
+              "memory_key": "849c46df-dd9b-451f-9fd9-377cf0580d30",
+              "title": "实体状态已重建: 张三",
+              "reason": null,
+              "before": {
+                "display_name": "张三",
+                "current_location": "地下仓库",
+                "inventory": [
+                  "绷带",
+                  "火折子"
+                ],
+                "status_tags": [
+                  "受伤",
+                  "警觉",
+                  "紧张"
+                ],
+                "companions": [
+                  "ac417266-abfc-4226-add3-79d97b125cc7"
+                ],
+                "short_goal": "封住入口",
+                "last_source_turn": 3
+              },
+              "after": {
+                "display_name": "张三",
+                "current_location": "地下仓库",
+                "inventory": [
+                  "绷带",
+                  "火折子"
+                ],
+                "status_tags": [
+                  "受伤",
+                  "警觉",
+                  "紧张"
+                ],
+                "companions": [
+                  "ac417266-abfc-4226-add3-79d97b125cc7"
+                ],
+                "short_goal": "封住入口",
+                "last_source_turn": 3
+              },
+              "status": "committed",
+              "committed_at": "2026-03-31T18:32:12.273687"
+            },
+            {
+              "event_id": "b6ccc512-a986-4224-95fe-391cb5054f97",
+              "session_id": "story-3dee714e-8c59-4f5f-a32d-578803208ba9-v2",
+              "operation_id": "entity_state_session_rebuild_api:ef65132c-c44d-4d33-9257-36d3837fbccb",
+              "sequence": 2,
+              "display_kind": "write",
+              "memory_layer": "entity_state",
+              "action": "rebuilt",
+              "source": "entity_state_session_rebuild_api",
+              "source_turn": 3,
+              "memory_key": "ac417266-abfc-4226-add3-79d97b125cc7",
+              "title": "实体状态已重建: 李四",
+              "reason": null,
+              "before": {
+                "display_name": "李四",
+                "current_location": "地下仓库",
+                "inventory": [
+                  "火折子"
+                ],
+                "status_tags": [
+                  "受伤",
+                  "警觉",
+                  "紧张"
+                ],
+                "companions": [
+                  "849c46df-dd9b-451f-9fd9-377cf0580d30"
+                ],
+                "short_goal": null,
+                "last_source_turn": 3
+              },
+              "after": {
+                "display_name": "李四",
+                "current_location": "地下仓库",
+                "inventory": [
+                  "火折子"
+                ],
+                "status_tags": [
+                  "受伤",
+                  "警觉",
+                  "紧张"
+                ],
+                "companions": [
+                  "849c46df-dd9b-451f-9fd9-377cf0580d30"
+                ],
+                "short_goal": null,
+                "last_source_turn": 3
+              },
+              "status": "committed",
+              "committed_at": "2026-03-31T18:32:12.273687"
+            }
+          ],
+          "warnings": [],
+          "items": [
+            {
+              "story_id": "3dee714e-8c59-4f5f-a32d-578803208ba9",
+              "session_id": "story-3dee714e-8c59-4f5f-a32d-578803208ba9-v2",
+              "entity_id": "849c46df-dd9b-451f-9fd9-377cf0580d30",
+              "entity_type": "character",
+              "display_name": "张三",
+              "current_location": "地下仓库",
+              "inventory": [
+                "绷带",
+                "火折子"
+              ],
+              "status_tags": [
+                "受伤",
+                "警觉",
+                "紧张"
+              ],
+              "companions": [
+                "ac417266-abfc-4226-add3-79d97b125cc7"
+              ],
+              "short_goal": "封住入口",
+              "state_summary": "地点=地下仓库；状态=受伤,警觉,紧张；携带物=绷带,火折子",
+              "evidence": [
+                "张三和李四在钟楼顶层会合。张三受伤但警觉地拿着铜钥匙，李四紧张地拿着火折子。张三决定寻找机关入口。",
+                "张三和李四赶到地下仓库。张三丢下了铜钥匙，李四警觉地握着火折子。张三准备封住入口。",
+                "地下仓库的霉味扑面而来，混杂着海水的咸腥和木头腐朽的气息。李四手中的火折子摇曳着，在潮湿的墙壁上投下晃动的阴影。张三迅速扫视四周——这里比他们预想的更拥挤，旧木箱堆叠如山，几乎堵住了所有通路。\n\n“钥匙扔了？”李四压低声音，火光照亮他额角的汗珠。\n\n“必须的。”张三简短回应，已经开始推动最近的一个木箱。木箱底部摩擦着石板地面，发出刺耳的刮擦声。“追兵会先找钥匙，能拖一会儿是一会儿。”\n\n李四举着火折子靠近墙壁，突然倒吸一口凉气：“这里有字。”\n\n在火光边缘，墙壁上刻着模糊的符"
+              ],
+              "last_source_turn": 3,
+              "updated_at": "2026-03-31T18:32:12.272687",
+              "version": 1,
+              "metadata": {
+                "source": "lorebook_seed"
+              }
+            },
+            {
+              "story_id": "3dee714e-8c59-4f5f-a32d-578803208ba9",
+              "session_id": "story-3dee714e-8c59-4f5f-a32d-578803208ba9-v2",
+              "entity_id": "ac417266-abfc-4226-add3-79d97b125cc7",
+              "entity_type": "character",
+              "display_name": "李四",
+              "current_location": "地下仓库",
+              "inventory": [
+                "火折子"
+              ],
+              "status_tags": [
+                "受伤",
+                "警觉",
+                "紧张"
+              ],
+              "companions": [
+                "849c46df-dd9b-451f-9fd9-377cf0580d30"
+              ],
+              "short_goal": null,
+              "state_summary": "地点=地下仓库；状态=受伤,警觉,紧张；携带物=火折子",
+              "evidence": [
+                "张三和李四在钟楼顶层会合。张三受伤但警觉地拿着铜钥匙，李四紧张地拿着火折子。张三决定寻找机关入口。",
+                "张三和李四赶到地下仓库。张三丢下了铜钥匙，李四警觉地握着火折子。张三准备封住入口。",
+                "地下仓库的霉味扑面而来，混杂着海水的咸腥和木头腐朽的气息。李四手中的火折子摇曳着，在潮湿的墙壁上投下晃动的阴影。张三迅速扫视四周——这里比他们预想的更拥挤，旧木箱堆叠如山，几乎堵住了所有通路。\n\n“钥匙扔了？”李四压低声音，火光照亮他额角的汗珠。\n\n“必须的。”张三简短回应，已经开始推动最近的一个木箱。木箱底部摩擦着石板地面，发出刺耳的刮擦声。“追兵会先找钥匙，能拖一会儿是一会儿。”\n\n李四举着火折子靠近墙壁，突然倒吸一口凉气：“这里有字。”\n\n在火光边缘，墙壁上刻着模糊的符"
+              ],
+              "last_source_turn": 3,
+              "updated_at": "2026-03-31T18:32:12.272687",
+              "version": 1,
+              "metadata": {
+                "source": "lorebook_seed"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "seed_story_segments",
+      "passed": true,
+      "detail": {
+        "status_seg1": 200,
+        "status_seg2": 200,
+        "segment_count": 2
+      }
+    },
+    {
+      "name": "seed_segment_id_available",
+      "passed": true,
+      "detail": {
+        "segment2_id": "7070f02b-03c3-4677-badc-c627caa4cff0"
+      }
+    },
+    {
+      "name": "story_adjustment_commit_rebuild_entity",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "rebuild_entity_state_rebuilt": true
+      }
+    },
+    {
+      "name": "story_adjustment_commit_entity_updates",
+      "passed": true,
+      "detail": {
+        "memory_updates": [
+          {
+            "event_id": "b8d92541-78cb-4996-a7a3-38874898bd16",
+            "session_id": "story-3dee714e-8c59-4f5f-a32d-578803208ba9-v2",
+            "operation_id": "story_adjustment_commit:474b3054-23f0-422c-87d1-30c4b8f5fbe2",
+            "sequence": 1,
+            "display_kind": "session_rebuild",
+            "memory_layer": "episodic",
+            "action": "rebuilt",
+            "source": "story_adjustment_commit",
+            "source_turn": null,
+            "memory_key": null,
+            "title": "会话消息已按故事正文重建",
+            "reason": null,
+            "before": null,
+            "after": {
+              "message_count": 4,
+              "segment_count": 2
+            },
+            "status": "committed",
+            "committed_at": "2026-03-31T18:32:12.397657"
+          },
+          {
+            "event_id": "defb70e1-5ddf-4707-8581-3db8d8f21b44",
+            "session_id": "story-3dee714e-8c59-4f5f-a32d-578803208ba9-v2",
+            "operation_id": "story_adjustment_commit:474b3054-23f0-422c-87d1-30c4b8f5fbe2",
+            "sequence": 2,
+            "display_kind": "index_rebuild",
+            "memory_layer": "episodic",
+            "action": "reindexed",
+            "source": "story_adjustment_commit",
+            "source_turn": null,
+            "memory_key": "conversation_history_index",
+            "title": "历史向量索引已重建",
+            "reason": null,
+            "before": null,
+            "after": {
+              "indexed_message_count": 4
+            },
+            "status": "committed",
+            "committed_at": "2026-03-31T18:32:12.862679"
+          },
+          {
+            "event_id": "267c5b66-0ffc-40ff-ba0d-94688dba977b",
+            "session_id": "story-3dee714e-8c59-4f5f-a32d-578803208ba9-v2",
+            "operation_id": "story_adjustment_commit:dc7913f7-b7ad-437d-b436-bd5202702028",
+            "sequence": 1,
+            "display_kind": "write",
+            "memory_layer": "entity_state",
+            "action": "rebuilt",
+            "source": "story_adjustment_commit",
+            "source_turn": 2,
+            "memory_key": "849c46df-dd9b-451f-9fd9-377cf0580d30",
+            "title": "实体状态已重建: 张三",
+            "reason": null,
+            "before": {
+              "display_name": "张三",
+              "current_location": "地下仓库",
+              "inventory": [
+                "绷带",
+                "火折子"
+              ],
+              "status_tags": [
+                "受伤",
+                "警觉",
+                "紧张"
+              ],
+              "companions": [
+                "ac417266-abfc-4226-add3-79d97b125cc7"
+              ],
+              "short_goal": "封住入口",
+              "last_source_turn": 3
+            },
+            "after": {
+              "display_name": "张三",
+              "current_location": "地下仓库",
+              "inventory": [
+                "绷带"
+              ],
+              "status_tags": [
+                "受伤",
+                "警觉",
+                "紧张"
+              ],
+              "companions": [
+                "ac417266-abfc-4226-add3-79d97b125cc7"
+              ],
+              "short_goal": "封住入口",
+              "last_source_turn": 2
+            },
+            "status": "committed",
+            "committed_at": "2026-03-31T18:32:12.865687"
+          },
+          {
+            "event_id": "e59ce15d-c60f-44fd-a897-64fc5a3bb1a6",
+            "session_id": "story-3dee714e-8c59-4f5f-a32d-578803208ba9-v2",
+            "operation_id": "story_adjustment_commit:dc7913f7-b7ad-437d-b436-bd5202702028",
+            "sequence": 2,
+            "display_kind": "write",
+            "memory_layer": "entity_state",
+            "action": "rebuilt",
+            "source": "story_adjustment_commit",
+            "source_turn": 2,
+            "memory_key": "ac417266-abfc-4226-add3-79d97b125cc7",
+            "title": "实体状态已重建: 李四",
+            "reason": null,
+            "before": {
+              "display_name": "李四",
+              "current_location": "地下仓库",
+              "inventory": [
+                "火折子"
+              ],
+              "status_tags": [
+                "受伤",
+                "警觉",
+                "紧张"
+              ],
+              "companions": [
+                "849c46df-dd9b-451f-9fd9-377cf0580d30"
+              ],
+              "short_goal": null,
+              "last_source_turn": 3
+            },
+            "after": {
+              "display_name": "李四",
+              "current_location": "地下仓库",
+              "inventory": [],
+              "status_tags": [
+                "受伤",
+                "警觉",
+                "紧张"
+              ],
+              "companions": [
+                "849c46df-dd9b-451f-9fd9-377cf0580d30"
+              ],
+              "short_goal": null,
+              "last_source_turn": 2
+            },
+            "status": "committed",
+            "committed_at": "2026-03-31T18:32:12.865687"
+          }
+        ]
+      }
+    },
+    {
+      "name": "story_entity_state_after_commit",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "zhangsan": {
+          "story_id": "3dee714e-8c59-4f5f-a32d-578803208ba9",
+          "session_id": "story-3dee714e-8c59-4f5f-a32d-578803208ba9-v2",
+          "entity_id": "849c46df-dd9b-451f-9fd9-377cf0580d30",
+          "entity_type": "character",
+          "display_name": "张三",
+          "current_location": "地下仓库",
+          "inventory": [
+            "绷带"
+          ],
+          "status_tags": [
+            "受伤",
+            "警觉",
+            "紧张"
+          ],
+          "companions": [
+            "ac417266-abfc-4226-add3-79d97b125cc7"
+          ],
+          "short_goal": "封住入口",
+          "state_summary": "地点=地下仓库；状态=受伤,警觉,紧张；携带物=绷带",
+          "evidence": [
+            "张三和李四在钟楼顶层，张三拿着铜钥匙。",
+            "张三受伤但警觉，李四紧张地观察门口。张三决定寻找机关入口。",
+            "张三和李四转入地下仓库，张三丢下了铜钥匙。",
+            "张三和李四在地下仓库继续搜查。张三受伤但警觉，张三丢下了铜钥匙后准备封住入口。"
+          ],
+          "last_source_turn": 2,
+          "updated_at": "2026-03-31T18:32:12.864688",
+          "version": 1,
+          "metadata": {
+            "source": "lorebook_seed"
+          }
+        }
+      }
+    },
+    {
+      "name": "story_segment_rollback_rebuild_entity",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "rebuild_entity_state_rebuilt": true
+      }
+    },
+    {
+      "name": "story_segment_rollback_entity_updates",
+      "passed": true,
+      "detail": {
+        "memory_updates": [
+          {
+            "event_id": "f7c236cf-778d-42b0-9189-3b640e040704",
+            "session_id": "story-3dee714e-8c59-4f5f-a32d-578803208ba9-v2",
+            "operation_id": "story_segment_rollback:ca9665c9-848f-46f4-a90c-170557355842",
+            "sequence": 1,
+            "display_kind": "session_rebuild",
+            "memory_layer": "episodic",
+            "action": "rebuilt",
+            "source": "story_segment_rollback",
+            "source_turn": null,
+            "memory_key": null,
+            "title": "会话消息已按故事正文重建",
+            "reason": null,
+            "before": null,
+            "after": {
+              "message_count": 2,
+              "segment_count": 1
+            },
+            "status": "committed",
+            "committed_at": "2026-03-31T18:32:12.952629"
+          },
+          {
+            "event_id": "88125fce-011f-4bc4-adef-95f0631afe9c",
+            "session_id": "story-3dee714e-8c59-4f5f-a32d-578803208ba9-v2",
+            "operation_id": "story_segment_rollback:ca9665c9-848f-46f4-a90c-170557355842",
+            "sequence": 2,
+            "display_kind": "index_rebuild",
+            "memory_layer": "episodic",
+            "action": "reindexed",
+            "source": "story_segment_rollback",
+            "source_turn": null,
+            "memory_key": "conversation_history_index",
+            "title": "历史向量索引已重建",
+            "reason": null,
+            "before": null,
+            "after": {
+              "indexed_message_count": 2
+            },
+            "status": "committed",
+            "committed_at": "2026-03-31T18:32:13.253733"
+          },
+          {
+            "event_id": "5c8130ee-27b7-4570-869a-7af48b8dc1d3",
+            "session_id": "story-3dee714e-8c59-4f5f-a32d-578803208ba9-v2",
+            "operation_id": "story_segment_rollback:491dc130-3080-414f-a872-332a5402a846",
+            "sequence": 1,
+            "display_kind": "write",
+            "memory_layer": "entity_state",
+            "action": "rebuilt",
+            "source": "story_segment_rollback",
+            "source_turn": 1,
+            "memory_key": "849c46df-dd9b-451f-9fd9-377cf0580d30",
+            "title": "实体状态已重建: 张三",
+            "reason": null,
+            "before": {
+              "display_name": "张三",
+              "current_location": "地下仓库",
+              "inventory": [
+                "绷带"
+              ],
+              "status_tags": [
+                "受伤",
+                "警觉",
+                "紧张"
+              ],
+              "companions": [
+                "ac417266-abfc-4226-add3-79d97b125cc7"
+              ],
+              "short_goal": "封住入口",
+              "last_source_turn": 2
+            },
+            "after": {
+              "display_name": "张三",
+              "current_location": "钟楼顶层",
+              "inventory": [
+                "绷带",
+                "铜钥匙"
+              ],
+              "status_tags": [
+                "受伤",
+                "警觉",
+                "紧张"
+              ],
+              "companions": [
+                "ac417266-abfc-4226-add3-79d97b125cc7"
+              ],
+              "short_goal": "寻找机关入口",
+              "last_source_turn": 1
+            },
+            "status": "committed",
+            "committed_at": "2026-03-31T18:32:13.255944"
+          },
+          {
+            "event_id": "88e8c455-3bf4-4380-9cfe-5ba211c134c4",
+            "session_id": "story-3dee714e-8c59-4f5f-a32d-578803208ba9-v2",
+            "operation_id": "story_segment_rollback:491dc130-3080-414f-a872-332a5402a846",
+            "sequence": 2,
+            "display_kind": "write",
+            "memory_layer": "entity_state",
+            "action": "rebuilt",
+            "source": "story_segment_rollback",
+            "source_turn": 1,
+            "memory_key": "ac417266-abfc-4226-add3-79d97b125cc7",
+            "title": "实体状态已重建: 李四",
+            "reason": null,
+            "before": {
+              "display_name": "李四",
+              "current_location": "地下仓库",
+              "inventory": [],
+              "status_tags": [
+                "受伤",
+                "警觉",
+                "紧张"
+              ],
+              "companions": [
+                "849c46df-dd9b-451f-9fd9-377cf0580d30"
+              ],
+              "short_goal": null,
+              "last_source_turn": 2
+            },
+            "after": {
+              "display_name": "李四",
+              "current_location": "钟楼顶层",
+              "inventory": [
+                "铜钥匙"
+              ],
+              "status_tags": [
+                "受伤",
+                "警觉",
+                "紧张"
+              ],
+              "companions": [
+                "849c46df-dd9b-451f-9fd9-377cf0580d30"
+              ],
+              "short_goal": null,
+              "last_source_turn": 1
+            },
+            "status": "committed",
+            "committed_at": "2026-03-31T18:32:13.255944"
+          }
+        ]
+      }
+    },
+    {
+      "name": "story_entity_state_after_segment_rollback",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "zhangsan": {
+          "story_id": "3dee714e-8c59-4f5f-a32d-578803208ba9",
+          "session_id": "story-3dee714e-8c59-4f5f-a32d-578803208ba9-v2",
+          "entity_id": "849c46df-dd9b-451f-9fd9-377cf0580d30",
+          "entity_type": "character",
+          "display_name": "张三",
+          "current_location": "钟楼顶层",
+          "inventory": [
+            "绷带",
+            "铜钥匙"
+          ],
+          "status_tags": [
+            "受伤",
+            "警觉",
+            "紧张"
+          ],
+          "companions": [
+            "ac417266-abfc-4226-add3-79d97b125cc7"
+          ],
+          "short_goal": "寻找机关入口",
+          "state_summary": "地点=钟楼顶层；状态=受伤,警觉,紧张；携带物=绷带,铜钥匙",
+          "evidence": [
+            "张三和李四在钟楼顶层，张三拿着铜钥匙。",
+            "张三受伤但警觉，李四紧张地观察门口。张三决定寻找机关入口。"
+          ],
+          "last_source_turn": 1,
+          "updated_at": "2026-03-31T18:32:13.255944",
+          "version": 1,
+          "metadata": {
+            "source": "lorebook_seed"
+          }
+        }
+      }
+    },
+    {
+      "name": "story_entity_rebuild_api",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "body": {
+          "story_id": "3dee714e-8c59-4f5f-a32d-578803208ba9",
+          "session_id": "story-3dee714e-8c59-4f5f-a32d-578803208ba9-v2",
+          "rebuilt": true,
+          "entity_count": 2,
+          "memory_updates": [
+            {
+              "event_id": "18369c04-0feb-439c-9c41-a60b8f4fb570",
+              "session_id": "story-3dee714e-8c59-4f5f-a32d-578803208ba9-v2",
+              "operation_id": "entity_state_story_rebuild_api:e4cb80eb-a686-458f-806f-9e20383954e4",
+              "sequence": 1,
+              "display_kind": "write",
+              "memory_layer": "entity_state",
+              "action": "rebuilt",
+              "source": "entity_state_story_rebuild_api",
+              "source_turn": 1,
+              "memory_key": "849c46df-dd9b-451f-9fd9-377cf0580d30",
+              "title": "实体状态已重建: 张三",
+              "reason": null,
+              "before": {
+                "display_name": "张三",
+                "current_location": "钟楼顶层",
+                "inventory": [
+                  "绷带",
+                  "铜钥匙"
+                ],
+                "status_tags": [
+                  "受伤",
+                  "警觉",
+                  "紧张"
+                ],
+                "companions": [
+                  "ac417266-abfc-4226-add3-79d97b125cc7"
+                ],
+                "short_goal": "寻找机关入口",
+                "last_source_turn": 1
+              },
+              "after": {
+                "display_name": "张三",
+                "current_location": "钟楼顶层",
+                "inventory": [
+                  "绷带",
+                  "铜钥匙"
+                ],
+                "status_tags": [
+                  "受伤",
+                  "警觉",
+                  "紧张"
+                ],
+                "companions": [
+                  "ac417266-abfc-4226-add3-79d97b125cc7"
+                ],
+                "short_goal": "寻找机关入口",
+                "last_source_turn": 1
+              },
+              "status": "committed",
+              "committed_at": "2026-03-31T18:32:13.326004"
+            },
+            {
+              "event_id": "d86309d1-3ff7-4f5f-9d07-1d1e3fa580b6",
+              "session_id": "story-3dee714e-8c59-4f5f-a32d-578803208ba9-v2",
+              "operation_id": "entity_state_story_rebuild_api:e4cb80eb-a686-458f-806f-9e20383954e4",
+              "sequence": 2,
+              "display_kind": "write",
+              "memory_layer": "entity_state",
+              "action": "rebuilt",
+              "source": "entity_state_story_rebuild_api",
+              "source_turn": 1,
+              "memory_key": "ac417266-abfc-4226-add3-79d97b125cc7",
+              "title": "实体状态已重建: 李四",
+              "reason": null,
+              "before": {
+                "display_name": "李四",
+                "current_location": "钟楼顶层",
+                "inventory": [
+                  "铜钥匙"
+                ],
+                "status_tags": [
+                  "受伤",
+                  "警觉",
+                  "紧张"
+                ],
+                "companions": [
+                  "849c46df-dd9b-451f-9fd9-377cf0580d30"
+                ],
+                "short_goal": null,
+                "last_source_turn": 1
+              },
+              "after": {
+                "display_name": "李四",
+                "current_location": "钟楼顶层",
+                "inventory": [
+                  "铜钥匙"
+                ],
+                "status_tags": [
+                  "受伤",
+                  "警觉",
+                  "紧张"
+                ],
+                "companions": [
+                  "849c46df-dd9b-451f-9fd9-377cf0580d30"
+                ],
+                "short_goal": null,
+                "last_source_turn": 1
+              },
+              "status": "committed",
+              "committed_at": "2026-03-31T18:32:13.326004"
+            }
+          ],
+          "warnings": [],
+          "items": [
+            {
+              "story_id": "3dee714e-8c59-4f5f-a32d-578803208ba9",
+              "session_id": "story-3dee714e-8c59-4f5f-a32d-578803208ba9-v2",
+              "entity_id": "849c46df-dd9b-451f-9fd9-377cf0580d30",
+              "entity_type": "character",
+              "display_name": "张三",
+              "current_location": "钟楼顶层",
+              "inventory": [
+                "绷带",
+                "铜钥匙"
+              ],
+              "status_tags": [
+                "受伤",
+                "警觉",
+                "紧张"
+              ],
+              "companions": [
+                "ac417266-abfc-4226-add3-79d97b125cc7"
+              ],
+              "short_goal": "寻找机关入口",
+              "state_summary": "地点=钟楼顶层；状态=受伤,警觉,紧张；携带物=绷带,铜钥匙",
+              "evidence": [
+                "张三和李四在钟楼顶层，张三拿着铜钥匙。",
+                "张三受伤但警觉，李四紧张地观察门口。张三决定寻找机关入口。"
+              ],
+              "last_source_turn": 1,
+              "updated_at": "2026-03-31T18:32:13.325002",
+              "version": 1,
+              "metadata": {
+                "source": "lorebook_seed"
+              }
+            },
+            {
+              "story_id": "3dee714e-8c59-4f5f-a32d-578803208ba9",
+              "session_id": "story-3dee714e-8c59-4f5f-a32d-578803208ba9-v2",
+              "entity_id": "ac417266-abfc-4226-add3-79d97b125cc7",
+              "entity_type": "character",
+              "display_name": "李四",
+              "current_location": "钟楼顶层",
+              "inventory": [
+                "铜钥匙"
+              ],
+              "status_tags": [
+                "受伤",
+                "警觉",
+                "紧张"
+              ],
+              "companions": [
+                "849c46df-dd9b-451f-9fd9-377cf0580d30"
+              ],
+              "short_goal": null,
+              "state_summary": "地点=钟楼顶层；状态=受伤,警觉,紧张；携带物=铜钥匙",
+              "evidence": [
+                "张三和李四在钟楼顶层，张三拿着铜钥匙。",
+                "张三受伤但警觉，李四紧张地观察门口。张三决定寻找机关入口。"
+              ],
+              "last_source_turn": 1,
+              "updated_at": "2026-03-31T18:32:13.325002",
+              "version": 1,
+              "metadata": {
+                "source": "lorebook_seed"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "timeline_contains_entity_sources",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "entity_sources": [
+          "entity_state_session_rebuild_api",
+          "entity_state_story_rebuild_api",
+          "generate",
+          "regenerate",
+          "rollback",
+          "story_adjustment_commit",
+          "story_segment_rollback"
+        ],
+        "missing_sources": []
+      }
+    }
+  ],
+  "evidence": {
+    "world_id": "5f32183d-49c8-46f8-abdd-4b0f1eadb257",
+    "story_id": "3dee714e-8c59-4f5f-a32d-578803208ba9",
+    "session_id": "story-3dee714e-8c59-4f5f-a32d-578803208ba9-v2",
+    "lorebook_entry_ids": {
+      "location_top": "c04b55ae-224d-41f1-922e-ac8bae9c9c01",
+      "location_warehouse": "41702920-b756-4257-a69e-27a1904be012",
+      "zhangsan": "849c46df-dd9b-451f-9fd9-377cf0580d30",
+      "lisi": "ac417266-abfc-4226-add3-79d97b125cc7"
+    },
+    "round1_snapshot": {
+      "story_id": "3dee714e-8c59-4f5f-a32d-578803208ba9",
+      "session_id": "story-3dee714e-8c59-4f5f-a32d-578803208ba9-v2",
+      "entity_type": null,
+      "items": [
+        {
+          "story_id": "3dee714e-8c59-4f5f-a32d-578803208ba9",
+          "session_id": "story-3dee714e-8c59-4f5f-a32d-578803208ba9-v2",
+          "entity_id": "849c46df-dd9b-451f-9fd9-377cf0580d30",
+          "entity_type": "character",
+          "display_name": "张三",
+          "current_location": "钟楼顶层",
+          "inventory": [
+            "绷带",
+            "火折子"
+          ],
+          "status_tags": [
+            "受伤",
+            "警觉",
+            "紧张"
+          ],
+          "companions": [
+            "ac417266-abfc-4226-add3-79d97b125cc7"
+          ],
+          "short_goal": "寻找机关入口",
+          "state_summary": "地点=钟楼顶层；状态=受伤,警觉,紧张；携带物=绷带,火折子",
+          "evidence": [
+            "张三和李四在钟楼顶层会合。张三受伤但警觉地拿着铜钥匙，李四紧张地拿着火折子。张三决定寻找机关入口。",
+            "钟楼顶层的风很大，吹得李四手中的火折子忽明忽暗。张三靠在石栏边，左臂的伤口还在渗血，但他握紧那把铜钥匙，目光锐利地扫视着脚下的石板地面。\n\n“老张，你确定入口在这儿？”李四压低声音，火光映出他额头的汗珠，“这地方除了钟和石头，啥也没有。”\n\n张三没有立刻回答。他蹲下身，用没受伤的右手轻敲地面，石板发出沉闷的回响。突然，他停在一块边缘有细微磨损的石板前。\n\n“你看这里。”张三指着石板边缘几乎看不见的凹槽，“形状和钥匙吻合。”\n\n李四凑近，火光照亮了那个凹槽——确实是一个锁孔的形"
+          ],
+          "last_source_turn": 1,
+          "updated_at": "2026-03-31T18:31:52.008972",
+          "version": 1,
+          "metadata": {
+            "source": "lorebook_seed"
+          }
+        },
+        {
+          "story_id": "3dee714e-8c59-4f5f-a32d-578803208ba9",
+          "session_id": "story-3dee714e-8c59-4f5f-a32d-578803208ba9-v2",
+          "entity_id": "ac417266-abfc-4226-add3-79d97b125cc7",
+          "entity_type": "character",
+          "display_name": "李四",
+          "current_location": "钟楼顶层",
+          "inventory": [
+            "火折子"
+          ],
+          "status_tags": [
+            "受伤",
+            "警觉",
+            "紧张"
+          ],
+          "companions": [
+            "849c46df-dd9b-451f-9fd9-377cf0580d30"
+          ],
+          "short_goal": null,
+          "state_summary": "地点=钟楼顶层；状态=受伤,警觉,紧张；携带物=火折子",
+          "evidence": [
+            "张三和李四在钟楼顶层会合。张三受伤但警觉地拿着铜钥匙，李四紧张地拿着火折子。张三决定寻找机关入口。",
+            "钟楼顶层的风很大，吹得李四手中的火折子忽明忽暗。张三靠在石栏边，左臂的伤口还在渗血，但他握紧那把铜钥匙，目光锐利地扫视着脚下的石板地面。\n\n“老张，你确定入口在这儿？”李四压低声音，火光映出他额头的汗珠，“这地方除了钟和石头，啥也没有。”\n\n张三没有立刻回答。他蹲下身，用没受伤的右手轻敲地面，石板发出沉闷的回响。突然，他停在一块边缘有细微磨损的石板前。\n\n“你看这里。”张三指着石板边缘几乎看不见的凹槽，“形状和钥匙吻合。”\n\n李四凑近，火光照亮了那个凹槽——确实是一个锁孔的形"
+          ],
+          "last_source_turn": 1,
+          "updated_at": "2026-03-31T18:31:52.008972",
+          "version": 1,
+          "metadata": {
+            "source": "lorebook_seed"
+          }
+        }
+      ],
+      "total": 2
+    },
+    "stream_snapshot": {
+      "story_id": "3dee714e-8c59-4f5f-a32d-578803208ba9",
+      "session_id": "story-3dee714e-8c59-4f5f-a32d-578803208ba9-v2",
+      "entity_type": null,
+      "items": [
+        {
+          "story_id": "3dee714e-8c59-4f5f-a32d-578803208ba9",
+          "session_id": "story-3dee714e-8c59-4f5f-a32d-578803208ba9-v2",
+          "entity_id": "849c46df-dd9b-451f-9fd9-377cf0580d30",
+          "entity_type": "character",
+          "display_name": "张三",
+          "current_location": "地下仓库",
+          "inventory": [
+            "绷带",
+            "火折子"
+          ],
+          "status_tags": [
+            "受伤",
+            "警觉",
+            "紧张"
+          ],
+          "companions": [
+            "ac417266-abfc-4226-add3-79d97b125cc7"
+          ],
+          "short_goal": "封住入口",
+          "state_summary": "地点=地下仓库；状态=受伤,警觉,紧张；携带物=绷带,火折子",
+          "evidence": [
+            "张三和李四在钟楼顶层会合。张三受伤但警觉地拿着铜钥匙，李四紧张地拿着火折子。张三决定寻找机关入口。",
+            "钟楼顶层的风很大，吹得李四手中的火折子忽明忽暗。张三靠在石栏边，左臂的伤口还在渗血，但他握紧那把铜钥匙，目光锐利地扫视着脚下的石板地面。\n\n“老张，你确定入口在这儿？”李四压低声音，火光映出他额头的汗珠，“这地方除了钟和石头，啥也没有。”\n\n张三没有立刻回答。他蹲下身，用没受伤的右手轻敲地面，石板发出沉闷的回响。突然，他停在一块边缘有细微磨损的石板前。\n\n“你看这里。”张三指着石板边缘几乎看不见的凹槽，“形状和钥匙吻合。”\n\n李四凑近，火光照亮了那个凹槽——确实是一个锁孔的形",
+            "张三和李四赶到地下仓库。张三丢下了铜钥匙，李四警觉地握着火折子。张三准备封住入口。",
+            "（张三将铜钥匙塞进凹槽，用力一拧）\n\n石板下方传来沉闷的齿轮转动声。整块石板缓缓下沉，露出一个向下的石阶入口，一股潮湿的霉味扑面而来。李四的火折子照亮了狭窄的阶梯，石壁上布满青苔。\n\n“快走。”张三率先踏入，伤口让他动作有些踉跄。\n\n两人沿着螺旋石阶向下走了约莫三分钟，终于抵达一个堆满旧木箱的地下空间。空气阴冷潮湿，木箱上覆盖着厚厚的灰尘。\n\n张三靠在最近的木箱上喘了口气，突然将手中的铜钥匙扔向角落的阴影里。钥匙在石地上发出清脆的撞击声。\n\n“你疯了？”李四压低声音，火折子猛"
+          ],
+          "last_source_turn": 2,
+          "updated_at": "2026-03-31T18:31:59.835106",
+          "version": 1,
+          "metadata": {
+            "source": "lorebook_seed"
+          }
+        },
+        {
+          "story_id": "3dee714e-8c59-4f5f-a32d-578803208ba9",
+          "session_id": "story-3dee714e-8c59-4f5f-a32d-578803208ba9-v2",
+          "entity_id": "ac417266-abfc-4226-add3-79d97b125cc7",
+          "entity_type": "character",
+          "display_name": "李四",
+          "current_location": "地下仓库",
+          "inventory": [
+            "火折子"
+          ],
+          "status_tags": [
+            "受伤",
+            "警觉",
+            "紧张"
+          ],
+          "companions": [
+            "849c46df-dd9b-451f-9fd9-377cf0580d30"
+          ],
+          "short_goal": null,
+          "state_summary": "地点=地下仓库；状态=受伤,警觉,紧张；携带物=火折子",
+          "evidence": [
+            "张三和李四在钟楼顶层会合。张三受伤但警觉地拿着铜钥匙，李四紧张地拿着火折子。张三决定寻找机关入口。",
+            "钟楼顶层的风很大，吹得李四手中的火折子忽明忽暗。张三靠在石栏边，左臂的伤口还在渗血，但他握紧那把铜钥匙，目光锐利地扫视着脚下的石板地面。\n\n“老张，你确定入口在这儿？”李四压低声音，火光映出他额头的汗珠，“这地方除了钟和石头，啥也没有。”\n\n张三没有立刻回答。他蹲下身，用没受伤的右手轻敲地面，石板发出沉闷的回响。突然，他停在一块边缘有细微磨损的石板前。\n\n“你看这里。”张三指着石板边缘几乎看不见的凹槽，“形状和钥匙吻合。”\n\n李四凑近，火光照亮了那个凹槽——确实是一个锁孔的形",
+            "张三和李四赶到地下仓库。张三丢下了铜钥匙，李四警觉地握着火折子。张三准备封住入口。",
+            "（张三将铜钥匙塞进凹槽，用力一拧）\n\n石板下方传来沉闷的齿轮转动声。整块石板缓缓下沉，露出一个向下的石阶入口，一股潮湿的霉味扑面而来。李四的火折子照亮了狭窄的阶梯，石壁上布满青苔。\n\n“快走。”张三率先踏入，伤口让他动作有些踉跄。\n\n两人沿着螺旋石阶向下走了约莫三分钟，终于抵达一个堆满旧木箱的地下空间。空气阴冷潮湿，木箱上覆盖着厚厚的灰尘。\n\n张三靠在最近的木箱上喘了口气，突然将手中的铜钥匙扔向角落的阴影里。钥匙在石地上发出清脆的撞击声。\n\n“你疯了？”李四压低声音，火折子猛"
+          ],
+          "last_source_turn": 2,
+          "updated_at": "2026-03-31T18:31:59.835106",
+          "version": 1,
+          "metadata": {
+            "source": "lorebook_seed"
+          }
+        }
+      ],
+      "total": 2
+    },
+    "post_commit_story_snapshot": {
+      "story_id": "3dee714e-8c59-4f5f-a32d-578803208ba9",
+      "session_id": "story-3dee714e-8c59-4f5f-a32d-578803208ba9-v2",
+      "entity_type": null,
+      "items": [
+        {
+          "story_id": "3dee714e-8c59-4f5f-a32d-578803208ba9",
+          "session_id": "story-3dee714e-8c59-4f5f-a32d-578803208ba9-v2",
+          "entity_id": "849c46df-dd9b-451f-9fd9-377cf0580d30",
+          "entity_type": "character",
+          "display_name": "张三",
+          "current_location": "地下仓库",
+          "inventory": [
+            "绷带"
+          ],
+          "status_tags": [
+            "受伤",
+            "警觉",
+            "紧张"
+          ],
+          "companions": [
+            "ac417266-abfc-4226-add3-79d97b125cc7"
+          ],
+          "short_goal": "封住入口",
+          "state_summary": "地点=地下仓库；状态=受伤,警觉,紧张；携带物=绷带",
+          "evidence": [
+            "张三和李四在钟楼顶层，张三拿着铜钥匙。",
+            "张三受伤但警觉，李四紧张地观察门口。张三决定寻找机关入口。",
+            "张三和李四转入地下仓库，张三丢下了铜钥匙。",
+            "张三和李四在地下仓库继续搜查。张三受伤但警觉，张三丢下了铜钥匙后准备封住入口。"
+          ],
+          "last_source_turn": 2,
+          "updated_at": "2026-03-31T18:32:12.864688",
+          "version": 1,
+          "metadata": {
+            "source": "lorebook_seed"
+          }
+        },
+        {
+          "story_id": "3dee714e-8c59-4f5f-a32d-578803208ba9",
+          "session_id": "story-3dee714e-8c59-4f5f-a32d-578803208ba9-v2",
+          "entity_id": "ac417266-abfc-4226-add3-79d97b125cc7",
+          "entity_type": "character",
+          "display_name": "李四",
+          "current_location": "地下仓库",
+          "inventory": [],
+          "status_tags": [
+            "受伤",
+            "警觉",
+            "紧张"
+          ],
+          "companions": [
+            "849c46df-dd9b-451f-9fd9-377cf0580d30"
+          ],
+          "short_goal": null,
+          "state_summary": "地点=地下仓库；状态=受伤,警觉,紧张",
+          "evidence": [
+            "张三和李四在钟楼顶层，张三拿着铜钥匙。",
+            "张三受伤但警觉，李四紧张地观察门口。张三决定寻找机关入口。",
+            "张三和李四转入地下仓库，张三丢下了铜钥匙。",
+            "张三和李四在地下仓库继续搜查。张三受伤但警觉，张三丢下了铜钥匙后准备封住入口。"
+          ],
+          "last_source_turn": 2,
+          "updated_at": "2026-03-31T18:32:12.864688",
+          "version": 1,
+          "metadata": {
+            "source": "lorebook_seed"
+          }
+        }
+      ],
+      "total": 2
+    },
+    "post_story_rollback_snapshot": {
+      "story_id": "3dee714e-8c59-4f5f-a32d-578803208ba9",
+      "session_id": "story-3dee714e-8c59-4f5f-a32d-578803208ba9-v2",
+      "entity_type": null,
+      "items": [
+        {
+          "story_id": "3dee714e-8c59-4f5f-a32d-578803208ba9",
+          "session_id": "story-3dee714e-8c59-4f5f-a32d-578803208ba9-v2",
+          "entity_id": "849c46df-dd9b-451f-9fd9-377cf0580d30",
+          "entity_type": "character",
+          "display_name": "张三",
+          "current_location": "钟楼顶层",
+          "inventory": [
+            "绷带",
+            "铜钥匙"
+          ],
+          "status_tags": [
+            "受伤",
+            "警觉",
+            "紧张"
+          ],
+          "companions": [
+            "ac417266-abfc-4226-add3-79d97b125cc7"
+          ],
+          "short_goal": "寻找机关入口",
+          "state_summary": "地点=钟楼顶层；状态=受伤,警觉,紧张；携带物=绷带,铜钥匙",
+          "evidence": [
+            "张三和李四在钟楼顶层，张三拿着铜钥匙。",
+            "张三受伤但警觉，李四紧张地观察门口。张三决定寻找机关入口。"
+          ],
+          "last_source_turn": 1,
+          "updated_at": "2026-03-31T18:32:13.255944",
+          "version": 1,
+          "metadata": {
+            "source": "lorebook_seed"
+          }
+        },
+        {
+          "story_id": "3dee714e-8c59-4f5f-a32d-578803208ba9",
+          "session_id": "story-3dee714e-8c59-4f5f-a32d-578803208ba9-v2",
+          "entity_id": "ac417266-abfc-4226-add3-79d97b125cc7",
+          "entity_type": "character",
+          "display_name": "李四",
+          "current_location": "钟楼顶层",
+          "inventory": [
+            "铜钥匙"
+          ],
+          "status_tags": [
+            "受伤",
+            "警觉",
+            "紧张"
+          ],
+          "companions": [
+            "849c46df-dd9b-451f-9fd9-377cf0580d30"
+          ],
+          "short_goal": null,
+          "state_summary": "地点=钟楼顶层；状态=受伤,警觉,紧张；携带物=铜钥匙",
+          "evidence": [
+            "张三和李四在钟楼顶层，张三拿着铜钥匙。",
+            "张三受伤但警觉，李四紧张地观察门口。张三决定寻找机关入口。"
+          ],
+          "last_source_turn": 1,
+          "updated_at": "2026-03-31T18:32:13.255944",
+          "version": 1,
+          "metadata": {
+            "source": "lorebook_seed"
+          }
+        }
+      ],
+      "total": 2
+    },
+    "final_timeline_entity_sources": [
+      "entity_state_session_rebuild_api",
+      "entity_state_story_rebuild_api",
+      "generate",
+      "regenerate",
+      "rollback",
+      "story_adjustment_commit",
+      "story_segment_rollback"
+    ]
+  }
+}

@@ -1,0 +1,857 @@
+{
+  "summary": {
+    "total": 22,
+    "passed": 22,
+    "failed": 0,
+    "all_passed": true,
+    "base_url": "http://127.0.0.1:8000",
+    "provider": "deepseek",
+    "model": "deepseek-chat",
+    "executed_at": "2026-03-29 22:20:22"
+  },
+  "checks": [
+    {
+      "name": "health",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "body": {
+          "status": "healthy",
+          "api_version": "v2"
+        }
+      }
+    },
+    {
+      "name": "provider_ready",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "provider": {
+          "provider": "deepseek",
+          "name": "DeepSeek",
+          "available": true,
+          "models": [
+            "deepseek-chat",
+            "deepseek-reasoner"
+          ],
+          "default_base_url": "https://api.deepseek.com",
+          "custom_base_url": "",
+          "protocol": "openai_compat"
+        }
+      }
+    },
+    {
+      "name": "provider_connection",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "body": {
+          "success": true,
+          "status": "ok",
+          "message": "连接成功，响应时间 474ms",
+          "latency_ms": 474
+        }
+      }
+    },
+    {
+      "name": "world_create",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "world_id": "6b001a9f-385e-40a3-8aa5-a06e76b9c268"
+      }
+    },
+    {
+      "name": "script_design_create",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "script_design_id": "2fd8821c-67c4-49c3-8a4e-e513c78a22d0"
+      }
+    },
+    {
+      "name": "story_create",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "story_id": "ff55ccc7-ddb2-49de-a8df-5de2217a73ea"
+      }
+    },
+    {
+      "name": "session_create",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "body": {
+          "session_id": "story-ff55ccc7-ddb2-49de-a8df-5de2217a73ea-v2",
+          "world_id": "6b001a9f-385e-40a3-8aa5-a06e76b9c268",
+          "character_card_id": null,
+          "persona_id": null,
+          "first_message": null,
+          "created_at": "2026-03-29T22:18:20.103081"
+        }
+      }
+    },
+    {
+      "name": "runtime_init",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "current_stage_id": "stage-1-af2a6338",
+        "current_event_id": "event-1-a988addc"
+      }
+    },
+    {
+      "name": "scripted_hold_no_transition",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "current_event_id": "event-1-a988addc",
+        "consistency_check": {
+          "passed": true,
+          "stage_alignment": "pass",
+          "event_alignment": "pass",
+          "foreshadow_alignment": "pass",
+          "unauthorized_entities": [],
+          "premature_payoff_ids": [],
+          "unsupported_completion": false,
+          "notes": [
+            "本轮仅描写，不自动推进剧情状态。"
+          ]
+        }
+      }
+    },
+    {
+      "name": "scripted_complete_phase1_progress",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "runtime": {
+          "id": "0a2c4b03-1778-4db6-aecc-13f628e20906",
+          "story_id": "ff55ccc7-ddb2-49de-a8df-5de2217a73ea",
+          "session_id": "story-ff55ccc7-ddb2-49de-a8df-5de2217a73ea-v2",
+          "world_id": "6b001a9f-385e-40a3-8aa5-a06e76b9c268",
+          "script_design_id": "2fd8821c-67c4-49c3-8a4e-e513c78a22d0",
+          "creation_mode": "scripted",
+          "current_stage_id": "stage-2-2c9ec4a1",
+          "current_event_id": "event-2-56ef1f7d",
+          "completed_event_ids": [
+            "event-1-a988addc"
+          ],
+          "skipped_event_ids": [],
+          "active_foreshadow_ids": [],
+          "paid_off_foreshadow_ids": [
+            "foreshadow-ledger-ac9da7d5"
+          ],
+          "abandoned_foreshadow_ids": [],
+          "current_location_entry_id": null,
+          "current_time_label": null,
+          "active_character_entry_ids": [],
+          "runtime_notes": null,
+          "last_contract_snapshot": {
+            "creation_mode": "scripted",
+            "script_design_id": "2fd8821c-67c4-49c3-8a4e-e513c78a22d0",
+            "stage_id": "stage-1-af2a6338",
+            "event_id": "event-1-a988addc",
+            "stage_title": "第一幕：雨夜入港",
+            "event_title": "拾得潮线账本",
+            "stage_goal": "建立危机与核心谜题",
+            "event_objective": "确认账本记录与失踪案有关",
+            "event_obstacle": "记录缺页且字迹被海水腐蚀",
+            "allowed_character_ids": [],
+            "allowed_location_ids": [],
+            "required_foreshadow_ids": [
+              "foreshadow-ledger-ac9da7d5"
+            ],
+            "highlighted_foreshadows": [
+              {
+                "id": "foreshadow-ledger-ac9da7d5",
+                "title": "潮线缺页",
+                "content": "账本缺失页在结尾揭示失踪真相",
+                "category": "mystery",
+                "planted_stage_id": "stage-1-af2a6338",
+                "planted_event_id": "event-1-a988addc",
+                "expected_payoff_stage_id": "stage-4-91c2ecbb",
+                "expected_payoff_event_id": "event-4-27bb5d07",
+                "payoff_description": "缺页作为关键证据公证",
+                "status": "planted",
+                "importance": "medium",
+                "notes": null
+              }
+            ],
+            "rag_scope_entry_ids": [],
+            "progress_intent": "complete",
+            "completion_guard": "主角决定追查灯塔"
+          },
+          "last_check_result": {
+            "passed": true,
+            "stage_alignment": "pass",
+            "event_alignment": "pass",
+            "foreshadow_alignment": "pass",
+            "unauthorized_entities": [],
+            "premature_payoff_ids": [],
+            "unsupported_completion": false,
+            "notes": []
+          },
+          "created_at": "2026-03-29T22:18:20.205121",
+          "updated_at": "2026-03-29T22:18:34.164503"
+        }
+      }
+    },
+    {
+      "name": "prompt_focus_shift_effective",
+      "passed": true,
+      "detail": {
+        "status_a": 200,
+        "status_b": 200,
+        "focus_a_keywords": [
+          "钟声",
+          "座钟",
+          "潮湿",
+          "海盐",
+          "铁锈",
+          "回声",
+          "空廊"
+        ],
+        "focus_b_keywords": [
+          "密码",
+          "密文",
+          "页码",
+          "符号",
+          "译码",
+          "坐标",
+          "重排"
+        ],
+        "score_a_on_a": 2,
+        "score_b_on_a": 0,
+        "score_a_on_b": 0,
+        "score_b_on_b": 5,
+        "sample_a": "灯塔的石阶盘旋向上，每一级都浸透了海盐与湿气。推开档案室铁门时，铰链发出锈蚀的呻吟。室内没有窗户，只有一盏煤油灯挂在低矮的天花板上，随着海风从门缝渗入而轻轻摇晃。\n\n墙边的木架挤满了泛黄的卷宗，潮气让纸张边缘卷曲发霉。你闻到旧纸、铁锈和某种更深的腥味混合在一起的气息——像是搁浅海藻在暗处腐烂的味道。账本被放在中央的木桌上，桌面的裂缝里嵌着细小的盐粒。\n\n远处传来雾笛低沉的鸣响，穿过石墙后变成模糊的呜咽。灯光将你的影子投在满墙的档案架上，那些装订线已经松脱的册子，在阴影里像一排排沉默的肋骨。",
+        "sample_b": "你翻开账本，直接定位到被撕页前后的记录。缺失页的上一页末尾写着:“潮高基准值偏移+1.7尺”，下一页开头却是“今日无异常”——这中间的断层明显有问题。\n\n**第一步:页码重排**\n正常页码是连续的阿拉伯数字，但仔细观察装订孔附近的痕迹，发现第34页与第35页之间有过重新装订的迹象。将第34页之后的所有页码减去3，得到新的序列:原37页变为34页，原40页变为37页...\n\n**第二步:潮汐密码对应**\n调整后的第34页(原37页)出现了异常符号:在潮汐高度数据旁，每隔三行就有一个不起眼的波浪线标记。将这些标记行的潮"
+      }
+    },
+    {
+      "name": "scripted_complete_phase2_progress",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "runtime": {
+          "id": "0a2c4b03-1778-4db6-aecc-13f628e20906",
+          "story_id": "ff55ccc7-ddb2-49de-a8df-5de2217a73ea",
+          "session_id": "story-ff55ccc7-ddb2-49de-a8df-5de2217a73ea-v2",
+          "world_id": "6b001a9f-385e-40a3-8aa5-a06e76b9c268",
+          "script_design_id": "2fd8821c-67c4-49c3-8a4e-e513c78a22d0",
+          "creation_mode": "scripted",
+          "current_stage_id": "stage-3-b245425a",
+          "current_event_id": "event-3-a84d844f",
+          "completed_event_ids": [
+            "event-1-a988addc",
+            "event-2-56ef1f7d"
+          ],
+          "skipped_event_ids": [],
+          "active_foreshadow_ids": [],
+          "paid_off_foreshadow_ids": [
+            "foreshadow-ledger-ac9da7d5"
+          ],
+          "abandoned_foreshadow_ids": [],
+          "current_location_entry_id": null,
+          "current_time_label": null,
+          "active_character_entry_ids": [],
+          "runtime_notes": null,
+          "last_contract_snapshot": {
+            "creation_mode": "scripted",
+            "script_design_id": "2fd8821c-67c4-49c3-8a4e-e513c78a22d0",
+            "stage_id": "stage-2-2c9ec4a1",
+            "event_id": "event-2-56ef1f7d",
+            "stage_title": "第二幕：账本解码",
+            "event_title": "解码账本页码",
+            "stage_goal": "解出加密页码并定位灯塔",
+            "event_objective": "解析账本中的潮汐密码",
+            "event_obstacle": "密文掺杂伪造条目",
+            "allowed_character_ids": [],
+            "allowed_location_ids": [],
+            "required_foreshadow_ids": [],
+            "highlighted_foreshadows": [],
+            "rag_scope_entry_ids": [],
+            "progress_intent": "complete",
+            "completion_guard": "锁定灯塔地下仓库"
+          },
+          "last_check_result": {
+            "passed": true,
+            "stage_alignment": "pass",
+            "event_alignment": "pass",
+            "foreshadow_alignment": "pass",
+            "unauthorized_entities": [],
+            "premature_payoff_ids": [],
+            "unsupported_completion": false,
+            "notes": []
+          },
+          "created_at": "2026-03-29T22:18:20.205121",
+          "updated_at": "2026-03-29T22:19:02.773024"
+        }
+      }
+    },
+    {
+      "name": "scripted_advance_no_complete",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "runtime": {
+          "id": "0a2c4b03-1778-4db6-aecc-13f628e20906",
+          "story_id": "ff55ccc7-ddb2-49de-a8df-5de2217a73ea",
+          "session_id": "story-ff55ccc7-ddb2-49de-a8df-5de2217a73ea-v2",
+          "world_id": "6b001a9f-385e-40a3-8aa5-a06e76b9c268",
+          "script_design_id": "2fd8821c-67c4-49c3-8a4e-e513c78a22d0",
+          "creation_mode": "scripted",
+          "current_stage_id": "stage-3-b245425a",
+          "current_event_id": "event-3-a84d844f",
+          "completed_event_ids": [
+            "event-1-a988addc",
+            "event-2-56ef1f7d"
+          ],
+          "skipped_event_ids": [],
+          "active_foreshadow_ids": [],
+          "paid_off_foreshadow_ids": [
+            "foreshadow-ledger-ac9da7d5"
+          ],
+          "abandoned_foreshadow_ids": [],
+          "current_location_entry_id": null,
+          "current_time_label": null,
+          "active_character_entry_ids": [],
+          "runtime_notes": null,
+          "last_contract_snapshot": {
+            "creation_mode": "scripted",
+            "script_design_id": "2fd8821c-67c4-49c3-8a4e-e513c78a22d0",
+            "stage_id": "stage-3-b245425a",
+            "event_id": "event-3-a84d844f",
+            "stage_title": "第三幕：灯塔对峙",
+            "event_title": "灯塔仓库对峙",
+            "stage_goal": "与港务长正面冲突",
+            "event_objective": "阻止证据焚毁",
+            "event_obstacle": "港务长提前设伏",
+            "allowed_character_ids": [],
+            "allowed_location_ids": [],
+            "required_foreshadow_ids": [],
+            "highlighted_foreshadows": [],
+            "rag_scope_entry_ids": [],
+            "progress_intent": "advance",
+            "completion_guard": "保住关键账页"
+          },
+          "last_check_result": {
+            "passed": true,
+            "stage_alignment": "pass",
+            "event_alignment": "pass",
+            "foreshadow_alignment": "pass",
+            "unauthorized_entities": [],
+            "premature_payoff_ids": [],
+            "unsupported_completion": false,
+            "notes": []
+          },
+          "created_at": "2026-03-29T22:18:20.205121",
+          "updated_at": "2026-03-29T22:19:14.817623"
+        }
+      }
+    },
+    {
+      "name": "scripted_complete_phase3_progress",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "runtime": {
+          "id": "0a2c4b03-1778-4db6-aecc-13f628e20906",
+          "story_id": "ff55ccc7-ddb2-49de-a8df-5de2217a73ea",
+          "session_id": "story-ff55ccc7-ddb2-49de-a8df-5de2217a73ea-v2",
+          "world_id": "6b001a9f-385e-40a3-8aa5-a06e76b9c268",
+          "script_design_id": "2fd8821c-67c4-49c3-8a4e-e513c78a22d0",
+          "creation_mode": "scripted",
+          "current_stage_id": "stage-4-91c2ecbb",
+          "current_event_id": "event-4-27bb5d07",
+          "completed_event_ids": [
+            "event-1-a988addc",
+            "event-2-56ef1f7d",
+            "event-3-a84d844f"
+          ],
+          "skipped_event_ids": [],
+          "active_foreshadow_ids": [],
+          "paid_off_foreshadow_ids": [
+            "foreshadow-ledger-ac9da7d5"
+          ],
+          "abandoned_foreshadow_ids": [],
+          "current_location_entry_id": null,
+          "current_time_label": null,
+          "active_character_entry_ids": [],
+          "runtime_notes": null,
+          "last_contract_snapshot": {
+            "creation_mode": "scripted",
+            "script_design_id": "2fd8821c-67c4-49c3-8a4e-e513c78a22d0",
+            "stage_id": "stage-3-b245425a",
+            "event_id": "event-3-a84d844f",
+            "stage_title": "第三幕：灯塔对峙",
+            "event_title": "灯塔仓库对峙",
+            "stage_goal": "与港务长正面冲突",
+            "event_objective": "阻止证据焚毁",
+            "event_obstacle": "港务长提前设伏",
+            "allowed_character_ids": [],
+            "allowed_location_ids": [],
+            "required_foreshadow_ids": [],
+            "highlighted_foreshadows": [],
+            "rag_scope_entry_ids": [],
+            "progress_intent": "complete",
+            "completion_guard": "保住关键账页"
+          },
+          "last_check_result": {
+            "passed": true,
+            "stage_alignment": "pass",
+            "event_alignment": "pass",
+            "foreshadow_alignment": "pass",
+            "unauthorized_entities": [],
+            "premature_payoff_ids": [],
+            "unsupported_completion": false,
+            "notes": []
+          },
+          "created_at": "2026-03-29T22:18:20.205121",
+          "updated_at": "2026-03-29T22:19:36.818250"
+        }
+      }
+    },
+    {
+      "name": "scripted_complete_final_phase",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "runtime": {
+          "id": "0a2c4b03-1778-4db6-aecc-13f628e20906",
+          "story_id": "ff55ccc7-ddb2-49de-a8df-5de2217a73ea",
+          "session_id": "story-ff55ccc7-ddb2-49de-a8df-5de2217a73ea-v2",
+          "world_id": "6b001a9f-385e-40a3-8aa5-a06e76b9c268",
+          "script_design_id": "2fd8821c-67c4-49c3-8a4e-e513c78a22d0",
+          "creation_mode": "scripted",
+          "current_stage_id": "stage-4-91c2ecbb",
+          "current_event_id": "event-4-27bb5d07",
+          "completed_event_ids": [
+            "event-1-a988addc",
+            "event-2-56ef1f7d",
+            "event-3-a84d844f",
+            "event-4-27bb5d07"
+          ],
+          "skipped_event_ids": [],
+          "active_foreshadow_ids": [],
+          "paid_off_foreshadow_ids": [
+            "foreshadow-ledger-ac9da7d5"
+          ],
+          "abandoned_foreshadow_ids": [],
+          "current_location_entry_id": null,
+          "current_time_label": null,
+          "active_character_entry_ids": [],
+          "runtime_notes": null,
+          "last_contract_snapshot": {
+            "creation_mode": "scripted",
+            "script_design_id": "2fd8821c-67c4-49c3-8a4e-e513c78a22d0",
+            "stage_id": "stage-4-91c2ecbb",
+            "event_id": "event-4-27bb5d07",
+            "stage_title": "第四幕：破晓收束",
+            "event_title": "黎明公证",
+            "stage_goal": "公布真相并给出代价",
+            "event_objective": "公开账本真相并承担代价",
+            "event_obstacle": "港口将爆发罢工与报复",
+            "allowed_character_ids": [],
+            "allowed_location_ids": [],
+            "required_foreshadow_ids": [
+              "foreshadow-ledger-ac9da7d5"
+            ],
+            "highlighted_foreshadows": [
+              {
+                "id": "foreshadow-ledger-ac9da7d5",
+                "title": "潮线缺页",
+                "content": "账本缺失页在结尾揭示失踪真相",
+                "category": "mystery",
+                "planted_stage_id": "stage-1-af2a6338",
+                "planted_event_id": "event-1-a988addc",
+                "expected_payoff_stage_id": "stage-4-91c2ecbb",
+                "expected_payoff_event_id": "event-4-27bb5d07",
+                "payoff_description": "缺页作为关键证据公证",
+                "status": "planted",
+                "importance": "medium",
+                "notes": null
+              }
+            ],
+            "rag_scope_entry_ids": [],
+            "progress_intent": "complete",
+            "completion_guard": "主线收束并回收伏笔"
+          },
+          "last_check_result": {
+            "passed": true,
+            "stage_alignment": "pass",
+            "event_alignment": "pass",
+            "foreshadow_alignment": "pass",
+            "unauthorized_entities": [],
+            "premature_payoff_ids": [],
+            "unsupported_completion": false,
+            "notes": []
+          },
+          "created_at": "2026-03-29T22:18:20.205121",
+          "updated_at": "2026-03-29T22:20:02.643685"
+        }
+      }
+    },
+    {
+      "name": "set_runtime_initial_snapshot",
+      "passed": true,
+      "detail": {
+        "status": 200
+      }
+    },
+    {
+      "name": "seed_segments_for_rollback",
+      "passed": true,
+      "detail": {
+        "status_seg_1": 200,
+        "status_seg_2": 200,
+        "status_story": 200,
+        "segment_count_before": 2
+      }
+    },
+    {
+      "name": "session_rollback_step1",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "body": {
+          "deleted": true,
+          "session_id": "story-ff55ccc7-ddb2-49de-a8df-5de2217a73ea-v2",
+          "detail": "Last message deleted",
+          "memory_updates": [
+            {
+              "event_id": "efceaa07-9b75-4701-8f96-461eedafede3",
+              "session_id": "story-ff55ccc7-ddb2-49de-a8df-5de2217a73ea-v2",
+              "operation_id": "rollback:4839175e-ea35-4b83-9723-fbe1f7a44233",
+              "sequence": 1,
+              "display_kind": "session_rebuild",
+              "memory_layer": "episodic",
+              "action": "rebuilt",
+              "source": "rollback",
+              "source_turn": null,
+              "memory_key": "story_session_messages",
+              "title": "会话上下文已根据最新消息重建",
+              "reason": null,
+              "before": null,
+              "after": {
+                "message_count": 15
+              },
+              "status": "committed",
+              "committed_at": "2026-03-29T22:20:03.015317"
+            },
+            {
+              "event_id": "6e2ee148-5692-4449-9718-225cd9bd6214",
+              "session_id": "story-ff55ccc7-ddb2-49de-a8df-5de2217a73ea-v2",
+              "operation_id": "rollback:4839175e-ea35-4b83-9723-fbe1f7a44233",
+              "sequence": 2,
+              "display_kind": "index_rebuild",
+              "memory_layer": "episodic",
+              "action": "reindexed",
+              "source": "rollback",
+              "source_turn": null,
+              "memory_key": "conversation_history_index",
+              "title": "历史向量索引已重建",
+              "reason": null,
+              "before": null,
+              "after": {
+                "indexed_message_count": 15
+              },
+              "status": "committed",
+              "committed_at": "2026-03-29T22:20:04.492553"
+            },
+            {
+              "event_id": "8d40a8aa-cc85-44ef-8e12-6a52e2328bd2",
+              "session_id": "story-ff55ccc7-ddb2-49de-a8df-5de2217a73ea-v2",
+              "operation_id": "rollback:4839175e-ea35-4b83-9723-fbe1f7a44233",
+              "sequence": 3,
+              "display_kind": "semantic_reset",
+              "memory_layer": "semantic",
+              "action": "reset",
+              "source": "rollback",
+              "source_turn": null,
+              "memory_key": "conversation_summary",
+              "title": "摘要记忆已重置",
+              "reason": "消息历史发生回退，旧摘要不再可信",
+              "before": null,
+              "after": null,
+              "status": "committed",
+              "committed_at": "2026-03-29T22:20:04.502776"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "strict_rollback_restore_previous_runtime",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "segment_count_after": 1,
+        "expected_prev_event": "event-4-27bb5d07",
+        "runtime_state": {
+          "id": "0a2c4b03-1778-4db6-aecc-13f628e20906",
+          "story_id": "ff55ccc7-ddb2-49de-a8df-5de2217a73ea",
+          "session_id": "story-ff55ccc7-ddb2-49de-a8df-5de2217a73ea-v2",
+          "world_id": "6b001a9f-385e-40a3-8aa5-a06e76b9c268",
+          "script_design_id": "2fd8821c-67c4-49c3-8a4e-e513c78a22d0",
+          "creation_mode": "scripted",
+          "current_stage_id": "stage-4-91c2ecbb",
+          "current_event_id": "event-4-27bb5d07",
+          "completed_event_ids": [
+            "event-1-a988addc",
+            "event-2-56ef1f7d",
+            "event-3-a84d844f"
+          ],
+          "skipped_event_ids": [],
+          "active_foreshadow_ids": [],
+          "paid_off_foreshadow_ids": [
+            "foreshadow-ledger-ac9da7d5"
+          ],
+          "abandoned_foreshadow_ids": [],
+          "current_location_entry_id": null,
+          "current_time_label": null,
+          "active_character_entry_ids": [],
+          "runtime_notes": null,
+          "last_contract_snapshot": {
+            "creation_mode": "scripted",
+            "script_design_id": "2fd8821c-67c4-49c3-8a4e-e513c78a22d0",
+            "stage_id": "stage-3-b245425a",
+            "event_id": "event-3-a84d844f",
+            "stage_title": "第三幕：灯塔对峙",
+            "event_title": "灯塔仓库对峙",
+            "stage_goal": "与港务长正面冲突",
+            "event_objective": "阻止证据焚毁",
+            "event_obstacle": "港务长提前设伏",
+            "allowed_character_ids": [],
+            "allowed_location_ids": [],
+            "required_foreshadow_ids": [],
+            "highlighted_foreshadows": [],
+            "rag_scope_entry_ids": [],
+            "progress_intent": "complete",
+            "completion_guard": "保住关键账页"
+          },
+          "last_check_result": {
+            "passed": true,
+            "stage_alignment": "pass",
+            "event_alignment": "pass",
+            "foreshadow_alignment": "pass",
+            "unauthorized_entities": [],
+            "premature_payoff_ids": [],
+            "unsupported_completion": false,
+            "notes": []
+          },
+          "created_at": "2026-03-29T22:18:20.205121",
+          "updated_at": "2026-03-29T22:20:04.538221"
+        }
+      }
+    },
+    {
+      "name": "session_rollback_step2",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "body": {
+          "deleted": true,
+          "session_id": "story-ff55ccc7-ddb2-49de-a8df-5de2217a73ea-v2",
+          "detail": "Last message deleted",
+          "memory_updates": [
+            {
+              "event_id": "999e0c78-0c14-4b9a-8ce2-3e1deb61a6d0",
+              "session_id": "story-ff55ccc7-ddb2-49de-a8df-5de2217a73ea-v2",
+              "operation_id": "rollback:2ce78ef6-50a2-48da-81a3-bb1f27c4fa48",
+              "sequence": 1,
+              "display_kind": "session_rebuild",
+              "memory_layer": "episodic",
+              "action": "rebuilt",
+              "source": "rollback",
+              "source_turn": null,
+              "memory_key": "story_session_messages",
+              "title": "会话上下文已根据最新消息重建",
+              "reason": null,
+              "before": null,
+              "after": {
+                "message_count": 14
+              },
+              "status": "committed",
+              "committed_at": "2026-03-29T22:20:04.578147"
+            },
+            {
+              "event_id": "f3f45489-29f4-4890-86df-e65dc82ee42b",
+              "session_id": "story-ff55ccc7-ddb2-49de-a8df-5de2217a73ea-v2",
+              "operation_id": "rollback:2ce78ef6-50a2-48da-81a3-bb1f27c4fa48",
+              "sequence": 2,
+              "display_kind": "index_rebuild",
+              "memory_layer": "episodic",
+              "action": "reindexed",
+              "source": "rollback",
+              "source_turn": null,
+              "memory_key": "conversation_history_index",
+              "title": "历史向量索引已重建",
+              "reason": null,
+              "before": null,
+              "after": {
+                "indexed_message_count": 14
+              },
+              "status": "committed",
+              "committed_at": "2026-03-29T22:20:06.008493"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "strict_rollback_restore_initial_runtime",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "segment_count_after": 0,
+        "expected_initial_event": "event-1-a988addc",
+        "runtime_state": {
+          "id": "0a2c4b03-1778-4db6-aecc-13f628e20906",
+          "story_id": "ff55ccc7-ddb2-49de-a8df-5de2217a73ea",
+          "session_id": "story-ff55ccc7-ddb2-49de-a8df-5de2217a73ea-v2",
+          "world_id": "6b001a9f-385e-40a3-8aa5-a06e76b9c268",
+          "script_design_id": "2fd8821c-67c4-49c3-8a4e-e513c78a22d0",
+          "creation_mode": "scripted",
+          "current_stage_id": "stage-1-af2a6338",
+          "current_event_id": "event-1-a988addc",
+          "completed_event_ids": [],
+          "skipped_event_ids": [],
+          "active_foreshadow_ids": [
+            "foreshadow-ledger-ac9da7d5"
+          ],
+          "paid_off_foreshadow_ids": [],
+          "abandoned_foreshadow_ids": [],
+          "current_location_entry_id": null,
+          "current_time_label": null,
+          "active_character_entry_ids": [],
+          "runtime_notes": null,
+          "last_contract_snapshot": null,
+          "last_check_result": null,
+          "created_at": "2026-03-29T22:18:20.205121",
+          "updated_at": "2026-03-29T22:20:06.043434"
+        }
+      }
+    },
+    {
+      "name": "dual_mode_branching",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "creation_mode": "improv",
+        "consistency_check": null
+      }
+    }
+  ],
+  "evidence": {
+    "world_id": "6b001a9f-385e-40a3-8aa5-a06e76b9c268",
+    "story_id": "ff55ccc7-ddb2-49de-a8df-5de2217a73ea",
+    "session_id": "story-ff55ccc7-ddb2-49de-a8df-5de2217a73ea-v2",
+    "script_design_id": "2fd8821c-67c4-49c3-8a4e-e513c78a22d0",
+    "phase_ids": {
+      "stage_ids": [
+        "stage-1-af2a6338",
+        "stage-2-2c9ec4a1",
+        "stage-3-b245425a",
+        "stage-4-91c2ecbb"
+      ],
+      "event_ids": [
+        "event-1-a988addc",
+        "event-2-56ef1f7d",
+        "event-3-a84d844f",
+        "event-4-27bb5d07"
+      ],
+      "foreshadow_id": "foreshadow-ledger-ac9da7d5"
+    },
+    "prompt_focus_scores": {
+      "score_a_on_a": 2,
+      "score_b_on_a": 0,
+      "score_a_on_b": 0,
+      "score_b_on_b": 5
+    },
+    "rollback_validation": {
+      "segments_before": 2,
+      "segments_after_first_rollback": 1,
+      "segments_after_second_rollback": 0,
+      "expected_previous_event": "event-4-27bb5d07",
+      "expected_initial_event": "event-1-a988addc",
+      "restored_event_after_first_rollback": "event-4-27bb5d07",
+      "restored_event_after_second_rollback": "event-1-a988addc"
+    },
+    "final_runtime": {
+      "id": "0a2c4b03-1778-4db6-aecc-13f628e20906",
+      "story_id": "ff55ccc7-ddb2-49de-a8df-5de2217a73ea",
+      "session_id": "story-ff55ccc7-ddb2-49de-a8df-5de2217a73ea-v2",
+      "world_id": "6b001a9f-385e-40a3-8aa5-a06e76b9c268",
+      "script_design_id": "2fd8821c-67c4-49c3-8a4e-e513c78a22d0",
+      "creation_mode": "scripted",
+      "current_stage_id": "stage-4-91c2ecbb",
+      "current_event_id": "event-4-27bb5d07",
+      "completed_event_ids": [
+        "event-1-a988addc",
+        "event-2-56ef1f7d",
+        "event-3-a84d844f",
+        "event-4-27bb5d07"
+      ],
+      "skipped_event_ids": [],
+      "active_foreshadow_ids": [],
+      "paid_off_foreshadow_ids": [
+        "foreshadow-ledger-ac9da7d5"
+      ],
+      "abandoned_foreshadow_ids": [],
+      "current_location_entry_id": null,
+      "current_time_label": null,
+      "active_character_entry_ids": [],
+      "runtime_notes": null,
+      "last_contract_snapshot": {
+        "creation_mode": "scripted",
+        "script_design_id": "2fd8821c-67c4-49c3-8a4e-e513c78a22d0",
+        "stage_id": "stage-4-91c2ecbb",
+        "event_id": "event-4-27bb5d07",
+        "stage_title": "第四幕：破晓收束",
+        "event_title": "黎明公证",
+        "stage_goal": "公布真相并给出代价",
+        "event_objective": "公开账本真相并承担代价",
+        "event_obstacle": "港口将爆发罢工与报复",
+        "allowed_character_ids": [],
+        "allowed_location_ids": [],
+        "required_foreshadow_ids": [
+          "foreshadow-ledger-ac9da7d5"
+        ],
+        "highlighted_foreshadows": [
+          {
+            "id": "foreshadow-ledger-ac9da7d5",
+            "title": "潮线缺页",
+            "content": "账本缺失页在结尾揭示失踪真相",
+            "category": "mystery",
+            "planted_stage_id": "stage-1-af2a6338",
+            "planted_event_id": "event-1-a988addc",
+            "expected_payoff_stage_id": "stage-4-91c2ecbb",
+            "expected_payoff_event_id": "event-4-27bb5d07",
+            "payoff_description": "缺页作为关键证据公证",
+            "status": "planted",
+            "importance": "medium",
+            "notes": null
+          }
+        ],
+        "rag_scope_entry_ids": [],
+        "progress_intent": "complete",
+        "completion_guard": "主线收束并回收伏笔"
+      },
+      "last_check_result": {
+        "passed": true,
+        "stage_alignment": "pass",
+        "event_alignment": "pass",
+        "foreshadow_alignment": "pass",
+        "unauthorized_entities": [],
+        "premature_payoff_ids": [],
+        "unsupported_completion": false,
+        "notes": []
+      },
+      "created_at": "2026-03-29T22:18:20.205121",
+      "updated_at": "2026-03-29T22:20:02.643685"
+    }
+  }
+}

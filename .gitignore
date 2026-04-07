@@ -1,0 +1,181 @@
+# Operating System
+.DS_Store
+Thumbs.db
+
+data
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Flutter
+chatbox_app/.dart_tool/
+chatbox_app/.flutter-plugins
+chatbox_app/.flutter-plugins-dependencies
+chatbox_app/.packages
+chatbox_app/.pub-cache/
+chatbox_app/.pub/
+chatbox_app/build/
+chatbox_app/.flutter-devtools/
+
+# Flutter iOS
+chatbox_app/ios/Flutter/flutter_export_environment.sh
+chatbox_app/ios/Flutter/Flutter.framework
+chatbox_app/ios/Flutter/Flutter.podspec
+chatbox_app/ios/Flutter/App.framework
+chatbox_app/ios/Flutter/Generated.xcconfig
+chatbox_app/ios/Pods/
+chatbox_app/ios/.symlinks/
+chatbox_app/ios/ServiceDefinitions.json
+chatbox_app/ios/Runner/GeneratedPluginRegistrant.*
+
+# Flutter Android
+chatbox_app/android/.gradle
+chatbox_app/android/captures/
+chatbox_app/android/gradlew
+chatbox_app/android/gradlew.bat
+chatbox_app/android/local.properties
+chatbox_app/android/**/GeneratedPluginRegistrant.*
+chatbox_app/android/key.properties
+chatbox_app/android/.idea
+chatbox_app/android/.gradle/
+
+# Flutter Web
+chatbox_app/web/flutter_service_worker.js
+chatbox_app/web/index.html
+chatbox_app/web/manifest.json
+
+# Node.js / Vue
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+frontend/.cache/
+frontend/.temp/
+frontend/.vitepress/dist/
+frontend/*.local
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/pnpm-debug.log*
+frontend/.env.local
+frontend/.env.*.local
+frontend/playwright-report/
+frontend/test-results/
+
+# Python
+backend/__pycache__/
+backend/*.py[cod]
+backend/*$py.class
+backend/*.so
+backend/.Python
+backend/env/
+backend/venv/
+backend/ENV/
+backend/build/
+backend/develop-eggs/
+backend/dist/
+backend/downloads/
+backend/eggs/
+backend/.eggs/
+backend/lib/
+backend/lib64/
+backend/parts/
+backend/sdist/
+backend/var/
+backend/wheels/
+backend/pip-wheel-metadata/
+backend/*.egg-info/
+backend/.installed.cfg
+backend/*.egg
+backend/MANIFEST
+backend/htmlcov/
+backend/.tox/
+backend/.coverage
+backend/.coverage.*
+backend/.cache
+backend/nosetests.xml
+backend/coverage.xml
+backend/*.cover
+backend/.hypothesis/
+backend/.pytest_cache/
+backend/instance/
+backend/.webassets-cache
+backend/.scrapy
+backend/docs/_build/
+backend/target/
+backend/.ipynb_checkpoints
+backend/.pytype/
+
+# Database
+backend/*.db
+backend/*.sqlite
+backend/*.sqlite3
+
+# Environment Variables
+.env
+.env.local
+.env.*.local
+backend/.env
+frontend/.env
+
+# Logs
+*.log
+logs/
+
+# Test Coverage
+coverage/
+.nyc_output/
+
+# Temporary Files
+*.tmp
+*.bak
+*.swp
+*~.nib
+local.properties
+
+# Package Files
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Security
+*.pem
+*.key
+*.cert
+*.p12
+*.jks
+secrets/
+credentials/
+
+# Build Artifacts
+chatbox_app/assets/frontend/
+!chatbox_app/assets/frontend/.gitkeep
+
+# OS Generated Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Docker
+.dockerignore
+docker-compose.override.yml
+
+# Generated Documentation
+docs/_build/
+site/
+
+node_modules
+myenv
+venv-linux 
+毕设参考文献
+.git_broken_*

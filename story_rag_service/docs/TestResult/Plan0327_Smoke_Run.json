@@ -1,0 +1,612 @@
+{
+  "meta": {
+    "base_url": "http://127.0.0.1:8012",
+    "user_id": "user_1773820783085_bk1gzshza",
+    "provider": "deepseek",
+    "model": "deepseek-chat",
+    "profile": "all"
+  },
+  "runs": [
+    {
+      "result": {
+        "profile": "A",
+        "checks": [
+          {
+            "name": "health",
+            "passed": true,
+            "detail": {
+              "status": 200,
+              "body": {
+                "status": "healthy",
+                "api_version": "v2"
+              }
+            }
+          },
+          {
+            "name": "providers_ready",
+            "passed": true,
+            "detail": {
+              "status": 200,
+              "provider": {
+                "provider": "deepseek",
+                "name": "DeepSeek",
+                "available": true,
+                "models": [
+                  "deepseek-chat",
+                  "deepseek-reasoner"
+                ],
+                "default_base_url": "https://api.deepseek.com",
+                "custom_base_url": "",
+                "protocol": "openai_compat"
+              }
+            }
+          },
+          {
+            "name": "provider_connection",
+            "passed": true,
+            "detail": {
+              "status": 200,
+              "body": {
+                "success": true,
+                "status": "ok",
+                "message": "连接成功，响应时间 1130ms",
+                "latency_ms": 1130
+              }
+            }
+          },
+          {
+            "name": "session_create",
+            "passed": true,
+            "detail": {
+              "status": 200,
+              "body": {
+                "session_id": "plan0327-a-1774624230-17e870",
+                "world_id": null,
+                "character_card_id": null,
+                "persona_id": null,
+                "first_message": null,
+                "created_at": "2026-03-27T23:10:30.202317"
+              }
+            }
+          },
+          {
+            "name": "generate_round_1",
+            "passed": true,
+            "detail": {
+              "status": 200,
+              "actions": [
+                "episodic:updated:generate"
+              ]
+            }
+          },
+          {
+            "name": "generate_round_2",
+            "passed": true,
+            "detail": {
+              "status": 200,
+              "actions": [
+                "episodic:updated:generate"
+              ]
+            }
+          },
+          {
+            "name": "db_after_generate",
+            "passed": true,
+            "detail": {
+              "message_count": 4
+            }
+          },
+          {
+            "name": "rollback_contract",
+            "passed": true,
+            "detail": {
+              "status": 200,
+              "actions": [
+                "episodic:rebuilt:rollback",
+                "episodic:reindexed:rollback"
+              ]
+            }
+          },
+          {
+            "name": "regenerate_contract",
+            "passed": true,
+            "detail": {
+              "status": 200,
+              "actions": [
+                "episodic:rebuilt:regenerate",
+                "episodic:reindexed:regenerate",
+                "episodic:updated:generate"
+              ]
+            }
+          },
+          {
+            "name": "world_create",
+            "passed": true,
+            "detail": {
+              "status": 200,
+              "world_id": "67c5da71-cd67-4be5-b9eb-2e6be2fc67ee"
+            }
+          },
+          {
+            "name": "story_create",
+            "passed": true,
+            "detail": {
+              "status": 200,
+              "story_id": "07c43250-194a-433f-89b8-b2491f1e7eee"
+            }
+          },
+          {
+            "name": "segment_create",
+            "passed": true,
+            "detail": {
+              "status": 200,
+              "segment_id": "40e617cb-2375-4070-bc70-705da80c9928"
+            }
+          },
+          {
+            "name": "polish",
+            "passed": true,
+            "detail": {
+              "status": 200,
+              "polished_text": "一把布满铜绿的钥匙"
+            }
+          },
+          {
+            "name": "draft_only",
+            "passed": true,
+            "detail": {
+              "before_text": "主角在阁楼里找到一把铜钥匙。"
+            }
+          },
+          {
+            "name": "commit_contract",
+            "passed": true,
+            "detail": {
+              "status": 200,
+              "actions": [
+                "episodic:rebuilt:story_adjustment_commit",
+                "episodic:reindexed:story_adjustment_commit"
+              ]
+            }
+          },
+          {
+            "name": "commit_persisted",
+            "passed": true,
+            "detail": {
+              "after_text": "主角在阁楼里找到一把一把布满铜绿的钥匙。"
+            }
+          }
+        ],
+        "evidence": {
+          "session_id": "plan0327-a-1774624230-17e870",
+          "journal_tail": [
+            {
+              "memory_layer": "episodic",
+              "action": "updated",
+              "source": "generate",
+              "status": "committed",
+              "committed_at": "2026-03-27T23:10:55.772990"
+            },
+            {
+              "memory_layer": "episodic",
+              "action": "reindexed",
+              "source": "regenerate",
+              "status": "committed",
+              "committed_at": "2026-03-27T23:10:47.531719"
+            },
+            {
+              "memory_layer": "episodic",
+              "action": "rebuilt",
+              "source": "regenerate",
+              "status": "committed",
+              "committed_at": "2026-03-27T23:10:47.411609"
+            },
+            {
+              "memory_layer": "episodic",
+              "action": "reindexed",
+              "source": "rollback",
+              "status": "committed",
+              "committed_at": "2026-03-27T23:10:47.374814"
+            },
+            {
+              "memory_layer": "episodic",
+              "action": "rebuilt",
+              "source": "rollback",
+              "status": "committed",
+              "committed_at": "2026-03-27T23:10:47.157226"
+            },
+            {
+              "memory_layer": "episodic",
+              "action": "updated",
+              "source": "generate",
+              "status": "committed",
+              "committed_at": "2026-03-27T23:10:47.096252"
+            },
+            {
+              "memory_layer": "episodic",
+              "action": "updated",
+              "source": "generate",
+              "status": "committed",
+              "committed_at": "2026-03-27T23:10:39.871207"
+            }
+          ],
+          "message_count": 4
+        }
+      },
+      "summary": {
+        "profile": "A",
+        "total": 16,
+        "passed": 16,
+        "failed": 0,
+        "failed_checks": []
+      }
+    },
+    {
+      "result": {
+        "profile": "B",
+        "checks": [
+          {
+            "name": "health",
+            "passed": true,
+            "detail": {
+              "status": 200,
+              "body": {
+                "status": "healthy",
+                "api_version": "v2"
+              }
+            }
+          },
+          {
+            "name": "providers_ready",
+            "passed": true,
+            "detail": {
+              "status": 200,
+              "provider": {
+                "provider": "deepseek",
+                "name": "DeepSeek",
+                "available": true,
+                "models": [
+                  "deepseek-chat",
+                  "deepseek-reasoner"
+                ],
+                "default_base_url": "https://api.deepseek.com",
+                "custom_base_url": "",
+                "protocol": "openai_compat"
+              }
+            }
+          },
+          {
+            "name": "provider_connection",
+            "passed": true,
+            "detail": {
+              "status": 200,
+              "body": {
+                "success": true,
+                "status": "ok",
+                "message": "连接成功，响应时间 1186ms",
+                "latency_ms": 1186
+              }
+            }
+          },
+          {
+            "name": "session_create",
+            "passed": true,
+            "detail": {
+              "status": 200,
+              "body": {
+                "session_id": "plan0327-b-1774624258-140c14",
+                "world_id": null,
+                "character_card_id": null,
+                "persona_id": null,
+                "first_message": null,
+                "created_at": "2026-03-27T23:10:58.872002"
+              }
+            }
+          },
+          {
+            "name": "summary_materialized",
+            "passed": true,
+            "detail": {
+              "rounds": [
+                {
+                  "round": 1,
+                  "status": 200,
+                  "summary_exists": false,
+                  "actions": [
+                    "episodic:updated:generate"
+                  ]
+                },
+                {
+                  "round": 2,
+                  "status": 200,
+                  "summary_exists": false,
+                  "actions": [
+                    "episodic:updated:generate"
+                  ]
+                },
+                {
+                  "round": 3,
+                  "status": 200,
+                  "summary_exists": false,
+                  "actions": [
+                    "episodic:updated:generate"
+                  ]
+                },
+                {
+                  "round": 4,
+                  "status": 200,
+                  "summary_exists": true,
+                  "actions": [
+                    "episodic:updated:generate",
+                    "semantic:created:generate"
+                  ]
+                }
+              ],
+              "summary": {
+                "exists": true,
+                "summary_text": "会话近期推进：\n- 玩家近期行动: B链路第2轮：归纳线索并推进剧情。 / B链路第3轮：归纳线索并推进剧情。 / B链路第4轮：归纳线索并推进剧情。\n- 近期剧情反馈: 你迅速熄灭台灯，在黑暗中屏住呼吸。脚步声在楼梯口停顿了片刻，随后继续向上——缓慢而谨慎，每一步都踩在木质台阶的吱呀处。你摸向桌边 / 你踩到潮湿的防火梯底部，落脚处溅起细小的水花。巷子里弥漫着垃圾和铁锈的气味，远处传来野猫的嘶叫。手机屏幕在黑暗中亮得刺眼——那张 / 语音留言结束后五秒自动删除。你盯着恢复漆黑的屏幕，巷子深处的野猫叫声不知何时停止了。厢型车已经驶远，但空气里残留着淡淡的柴油味。",
+                "updated_at": "2026-03-27T23:11:39.394441"
+              }
+            }
+          },
+          {
+            "name": "rollback_semantic_reset",
+            "passed": true,
+            "detail": {
+              "status": 200,
+              "actions": [
+                "episodic:rebuilt:rollback",
+                "episodic:reindexed:rollback",
+                "semantic:reset:rollback"
+              ],
+              "summary_after": {
+                "exists": false,
+                "summary_text": null,
+                "updated_at": null
+              },
+              "before_count": 8,
+              "after_count": 7
+            }
+          },
+          {
+            "name": "regenerate_rebuild",
+            "passed": true,
+            "detail": {
+              "status": 200,
+              "actions": [
+                "episodic:rebuilt:regenerate",
+                "episodic:reindexed:regenerate",
+                "episodic:updated:generate",
+                "semantic:created:generate"
+              ],
+              "summary_after": {
+                "exists": true,
+                "summary_text": "会话近期推进：\n- 玩家近期行动: B链路第3轮：归纳线索并推进剧情。 / B链路第4轮：归纳线索并推进剧情。 / B链路第4轮：归纳线索并推进剧情。\n- 近期剧情反馈: 你深吸一口气，目光扫过桌上散落的资料——泛黄的旧报纸、模糊的监控截图、还有那张写着“他们还在看着”的匿名纸条。夜风从半开的窗户灌 / 你迅速熄灭台灯，在黑暗中屏住呼吸。脚步声在楼梯口停顿了片刻，随后继续向上——缓慢而谨慎，每一步都踩在木质台阶的吱呀处。你摸向桌边 / 你停在防火梯中段，夜雾越来越浓，几乎吞没了下方街道的轮廓。手机屏幕在掌心持续发烫——地图上的三角形中心点闪烁红光，而你现在正悬在",
+                "updated_at": "2026-03-27T23:11:51.333397"
+              }
+            }
+          },
+          {
+            "name": "summary_recovered_before_commit",
+            "passed": true,
+            "detail": {
+              "summary": {
+                "exists": true,
+                "summary_text": "会话近期推进：\n- 玩家近期行动: B链路第3轮：归纳线索并推进剧情。 / B链路第4轮：归纳线索并推进剧情。 / B链路第4轮：归纳线索并推进剧情。\n- 近期剧情反馈: 你深吸一口气，目光扫过桌上散落的资料——泛黄的旧报纸、模糊的监控截图、还有那张写着“他们还在看着”的匿名纸条。夜风从半开的窗户灌 / 你迅速熄灭台灯，在黑暗中屏住呼吸。脚步声在楼梯口停顿了片刻，随后继续向上——缓慢而谨慎，每一步都踩在木质台阶的吱呀处。你摸向桌边 / 你停在防火梯中段，夜雾越来越浓，几乎吞没了下方街道的轮廓。手机屏幕在掌心持续发烫——地图上的三角形中心点闪烁红光，而你现在正悬在",
+                "updated_at": "2026-03-27T23:11:51.333397"
+              }
+            }
+          },
+          {
+            "name": "world_create",
+            "passed": true,
+            "detail": {
+              "status": 200,
+              "world_id": "78269340-62af-4706-b805-01bd92010622"
+            }
+          },
+          {
+            "name": "story_create",
+            "passed": true,
+            "detail": {
+              "status": 200,
+              "story_id": "004f6649-b190-4623-9ff5-54027eedc9a2"
+            }
+          },
+          {
+            "name": "segment_create",
+            "passed": true,
+            "detail": {
+              "status": 200,
+              "segment_id": "6959ab08-8c1f-4431-98ef-e73b14780ff8"
+            }
+          },
+          {
+            "name": "polish",
+            "passed": true,
+            "detail": {
+              "status": 200,
+              "polished_text": "残破的日志"
+            }
+          },
+          {
+            "name": "commit_semantic_reset",
+            "passed": true,
+            "detail": {
+              "status": 200,
+              "actions": [
+                "episodic:rebuilt:story_adjustment_commit",
+                "semantic:reset:story_adjustment_commit",
+                "episodic:reindexed:story_adjustment_commit"
+              ],
+              "summary_after": {
+                "exists": false,
+                "summary_text": null,
+                "updated_at": null
+              },
+              "rebuild_summary_reset": true,
+              "rebuild_history_reindexed": true
+            }
+          }
+        ],
+        "evidence": {
+          "session_id": "plan0327-b-1774624258-140c14",
+          "rounds": [
+            {
+              "round": 1,
+              "status": 200,
+              "summary_exists": false,
+              "actions": [
+                "episodic:updated:generate"
+              ]
+            },
+            {
+              "round": 2,
+              "status": 200,
+              "summary_exists": false,
+              "actions": [
+                "episodic:updated:generate"
+              ]
+            },
+            {
+              "round": 3,
+              "status": 200,
+              "summary_exists": false,
+              "actions": [
+                "episodic:updated:generate"
+              ]
+            },
+            {
+              "round": 4,
+              "status": 200,
+              "summary_exists": true,
+              "actions": [
+                "episodic:updated:generate",
+                "semantic:created:generate"
+              ]
+            }
+          ],
+          "journal_tail": [
+            {
+              "memory_layer": "episodic",
+              "action": "reindexed",
+              "source": "story_adjustment_commit",
+              "status": "committed",
+              "committed_at": "2026-03-27T23:11:53.251589"
+            },
+            {
+              "memory_layer": "semantic",
+              "action": "reset",
+              "source": "story_adjustment_commit",
+              "status": "committed",
+              "committed_at": "2026-03-27T23:11:53.105308"
+            },
+            {
+              "memory_layer": "episodic",
+              "action": "rebuilt",
+              "source": "story_adjustment_commit",
+              "status": "committed",
+              "committed_at": "2026-03-27T23:11:53.098168"
+            },
+            {
+              "memory_layer": "semantic",
+              "action": "created",
+              "source": "generate",
+              "status": "committed",
+              "committed_at": "2026-03-27T23:11:51.334631"
+            },
+            {
+              "memory_layer": "episodic",
+              "action": "updated",
+              "source": "generate",
+              "status": "committed",
+              "committed_at": "2026-03-27T23:11:51.325124"
+            },
+            {
+              "memory_layer": "episodic",
+              "action": "reindexed",
+              "source": "regenerate",
+              "status": "committed",
+              "committed_at": "2026-03-27T23:11:40.219313"
+            },
+            {
+              "memory_layer": "episodic",
+              "action": "rebuilt",
+              "source": "regenerate",
+              "status": "committed",
+              "committed_at": "2026-03-27T23:11:39.887081"
+            },
+            {
+              "memory_layer": "semantic",
+              "action": "reset",
+              "source": "rollback",
+              "status": "committed",
+              "committed_at": "2026-03-27T23:11:39.849592"
+            },
+            {
+              "memory_layer": "episodic",
+              "action": "reindexed",
+              "source": "rollback",
+              "status": "committed",
+              "committed_at": "2026-03-27T23:11:39.840740"
+            },
+            {
+              "memory_layer": "episodic",
+              "action": "rebuilt",
+              "source": "rollback",
+              "status": "committed",
+              "committed_at": "2026-03-27T23:11:39.454650"
+            },
+            {
+              "memory_layer": "semantic",
+              "action": "created",
+              "source": "generate",
+              "status": "committed",
+              "committed_at": "2026-03-27T23:11:39.394794"
+            },
+            {
+              "memory_layer": "episodic",
+              "action": "updated",
+              "source": "generate",
+              "status": "committed",
+              "committed_at": "2026-03-27T23:11:39.385551"
+            },
+            {
+              "memory_layer": "episodic",
+              "action": "updated",
+              "source": "generate",
+              "status": "committed",
+              "committed_at": "2026-03-27T23:11:28.737911"
+            },
+            {
+              "memory_layer": "episodic",
+              "action": "updated",
+              "source": "generate",
+              "status": "committed",
+              "committed_at": "2026-03-27T23:11:18.539588"
+            },
+            {
+              "memory_layer": "episodic",
+              "action": "updated",
+              "source": "generate",
+              "status": "committed",
+              "committed_at": "2026-03-27T23:11:07.855332"
+            }
+          ]
+        }
+      },
+      "summary": {
+        "profile": "B",
+        "total": 13,
+        "passed": 13,
+        "failed": 0,
+        "failed_checks": []
+      }
+    }
+  ],
+  "overall": {
+    "run_count": 2,
+    "failed_checks": 0,
+    "passed": true
+  }
+}
