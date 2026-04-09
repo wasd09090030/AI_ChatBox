@@ -1,0 +1,3344 @@
+{
+  "summary": {
+    "total": 56,
+    "passed": 55,
+    "failed": 1,
+    "all_passed": false,
+    "base_url": "http://127.0.0.1:8000",
+    "provider": "deepseek",
+    "model": "deepseek-chat",
+    "db_path": "E:\\CODE\\AI_ChatBox\\story_rag_service\\data\\chatbox.db",
+    "executed_at": "2026-04-09 21:07:51"
+  },
+  "checks": [
+    {
+      "name": "health",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "body": {
+          "status": "healthy",
+          "api_version": "v2"
+        }
+      }
+    },
+    {
+      "name": "provider_ready",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "provider": {
+          "provider": "deepseek",
+          "name": "DeepSeek",
+          "available": true,
+          "models": [
+            "deepseek-chat",
+            "deepseek-reasoner"
+          ],
+          "default_base_url": "https://api.deepseek.com",
+          "custom_base_url": "",
+          "protocol": "openai_compat"
+        }
+      }
+    },
+    {
+      "name": "provider_connection",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "body": {
+          "success": true,
+          "status": "ok",
+          "message": "连接成功，响应时间 849ms",
+          "latency_ms": 849
+        }
+      }
+    },
+    {
+      "name": "db_path_exists",
+      "passed": true,
+      "detail": {
+        "db_path": "E:\\CODE\\AI_ChatBox\\story_rag_service\\data\\chatbox.db",
+        "exists": true
+      }
+    },
+    {
+      "name": "entity_state_events_table_exists",
+      "passed": true,
+      "detail": {
+        "db_path": "E:\\CODE\\AI_ChatBox\\story_rag_service\\data\\chatbox.db",
+        "table_exists": true
+      }
+    },
+    {
+      "name": "entity_state_events_columns_ready",
+      "passed": true,
+      "detail": {
+        "required_columns": [
+          "after_payload",
+          "before_payload",
+          "committed_at",
+          "entity_id",
+          "event_id",
+          "field_name",
+          "op",
+          "operation_id",
+          "sequence",
+          "session_id",
+          "source",
+          "status",
+          "story_id"
+        ],
+        "actual_columns": [
+          "after_payload",
+          "before_payload",
+          "committed_at",
+          "confidence",
+          "entity_id",
+          "entity_name",
+          "entity_type",
+          "event_id",
+          "evidence_text",
+          "field_name",
+          "metadata",
+          "op",
+          "operation_id",
+          "sequence",
+          "session_id",
+          "source",
+          "source_turn",
+          "status",
+          "story_id",
+          "value_payload"
+        ],
+        "missing_columns": []
+      }
+    },
+    {
+      "name": "world_create",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "world_id": "f88b0232-0716-44f4-8f24-030616511873"
+      }
+    },
+    {
+      "name": "location_create_top",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "entry_id": "f23b1be7-eb24-472c-923c-7aa5d6119038"
+      }
+    },
+    {
+      "name": "location_create_warehouse",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "entry_id": "e9782783-02ee-476e-80bf-7aeda27849ac"
+      }
+    },
+    {
+      "name": "character_create_zhangsan",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "entry_id": "86cf19d8-6b99-43b8-af29-0732ab1fe0d8"
+      }
+    },
+    {
+      "name": "character_create_lisi",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "entry_id": "25189a64-1ef3-4bc7-b681-84f5dd61eff8"
+      }
+    },
+    {
+      "name": "story_create",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "story_id": "b251ebd6-f925-4a31-9f2a-30599f5887d1"
+      }
+    },
+    {
+      "name": "session_create",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "body": {
+          "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+          "world_id": "f88b0232-0716-44f4-8f24-030616511873",
+          "character_card_id": null,
+          "persona_id": null,
+          "first_message": null,
+          "created_at": "2026-04-09T21:06:47.150469"
+        }
+      }
+    },
+    {
+      "name": "generate_contract_fields",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "used_prompt": "请推进剧情并明确写出：张三来到钟楼顶层，张三拿到铜钥匙，李四与张三结伴行动。",
+        "attempts": [
+          {
+            "status": 200,
+            "prompt": "请推进剧情并明确写出：张三来到钟楼顶层，张三拿到铜钥匙，李四与张三结伴行动。",
+            "patch_count": 6,
+            "update_count": 6,
+            "has_snapshot": true
+          }
+        ],
+        "snapshot_total": 2,
+        "update_count": 6,
+        "world_update": {
+          "entity_patch": {
+            "patch_count": 6,
+            "warnings": [],
+            "fallback_used": false
+          }
+        }
+      }
+    },
+    {
+      "name": "generate_patch_updates_present",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "used_prompt": "请推进剧情并明确写出：张三来到钟楼顶层，张三拿到铜钥匙，李四与张三结伴行动。",
+        "attempts": [
+          {
+            "status": 200,
+            "prompt": "请推进剧情并明确写出：张三来到钟楼顶层，张三拿到铜钥匙，李四与张三结伴行动。",
+            "patch_count": 6,
+            "update_count": 6,
+            "has_snapshot": true
+          }
+        ],
+        "update_count": 6
+      }
+    },
+    {
+      "name": "generate_patch_updates_schema_valid",
+      "passed": true,
+      "detail": {
+        "count": 6,
+        "operation_ids": [
+          "generate:87b5733c-f382-46ac-8748-20597ed7cb4d"
+        ],
+        "sequences": [
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "errors": [],
+        "preview": [
+          {
+            "event_id": "83205f12-eb7e-43b1-a563-0a73ea769437",
+            "story_id": "b251ebd6-f925-4a31-9f2a-30599f5887d1",
+            "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+            "entity_id": "86cf19d8-6b99-43b8-af29-0732ab1fe0d8",
+            "entity_type": "character",
+            "entity_name": "张三",
+            "field_name": "current_location",
+            "op": "set",
+            "value": "钟楼顶层",
+            "before": null,
+            "after": "钟楼顶层",
+            "evidence_text": "张三推开沉重的木门时，锈蚀的铰链发出刺耳的呻吟。他站在平台边缘，俯瞰着旧港",
+            "source_turn": 1,
+            "source": "generate",
+            "operation_id": "generate:87b5733c-f382-46ac-8748-20597ed7cb4d",
+            "sequence": 2,
+            "confidence": 1.0,
+            "status": "committed",
+            "committed_at": "2026-04-09T21:07:08.971547",
+            "metadata": {}
+          },
+          {
+            "event_id": "ced38929-4983-4e77-8d75-f676b3992879",
+            "story_id": "b251ebd6-f925-4a31-9f2a-30599f5887d1",
+            "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+            "entity_id": "86cf19d8-6b99-43b8-af29-0732ab1fe0d8",
+            "entity_type": "character",
+            "entity_name": "张三",
+            "field_name": "inventory",
+            "op": "add",
+            "value": "铜钥匙",
+            "before": null,
+            "after": [
+              "铜钥匙"
+            ],
+            "evidence_text": "他蹲下身，从石缝里抠出一把铜钥匙。钥匙表面布满绿锈，但齿纹依然清晰，在掌心沉甸甸的。",
+            "source_turn": 1,
+            "source": "generate",
+            "operation_id": "generate:87b5733c-f382-46ac-8748-20597ed7cb4d",
+            "sequence": 3,
+            "confidence": 1.0,
+            "status": "committed",
+            "committed_at": "2026-04-09T21:07:08.971547",
+            "metadata": {}
+          },
+          {
+            "event_id": "0eed6f32-a98e-4d4e-a31e-b4735a2ff671",
+            "story_id": "b251ebd6-f925-4a31-9f2a-30599f5887d1",
+            "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+            "entity_id": "86cf19d8-6b99-43b8-af29-0732ab1fe0d8",
+            "entity_type": "character",
+            "entity_name": "张三",
+            "field_name": "companions",
+            "op": "add",
+            "value": [
+              "25189a64-1ef3-4bc7-b681-84f5dd61eff8"
+            ],
+            "before": null,
+            "after": [
+              "25189a64-1ef3-4bc7-b681-84f5dd61eff8"
+            ],
+            "evidence_text": "“结伴行动？”张三问，语气平静得像在讨论天气。李四咧嘴笑了，露出被烟草熏黄的牙齿：“当然。这鬼地方一个人可不行。”",
+            "source_turn": 1,
+            "source": "generate",
+            "operation_id": "generate:87b5733c-f382-46ac-8748-20597ed7cb4d",
+            "sequence": 4,
+            "confidence": 1.0,
+            "status": "committed",
+            "committed_at": "2026-04-09T21:07:08.971547",
+            "metadata": {}
+          }
+        ]
+      }
+    },
+    {
+      "name": "generate_world_update_patch_meta",
+      "passed": true,
+      "detail": {
+        "patch_meta": {
+          "patch_count": 6,
+          "warnings": [],
+          "fallback_used": false
+        },
+        "update_count": 6
+      }
+    },
+    {
+      "name": "generate_memory_updates_contains_entity_state",
+      "passed": true,
+      "detail": {
+        "memory_updates": [
+          {
+            "event_id": "441ed2c0-5037-44ae-a872-f9e65937e57d",
+            "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+            "operation_id": "generate:87b5733c-f382-46ac-8748-20597ed7cb4d",
+            "sequence": 1,
+            "display_kind": "write",
+            "memory_layer": "episodic",
+            "action": "updated",
+            "source": "generate",
+            "source_turn": 1,
+            "memory_key": "story_session_messages",
+            "title": "原始会话消息已写入",
+            "reason": null,
+            "before": null,
+            "after": {
+              "roles": [
+                "user",
+                "assistant"
+              ],
+              "user_input_preview": "请推进剧情并明确写出：张三来到钟楼顶层，张三拿到铜钥匙，李四与张三结伴行动。",
+              "assistant_output_preview": "钟楼顶层，海风呼啸。\n\n张三推开沉重的木门时，锈蚀的铰链发出刺耳的呻吟。他站在平台边缘，俯瞰着旧港——那些歪斜的屋顶、停泊的破船、蜿蜒的巷道，都在暮色中染上了一层铁锈般的暗红。\n\n“找到了。”他蹲下身，从石缝里抠出一把铜钥匙。钥匙表面布满绿"
+            },
+            "status": "committed",
+            "committed_at": "2026-04-09T21:06:55.332422"
+          },
+          {
+            "event_id": "907c09c0-c962-4add-b2b9-b3cbce94dbb8",
+            "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+            "operation_id": "generate:87b5733c-f382-46ac-8748-20597ed7cb4d",
+            "sequence": 2,
+            "display_kind": "write",
+            "memory_layer": "entity_state",
+            "action": "patched",
+            "source": "generate",
+            "source_turn": 1,
+            "memory_key": "86cf19d8-6b99-43b8-af29-0732ab1fe0d8:current_location",
+            "title": "实体状态字段已更新: 张三.current_location",
+            "reason": "张三推开沉重的木门时，锈蚀的铰链发出刺耳的呻吟。他站在平台边缘，俯瞰着旧港",
+            "before": {
+              "field": "current_location",
+              "value": null
+            },
+            "after": {
+              "field": "current_location",
+              "value": "钟楼顶层"
+            },
+            "status": "committed",
+            "committed_at": "2026-04-09T21:07:08.995394"
+          },
+          {
+            "event_id": "7c576737-1768-47d0-8c08-e31870db51a3",
+            "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+            "operation_id": "generate:87b5733c-f382-46ac-8748-20597ed7cb4d",
+            "sequence": 3,
+            "display_kind": "write",
+            "memory_layer": "entity_state",
+            "action": "patched",
+            "source": "generate",
+            "source_turn": 1,
+            "memory_key": "86cf19d8-6b99-43b8-af29-0732ab1fe0d8:inventory",
+            "title": "实体状态字段已更新: 张三.inventory",
+            "reason": "他蹲下身，从石缝里抠出一把铜钥匙。钥匙表面布满绿锈，但齿纹依然清晰，在掌心沉甸甸的。",
+            "before": {
+              "field": "inventory",
+              "value": null
+            },
+            "after": {
+              "field": "inventory",
+              "value": [
+                "铜钥匙"
+              ]
+            },
+            "status": "committed",
+            "committed_at": "2026-04-09T21:07:08.995394"
+          },
+          {
+            "event_id": "e15bcee5-a045-4d2a-9d83-150fad86431b",
+            "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+            "operation_id": "generate:87b5733c-f382-46ac-8748-20597ed7cb4d",
+            "sequence": 4,
+            "display_kind": "write",
+            "memory_layer": "entity_state",
+            "action": "patched",
+            "source": "generate",
+            "source_turn": 1,
+            "memory_key": "86cf19d8-6b99-43b8-af29-0732ab1fe0d8:companions",
+            "title": "实体状态字段已更新: 张三.companions",
+            "reason": "“结伴行动？”张三问，语气平静得像在讨论天气。李四咧嘴笑了，露出被烟草熏黄的牙齿：“当然。这鬼地方一个人可不行。”",
+            "before": {
+              "field": "companions",
+              "value": null
+            },
+            "after": {
+              "field": "companions",
+              "value": [
+                "25189a64-1ef3-4bc7-b681-84f5dd61eff8"
+              ]
+            },
+            "status": "committed",
+            "committed_at": "2026-04-09T21:07:08.995394"
+          },
+          {
+            "event_id": "03983990-5832-4175-92aa-5b2b0eb6b013",
+            "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+            "operation_id": "generate:87b5733c-f382-46ac-8748-20597ed7cb4d",
+            "sequence": 5,
+            "display_kind": "write",
+            "memory_layer": "entity_state",
+            "action": "patched",
+            "source": "generate",
+            "source_turn": 1,
+            "memory_key": "86cf19d8-6b99-43b8-af29-0732ab1fe0d8:short_goal",
+            "title": "实体状态字段已更新: 张三.short_goal",
+            "reason": "张三将钥匙递过去：“钟楼顶层的钥匙。齿形特殊，应该能打开旧港档案馆的地下室。”",
+            "before": {
+              "field": "short_goal",
+              "value": null
+            },
+            "after": {
+              "field": "short_goal",
+              "value": "前往旧港档案馆地下室"
+            },
+            "status": "committed",
+            "committed_at": "2026-04-09T21:07:08.995394"
+          },
+          {
+            "event_id": "bcf53d4f-e705-4cfa-8898-59c641cd68ee",
+            "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+            "operation_id": "generate:87b5733c-f382-46ac-8748-20597ed7cb4d",
+            "sequence": 6,
+            "display_kind": "write",
+            "memory_layer": "entity_state",
+            "action": "patched",
+            "source": "generate",
+            "source_turn": 1,
+            "memory_key": "25189a64-1ef3-4bc7-b681-84f5dd61eff8:current_location",
+            "title": "实体状态字段已更新: 李四.current_location",
+            "reason": "楼梯传来急促的脚步声。李四喘着气出现在门口，额头上挂着汗珠",
+            "before": {
+              "field": "current_location",
+              "value": null
+            },
+            "after": {
+              "field": "current_location",
+              "value": "钟楼顶层"
+            },
+            "status": "committed",
+            "committed_at": "2026-04-09T21:07:08.995394"
+          },
+          {
+            "event_id": "3fdb0c2b-3a26-43da-acc4-b412f027a14c",
+            "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+            "operation_id": "generate:87b5733c-f382-46ac-8748-20597ed7cb4d",
+            "sequence": 7,
+            "display_kind": "write",
+            "memory_layer": "entity_state",
+            "action": "patched",
+            "source": "generate",
+            "source_turn": 1,
+            "memory_key": "25189a64-1ef3-4bc7-b681-84f5dd61eff8:companions",
+            "title": "实体状态字段已更新: 李四.companions",
+            "reason": "“结伴行动？”张三问，语气平静得像在讨论天气。李四咧嘴笑了，露出被烟草熏黄的牙齿：“当然。这鬼地方一个人可不行。”",
+            "before": {
+              "field": "companions",
+              "value": null
+            },
+            "after": {
+              "field": "companions",
+              "value": [
+                "86cf19d8-6b99-43b8-af29-0732ab1fe0d8"
+              ]
+            },
+            "status": "committed",
+            "committed_at": "2026-04-09T21:07:08.995394"
+          }
+        ],
+        "total": 7
+      }
+    },
+    {
+      "name": "generate_operation_chain_aligned",
+      "passed": true,
+      "detail": {
+        "episodic_operation_ids": [
+          "generate:87b5733c-f382-46ac-8748-20597ed7cb4d"
+        ],
+        "entity_operation_ids": [
+          "generate:87b5733c-f382-46ac-8748-20597ed7cb4d"
+        ],
+        "shared_operation_ids": [
+          "generate:87b5733c-f382-46ac-8748-20597ed7cb4d"
+        ]
+      }
+    },
+    {
+      "name": "generate_operation_id_prefix",
+      "passed": true,
+      "detail": {
+        "shared_operation_ids": [
+          "generate:87b5733c-f382-46ac-8748-20597ed7cb4d"
+        ]
+      }
+    },
+    {
+      "name": "generate_entity_events_persisted",
+      "passed": true,
+      "detail": {
+        "operation_id": "generate:87b5733c-f382-46ac-8748-20597ed7cb4d",
+        "expected_min": 6,
+        "db_count": 6,
+        "db_path": "E:\\CODE\\AI_ChatBox\\story_rag_service\\data\\chatbox.db"
+      }
+    },
+    {
+      "name": "generate_memory_journal_chain_present",
+      "passed": true,
+      "detail": {
+        "operation_id": "generate:87b5733c-f382-46ac-8748-20597ed7cb4d",
+        "entity_journal_count": 6
+      }
+    },
+    {
+      "name": "session_entity_state_read_after_generate",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "total": 2
+      }
+    },
+    {
+      "name": "stream_done_contract_fields",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "chunk_count": 485,
+        "snapshot_total": 2,
+        "update_count": 1,
+        "patch_meta": {
+          "patch_count": 1,
+          "warnings": [
+            "unknown location skipped: 地下仓库入口（向下石阶）",
+            "unknown location skipped: 地下仓库入口（向下石阶）"
+          ],
+          "fallback_used": false
+        }
+      }
+    },
+    {
+      "name": "stream_patch_updates_schema_valid_if_present",
+      "passed": true,
+      "detail": {
+        "count": 1,
+        "operation_ids": [
+          "generate:0c451208-c747-46bb-8fd4-f3534be8ecb3"
+        ],
+        "sequences": [
+          2
+        ],
+        "errors": [],
+        "preview": [
+          {
+            "event_id": "85e13e4e-3603-4189-ad7d-8e78aeae4ad2",
+            "story_id": "b251ebd6-f925-4a31-9f2a-30599f5887d1",
+            "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+            "entity_id": "86cf19d8-6b99-43b8-af29-0732ab1fe0d8",
+            "entity_type": "character",
+            "entity_name": "张三",
+            "field_name": "inventory",
+            "op": "remove",
+            "value": "铜钥匙",
+            "before": [
+              "铜钥匙"
+            ],
+            "after": [],
+            "evidence_text": "他走到钟楼边缘的石栏前，将铜钥匙轻轻放在一块风化的石墩上。",
+            "source_turn": 2,
+            "source": "generate",
+            "operation_id": "generate:0c451208-c747-46bb-8fd4-f3534be8ecb3",
+            "sequence": 2,
+            "confidence": 1.0,
+            "status": "committed",
+            "committed_at": "2026-04-09T21:07:31.077624",
+            "metadata": {}
+          }
+        ]
+      }
+    },
+    {
+      "name": "stream_world_update_patch_meta",
+      "passed": true,
+      "detail": {
+        "patch_meta": {
+          "patch_count": 1,
+          "warnings": [
+            "unknown location skipped: 地下仓库入口（向下石阶）",
+            "unknown location skipped: 地下仓库入口（向下石阶）"
+          ],
+          "fallback_used": false
+        },
+        "update_count": 1
+      }
+    },
+    {
+      "name": "stream_operation_chain_aligned",
+      "passed": true,
+      "detail": {
+        "episodic_operation_ids": [
+          "generate:0c451208-c747-46bb-8fd4-f3534be8ecb3"
+        ],
+        "entity_operation_ids": [
+          "generate:0c451208-c747-46bb-8fd4-f3534be8ecb3"
+        ],
+        "shared_operation_ids": [
+          "generate:0c451208-c747-46bb-8fd4-f3534be8ecb3"
+        ]
+      }
+    },
+    {
+      "name": "stream_entity_events_persisted_if_patch",
+      "passed": true,
+      "detail": {
+        "operation_id": "generate:0c451208-c747-46bb-8fd4-f3534be8ecb3",
+        "expected_min": 1,
+        "db_count": 1
+      }
+    },
+    {
+      "name": "stream_state_transition_visible",
+      "passed": false,
+      "detail": {
+        "zhangsan": {
+          "story_id": "b251ebd6-f925-4a31-9f2a-30599f5887d1",
+          "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+          "entity_id": "86cf19d8-6b99-43b8-af29-0732ab1fe0d8",
+          "entity_type": "character",
+          "display_name": "张三",
+          "current_location": "钟楼顶层",
+          "inventory": [],
+          "status_tags": [],
+          "companions": [
+            "25189a64-1ef3-4bc7-b681-84f5dd61eff8"
+          ],
+          "short_goal": "前往旧港档案馆地下室",
+          "state_summary": null,
+          "evidence": [
+            "张三推开沉重的木门时，锈蚀的铰链发出刺耳的呻吟。他站在平台边缘，俯瞰着旧港",
+            "他蹲下身，从石缝里抠出一把铜钥匙。钥匙表面布满绿锈，但齿纹依然清晰，在掌心沉甸甸的。",
+            "“结伴行动？”张三问，语气平静得像在讨论天气。李四咧嘴笑了，露出被烟草熏黄的牙齿：“当然。这鬼地方一个人可不行。”",
+            "张三将钥匙递过去：“钟楼顶层的钥匙。齿形特殊，应该能打开旧港档案馆的地下室。”",
+            "他走到钟楼边缘的石栏前，将铜钥匙轻轻放在一块风化的石墩上。"
+          ],
+          "last_source_turn": 2,
+          "updated_at": "2026-04-09T21:07:31.077624",
+          "version": 1,
+          "metadata": {}
+        },
+        "stream_done_preview": "张三没有立刻回答。\n\n他走到钟楼边缘的石栏前，将铜钥匙轻轻放在一块风化的石墩上。钥匙与石头碰撞发出清脆的“咔哒”声，在呼啸的海风中几乎听不见。\n\n“钥匙留在这里。”他说，转身看向李四，“档案馆太显眼，我们先去地下仓库。那里有条旧通道，能避开巡逻队。”\n\n李四盯着石墩上的钥匙，眉头微皱：“你确定？万一被人捡走——”\n\n“不会有人来钟楼顶层。”张三已经走向楼梯，"
+      }
+    },
+    {
+      "name": "regenerate_contract_fields",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "snapshot_total": 2,
+        "update_count": 3,
+        "patch_meta": {
+          "patch_count": 3,
+          "warnings": [],
+          "fallback_used": false
+        }
+      }
+    },
+    {
+      "name": "regenerate_patch_updates_schema_valid_if_present",
+      "passed": true,
+      "detail": {
+        "count": 3,
+        "operation_ids": [
+          "regenerate:69f6a3ec-b00e-4a64-b762-58868037c377"
+        ],
+        "sequences": [
+          6,
+          7,
+          8
+        ],
+        "errors": [],
+        "preview": [
+          {
+            "event_id": "0edd397c-55b8-4fd9-b0f2-1d2e84974bdf",
+            "story_id": "b251ebd6-f925-4a31-9f2a-30599f5887d1",
+            "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+            "entity_id": "86cf19d8-6b99-43b8-af29-0732ab1fe0d8",
+            "entity_type": "character",
+            "entity_name": "张三",
+            "field_name": "current_location",
+            "op": "set",
+            "value": "地下仓库",
+            "before": "钟楼顶层",
+            "after": "地下仓库",
+            "evidence_text": "张三站在仓库中央，他刚从钟楼赶来",
+            "source_turn": 2,
+            "source": "generate",
+            "operation_id": "regenerate:69f6a3ec-b00e-4a64-b762-58868037c377",
+            "sequence": 6,
+            "confidence": 1.0,
+            "status": "committed",
+            "committed_at": "2026-04-09T21:07:50.513974",
+            "metadata": {}
+          },
+          {
+            "event_id": "c6e486f9-f29c-4198-a2aa-11de0877dc41",
+            "story_id": "b251ebd6-f925-4a31-9f2a-30599f5887d1",
+            "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+            "entity_id": "86cf19d8-6b99-43b8-af29-0732ab1fe0d8",
+            "entity_type": "character",
+            "entity_name": "张三",
+            "field_name": "inventory",
+            "op": "remove",
+            "value": "铜钥匙",
+            "before": [
+              "铜钥匙"
+            ],
+            "after": [],
+            "evidence_text": "那把铜钥匙，此刻正静静躺在顶层平台的石缝原处",
+            "source_turn": 2,
+            "source": "generate",
+            "operation_id": "regenerate:69f6a3ec-b00e-4a64-b762-58868037c377",
+            "sequence": 7,
+            "confidence": 1.0,
+            "status": "committed",
+            "committed_at": "2026-04-09T21:07:50.513974",
+            "metadata": {}
+          },
+          {
+            "event_id": "765d3f39-fb29-4a11-bb64-6651831a5195",
+            "story_id": "b251ebd6-f925-4a31-9f2a-30599f5887d1",
+            "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+            "entity_id": "25189a64-1ef3-4bc7-b681-84f5dd61eff8",
+            "entity_type": "character",
+            "entity_name": "李四",
+            "field_name": "current_location",
+            "op": "set",
+            "value": "地下仓库",
+            "before": "钟楼顶层",
+            "after": "地下仓库",
+            "evidence_text": "李四从两排箱子间的窄道里闪身出来",
+            "source_turn": 2,
+            "source": "generate",
+            "operation_id": "regenerate:69f6a3ec-b00e-4a64-b762-58868037c377",
+            "sequence": 8,
+            "confidence": 1.0,
+            "status": "committed",
+            "committed_at": "2026-04-09T21:07:50.513974",
+            "metadata": {}
+          }
+        ]
+      }
+    },
+    {
+      "name": "regenerate_memory_updates_contains_entity_state",
+      "passed": true,
+      "detail": {
+        "memory_updates_preview": [
+          {
+            "event_id": "be187761-989c-4bfa-90ee-60f8893fd83c",
+            "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+            "operation_id": "regenerate:69f6a3ec-b00e-4a64-b762-58868037c377",
+            "sequence": 1,
+            "display_kind": "session_rebuild",
+            "memory_layer": "episodic",
+            "action": "rebuilt",
+            "source": "regenerate",
+            "source_turn": null,
+            "memory_key": "story_session_messages",
+            "title": "会话上下文已根据最新消息重建",
+            "reason": null,
+            "before": null,
+            "after": {
+              "message_count": 3
+            },
+            "status": "committed",
+            "committed_at": "2026-04-09T21:07:31.118466"
+          },
+          {
+            "event_id": "0780c509-66c8-4160-804a-04f192d5c9e7",
+            "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+            "operation_id": "regenerate:69f6a3ec-b00e-4a64-b762-58868037c377",
+            "sequence": 2,
+            "display_kind": "index_rebuild",
+            "memory_layer": "episodic",
+            "action": "reindexed",
+            "source": "regenerate",
+            "source_turn": null,
+            "memory_key": "conversation_history_index",
+            "title": "历史向量索引已重建",
+            "reason": null,
+            "before": null,
+            "after": {
+              "indexed_message_count": 3
+            },
+            "status": "committed",
+            "committed_at": "2026-04-09T21:07:31.284412"
+          },
+          {
+            "event_id": "d4dfd7dd-c264-4189-baa0-ed274cf065cf",
+            "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+            "operation_id": "regenerate:69f6a3ec-b00e-4a64-b762-58868037c377",
+            "sequence": 3,
+            "display_kind": "write",
+            "memory_layer": "entity_state",
+            "action": "rebuilt",
+            "source": "regenerate",
+            "source_turn": 1,
+            "memory_key": "86cf19d8-6b99-43b8-af29-0732ab1fe0d8",
+            "title": "实体状态已通过事件回放重建: 张三",
+            "reason": "event_replay:6",
+            "before": {
+              "display_name": "张三",
+              "current_location": "钟楼顶层",
+              "inventory": [],
+              "status_tags": [],
+              "companions": [
+                "25189a64-1ef3-4bc7-b681-84f5dd61eff8"
+              ],
+              "short_goal": "前往旧港档案馆地下室",
+              "last_source_turn": 2
+            },
+            "after": {
+              "display_name": "张三",
+              "current_location": "钟楼顶层",
+              "inventory": [
+                "铜钥匙"
+              ],
+              "status_tags": [],
+              "companions": [
+                "25189a64-1ef3-4bc7-b681-84f5dd61eff8"
+              ],
+              "short_goal": "前往旧港档案馆地下室",
+              "last_source_turn": 1
+            },
+            "status": "committed",
+            "committed_at": "2026-04-09T21:07:31.301225"
+          },
+          {
+            "event_id": "40acec19-eb6c-4f71-8249-c6f634fc3814",
+            "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+            "operation_id": "regenerate:69f6a3ec-b00e-4a64-b762-58868037c377",
+            "sequence": 4,
+            "display_kind": "write",
+            "memory_layer": "entity_state",
+            "action": "rebuilt",
+            "source": "regenerate",
+            "source_turn": 1,
+            "memory_key": "25189a64-1ef3-4bc7-b681-84f5dd61eff8",
+            "title": "实体状态已通过事件回放重建: 李四",
+            "reason": "event_replay:6",
+            "before": {
+              "display_name": "李四",
+              "current_location": "钟楼顶层",
+              "inventory": [],
+              "status_tags": [],
+              "companions": [
+                "86cf19d8-6b99-43b8-af29-0732ab1fe0d8"
+              ],
+              "short_goal": null,
+              "last_source_turn": 1
+            },
+            "after": {
+              "display_name": "李四",
+              "current_location": "钟楼顶层",
+              "inventory": [],
+              "status_tags": [],
+              "companions": [
+                "86cf19d8-6b99-43b8-af29-0732ab1fe0d8"
+              ],
+              "short_goal": null,
+              "last_source_turn": 1
+            },
+            "status": "committed",
+            "committed_at": "2026-04-09T21:07:31.301225"
+          },
+          {
+            "event_id": "83cd2666-9f96-40f7-9f59-577d6ce67924",
+            "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+            "operation_id": "regenerate:69f6a3ec-b00e-4a64-b762-58868037c377",
+            "sequence": 5,
+            "display_kind": "write",
+            "memory_layer": "episodic",
+            "action": "updated",
+            "source": "generate",
+            "source_turn": 2,
+            "memory_key": "story_session_messages",
+            "title": "原始会话消息已写入",
+            "reason": null,
+            "before": null,
+            "after": {
+              "roles": [
+                "user",
+                "assistant"
+              ],
+              "user_input_preview": "请明确写出：张三转移到地下仓库，并将铜钥匙留在原处（物品栏移除铜钥匙）。",
+              "assistant_output_preview": "（钟楼顶层的钥匙交接已完成，剧情已推进至转移阶段）\n\n---\n\n地下仓库的空气像浸了水的抹布，沉甸甸地压在肺上。霉味、朽木和铁锈的气息混杂在一起，随着每一次呼吸钻进鼻腔。昏暗的光线从高处一扇巴掌大的气窗透进来，勉强勾勒出堆积如山的旧木箱轮廓"
+            },
+            "status": "committed",
+            "committed_at": "2026-04-09T21:07:42.861943"
+          },
+          {
+            "event_id": "6d3b4ad1-52cb-4c80-8a51-c2bbe265b0d1",
+            "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+            "operation_id": "regenerate:69f6a3ec-b00e-4a64-b762-58868037c377",
+            "sequence": 6,
+            "display_kind": "write",
+            "memory_layer": "entity_state",
+            "action": "patched",
+            "source": "generate",
+            "source_turn": 2,
+            "memory_key": "86cf19d8-6b99-43b8-af29-0732ab1fe0d8:current_location",
+            "title": "实体状态字段已更新: 张三.current_location",
+            "reason": "张三站在仓库中央，他刚从钟楼赶来",
+            "before": {
+              "field": "current_location",
+              "value": "钟楼顶层"
+            },
+            "after": {
+              "field": "current_location",
+              "value": "地下仓库"
+            },
+            "status": "committed",
+            "committed_at": "2026-04-09T21:07:50.525184"
+          },
+          {
+            "event_id": "ca0ffc99-4004-4508-a4de-57a4aecf8b3f",
+            "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+            "operation_id": "regenerate:69f6a3ec-b00e-4a64-b762-58868037c377",
+            "sequence": 7,
+            "display_kind": "write",
+            "memory_layer": "entity_state",
+            "action": "patched",
+            "source": "generate",
+            "source_turn": 2,
+            "memory_key": "86cf19d8-6b99-43b8-af29-0732ab1fe0d8:inventory",
+            "title": "实体状态字段已更新: 张三.inventory",
+            "reason": "那把铜钥匙，此刻正静静躺在顶层平台的石缝原处",
+            "before": {
+              "field": "inventory",
+              "value": [
+                "铜钥匙"
+              ]
+            },
+            "after": {
+              "field": "inventory",
+              "value": []
+            },
+            "status": "committed",
+            "committed_at": "2026-04-09T21:07:50.525184"
+          },
+          {
+            "event_id": "98289b5f-5aea-4146-9165-bd4d50b1b5de",
+            "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+            "operation_id": "regenerate:69f6a3ec-b00e-4a64-b762-58868037c377",
+            "sequence": 8,
+            "display_kind": "write",
+            "memory_layer": "entity_state",
+            "action": "patched",
+            "source": "generate",
+            "source_turn": 2,
+            "memory_key": "25189a64-1ef3-4bc7-b681-84f5dd61eff8:current_location",
+            "title": "实体状态字段已更新: 李四.current_location",
+            "reason": "李四从两排箱子间的窄道里闪身出来",
+            "before": {
+              "field": "current_location",
+              "value": "钟楼顶层"
+            },
+            "after": {
+              "field": "current_location",
+              "value": "地下仓库"
+            },
+            "status": "committed",
+            "committed_at": "2026-04-09T21:07:50.525184"
+          }
+        ],
+        "total": 8
+      }
+    },
+    {
+      "name": "regenerate_operation_chain_single_id",
+      "passed": true,
+      "detail": {
+        "operation_ids": [
+          "regenerate:69f6a3ec-b00e-4a64-b762-58868037c377"
+        ]
+      }
+    },
+    {
+      "name": "regenerate_entity_events_persisted_if_patch",
+      "passed": true,
+      "detail": {
+        "operation_id": "regenerate:69f6a3ec-b00e-4a64-b762-58868037c377",
+        "patch_count": 3,
+        "db_count": 3
+      }
+    },
+    {
+      "name": "rollback_delete_last_message",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "body": {
+          "deleted": true,
+          "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+          "detail": "Last message deleted",
+          "memory_updates": [
+            {
+              "event_id": "6440c3e8-43fa-4624-a0b5-7a43737ae682",
+              "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+              "operation_id": "rollback:34692724-c69c-4ab8-9f8f-a869e9ab46f7",
+              "sequence": 1,
+              "display_kind": "session_rebuild",
+              "memory_layer": "episodic",
+              "action": "rebuilt",
+              "source": "rollback",
+              "source_turn": null,
+              "memory_key": "story_session_messages",
+              "title": "会话上下文已根据最新消息重建",
+              "reason": null,
+              "before": null,
+              "after": {
+                "message_count": 4
+              },
+              "status": "committed",
+              "committed_at": "2026-04-09T21:07:50.577663"
+            },
+            {
+              "event_id": "1d65f2a0-f0ac-4a99-b689-9625432ddbdd",
+              "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+              "operation_id": "rollback:34692724-c69c-4ab8-9f8f-a869e9ab46f7",
+              "sequence": 2,
+              "display_kind": "index_rebuild",
+              "memory_layer": "episodic",
+              "action": "reindexed",
+              "source": "rollback",
+              "source_turn": null,
+              "memory_key": "conversation_history_index",
+              "title": "历史向量索引已重建",
+              "reason": null,
+              "before": null,
+              "after": {
+                "indexed_message_count": 4
+              },
+              "status": "committed",
+              "committed_at": "2026-04-09T21:07:50.821283"
+            },
+            {
+              "event_id": "d4f8d5b6-4301-49c3-aa09-45e07d142164",
+              "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+              "operation_id": "rollback:34692724-c69c-4ab8-9f8f-a869e9ab46f7",
+              "sequence": 3,
+              "display_kind": "write",
+              "memory_layer": "entity_state",
+              "action": "rebuilt",
+              "source": "rollback",
+              "source_turn": 1,
+              "memory_key": "86cf19d8-6b99-43b8-af29-0732ab1fe0d8",
+              "title": "实体状态已通过事件回放重建: 张三",
+              "reason": "event_replay:6",
+              "before": {
+                "display_name": "张三",
+                "current_location": "地下仓库",
+                "inventory": [],
+                "status_tags": [],
+                "companions": [
+                  "25189a64-1ef3-4bc7-b681-84f5dd61eff8"
+                ],
+                "short_goal": "前往旧港档案馆地下室",
+                "last_source_turn": 2
+              },
+              "after": {
+                "display_name": "张三",
+                "current_location": "钟楼顶层",
+                "inventory": [
+                  "铜钥匙"
+                ],
+                "status_tags": [],
+                "companions": [
+                  "25189a64-1ef3-4bc7-b681-84f5dd61eff8"
+                ],
+                "short_goal": "前往旧港档案馆地下室",
+                "last_source_turn": 1
+              },
+              "status": "committed",
+              "committed_at": "2026-04-09T21:07:50.841377"
+            },
+            {
+              "event_id": "ca2a1d87-5e5c-4d0f-a7c2-a18c872a6da4",
+              "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+              "operation_id": "rollback:34692724-c69c-4ab8-9f8f-a869e9ab46f7",
+              "sequence": 4,
+              "display_kind": "write",
+              "memory_layer": "entity_state",
+              "action": "rebuilt",
+              "source": "rollback",
+              "source_turn": 1,
+              "memory_key": "25189a64-1ef3-4bc7-b681-84f5dd61eff8",
+              "title": "实体状态已通过事件回放重建: 李四",
+              "reason": "event_replay:6",
+              "before": {
+                "display_name": "李四",
+                "current_location": "地下仓库",
+                "inventory": [],
+                "status_tags": [],
+                "companions": [
+                  "86cf19d8-6b99-43b8-af29-0732ab1fe0d8"
+                ],
+                "short_goal": null,
+                "last_source_turn": 2
+              },
+              "after": {
+                "display_name": "李四",
+                "current_location": "钟楼顶层",
+                "inventory": [],
+                "status_tags": [],
+                "companions": [
+                  "86cf19d8-6b99-43b8-af29-0732ab1fe0d8"
+                ],
+                "short_goal": null,
+                "last_source_turn": 1
+              },
+              "status": "committed",
+              "committed_at": "2026-04-09T21:07:50.841377"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "rollback_updates_contains_entity_state",
+      "passed": true,
+      "detail": {
+        "entity_updates": [
+          {
+            "event_id": "d4f8d5b6-4301-49c3-aa09-45e07d142164",
+            "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+            "operation_id": "rollback:34692724-c69c-4ab8-9f8f-a869e9ab46f7",
+            "sequence": 3,
+            "display_kind": "write",
+            "memory_layer": "entity_state",
+            "action": "rebuilt",
+            "source": "rollback",
+            "source_turn": 1,
+            "memory_key": "86cf19d8-6b99-43b8-af29-0732ab1fe0d8",
+            "title": "实体状态已通过事件回放重建: 张三",
+            "reason": "event_replay:6",
+            "before": {
+              "display_name": "张三",
+              "current_location": "地下仓库",
+              "inventory": [],
+              "status_tags": [],
+              "companions": [
+                "25189a64-1ef3-4bc7-b681-84f5dd61eff8"
+              ],
+              "short_goal": "前往旧港档案馆地下室",
+              "last_source_turn": 2
+            },
+            "after": {
+              "display_name": "张三",
+              "current_location": "钟楼顶层",
+              "inventory": [
+                "铜钥匙"
+              ],
+              "status_tags": [],
+              "companions": [
+                "25189a64-1ef3-4bc7-b681-84f5dd61eff8"
+              ],
+              "short_goal": "前往旧港档案馆地下室",
+              "last_source_turn": 1
+            },
+            "status": "committed",
+            "committed_at": "2026-04-09T21:07:50.841377"
+          },
+          {
+            "event_id": "ca2a1d87-5e5c-4d0f-a7c2-a18c872a6da4",
+            "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+            "operation_id": "rollback:34692724-c69c-4ab8-9f8f-a869e9ab46f7",
+            "sequence": 4,
+            "display_kind": "write",
+            "memory_layer": "entity_state",
+            "action": "rebuilt",
+            "source": "rollback",
+            "source_turn": 1,
+            "memory_key": "25189a64-1ef3-4bc7-b681-84f5dd61eff8",
+            "title": "实体状态已通过事件回放重建: 李四",
+            "reason": "event_replay:6",
+            "before": {
+              "display_name": "李四",
+              "current_location": "地下仓库",
+              "inventory": [],
+              "status_tags": [],
+              "companions": [
+                "86cf19d8-6b99-43b8-af29-0732ab1fe0d8"
+              ],
+              "short_goal": null,
+              "last_source_turn": 2
+            },
+            "after": {
+              "display_name": "李四",
+              "current_location": "钟楼顶层",
+              "inventory": [],
+              "status_tags": [],
+              "companions": [
+                "86cf19d8-6b99-43b8-af29-0732ab1fe0d8"
+              ],
+              "short_goal": null,
+              "last_source_turn": 1
+            },
+            "status": "committed",
+            "committed_at": "2026-04-09T21:07:50.841377"
+          }
+        ],
+        "total": 2
+      }
+    },
+    {
+      "name": "rollback_operation_chain_single_id",
+      "passed": true,
+      "detail": {
+        "operation_ids": [
+          "rollback:34692724-c69c-4ab8-9f8f-a869e9ab46f7"
+        ]
+      }
+    },
+    {
+      "name": "rollback_prefers_event_replay_when_events_exist",
+      "passed": true,
+      "detail": {
+        "pre_rollback_event_count": 9,
+        "replay_reason_found": true,
+        "reasons_preview": [
+          "event_replay:6",
+          "event_replay:6"
+        ]
+      }
+    },
+    {
+      "name": "session_entity_state_read_after_rollback",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "body": {
+          "story_id": null,
+          "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+          "entity_type": null,
+          "items": [
+            {
+              "story_id": "b251ebd6-f925-4a31-9f2a-30599f5887d1",
+              "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+              "entity_id": "25189a64-1ef3-4bc7-b681-84f5dd61eff8",
+              "entity_type": "character",
+              "display_name": "李四",
+              "current_location": "钟楼顶层",
+              "inventory": [],
+              "status_tags": [],
+              "companions": [
+                "86cf19d8-6b99-43b8-af29-0732ab1fe0d8"
+              ],
+              "short_goal": null,
+              "state_summary": null,
+              "evidence": [
+                "楼梯传来急促的脚步声。李四喘着气出现在门口，额头上挂着汗珠",
+                "“结伴行动？”张三问，语气平静得像在讨论天气。李四咧嘴笑了，露出被烟草熏黄的牙齿：“当然。这鬼地方一个人可不行。”"
+              ],
+              "last_source_turn": 1,
+              "updated_at": "2026-04-09T21:07:08.971547",
+              "version": 1,
+              "metadata": {}
+            },
+            {
+              "story_id": "b251ebd6-f925-4a31-9f2a-30599f5887d1",
+              "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+              "entity_id": "86cf19d8-6b99-43b8-af29-0732ab1fe0d8",
+              "entity_type": "character",
+              "display_name": "张三",
+              "current_location": "钟楼顶层",
+              "inventory": [
+                "铜钥匙"
+              ],
+              "status_tags": [],
+              "companions": [
+                "25189a64-1ef3-4bc7-b681-84f5dd61eff8"
+              ],
+              "short_goal": "前往旧港档案馆地下室",
+              "state_summary": null,
+              "evidence": [
+                "张三推开沉重的木门时，锈蚀的铰链发出刺耳的呻吟。他站在平台边缘，俯瞰着旧港",
+                "他蹲下身，从石缝里抠出一把铜钥匙。钥匙表面布满绿锈，但齿纹依然清晰，在掌心沉甸甸的。",
+                "“结伴行动？”张三问，语气平静得像在讨论天气。李四咧嘴笑了，露出被烟草熏黄的牙齿：“当然。这鬼地方一个人可不行。”",
+                "张三将钥匙递过去：“钟楼顶层的钥匙。齿形特殊，应该能打开旧港档案馆的地下室。”"
+              ],
+              "last_source_turn": 1,
+              "updated_at": "2026-04-09T21:07:08.971547",
+              "version": 1,
+              "metadata": {}
+            }
+          ],
+          "total": 2
+        }
+      }
+    },
+    {
+      "name": "session_entity_rebuild_api_success",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "body": {
+          "story_id": "b251ebd6-f925-4a31-9f2a-30599f5887d1",
+          "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+          "rebuilt": true,
+          "entity_count": 2,
+          "memory_updates": [
+            {
+              "event_id": "a5138916-2823-46bf-99ff-32dd646b2c18",
+              "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+              "operation_id": "entity_state_session_rebuild_api:2e13918d-a6b7-4f1f-822f-7a502b92a020",
+              "sequence": 1,
+              "display_kind": "write",
+              "memory_layer": "entity_state",
+              "action": "rebuilt",
+              "source": "entity_state_session_rebuild_api",
+              "source_turn": 1,
+              "memory_key": "86cf19d8-6b99-43b8-af29-0732ab1fe0d8",
+              "title": "实体状态已通过事件回放重建: 张三",
+              "reason": "event_replay:6",
+              "before": {
+                "display_name": "张三",
+                "current_location": "钟楼顶层",
+                "inventory": [
+                  "铜钥匙"
+                ],
+                "status_tags": [],
+                "companions": [
+                  "25189a64-1ef3-4bc7-b681-84f5dd61eff8"
+                ],
+                "short_goal": "前往旧港档案馆地下室",
+                "last_source_turn": 1
+              },
+              "after": {
+                "display_name": "张三",
+                "current_location": "钟楼顶层",
+                "inventory": [
+                  "铜钥匙"
+                ],
+                "status_tags": [],
+                "companions": [
+                  "25189a64-1ef3-4bc7-b681-84f5dd61eff8"
+                ],
+                "short_goal": "前往旧港档案馆地下室",
+                "last_source_turn": 1
+              },
+              "status": "committed",
+              "committed_at": "2026-04-09T21:07:50.888163"
+            },
+            {
+              "event_id": "48bcd96a-69b9-4cd1-b3dc-3bcf17ed2ef5",
+              "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+              "operation_id": "entity_state_session_rebuild_api:2e13918d-a6b7-4f1f-822f-7a502b92a020",
+              "sequence": 2,
+              "display_kind": "write",
+              "memory_layer": "entity_state",
+              "action": "rebuilt",
+              "source": "entity_state_session_rebuild_api",
+              "source_turn": 1,
+              "memory_key": "25189a64-1ef3-4bc7-b681-84f5dd61eff8",
+              "title": "实体状态已通过事件回放重建: 李四",
+              "reason": "event_replay:6",
+              "before": {
+                "display_name": "李四",
+                "current_location": "钟楼顶层",
+                "inventory": [],
+                "status_tags": [],
+                "companions": [
+                  "86cf19d8-6b99-43b8-af29-0732ab1fe0d8"
+                ],
+                "short_goal": null,
+                "last_source_turn": 1
+              },
+              "after": {
+                "display_name": "李四",
+                "current_location": "钟楼顶层",
+                "inventory": [],
+                "status_tags": [],
+                "companions": [
+                  "86cf19d8-6b99-43b8-af29-0732ab1fe0d8"
+                ],
+                "short_goal": null,
+                "last_source_turn": 1
+              },
+              "status": "committed",
+              "committed_at": "2026-04-09T21:07:50.888163"
+            }
+          ],
+          "warnings": [],
+          "items": [
+            {
+              "story_id": "b251ebd6-f925-4a31-9f2a-30599f5887d1",
+              "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+              "entity_id": "86cf19d8-6b99-43b8-af29-0732ab1fe0d8",
+              "entity_type": "character",
+              "display_name": "张三",
+              "current_location": "钟楼顶层",
+              "inventory": [
+                "铜钥匙"
+              ],
+              "status_tags": [],
+              "companions": [
+                "25189a64-1ef3-4bc7-b681-84f5dd61eff8"
+              ],
+              "short_goal": "前往旧港档案馆地下室",
+              "state_summary": null,
+              "evidence": [
+                "张三推开沉重的木门时，锈蚀的铰链发出刺耳的呻吟。他站在平台边缘，俯瞰着旧港",
+                "他蹲下身，从石缝里抠出一把铜钥匙。钥匙表面布满绿锈，但齿纹依然清晰，在掌心沉甸甸的。",
+                "“结伴行动？”张三问，语气平静得像在讨论天气。李四咧嘴笑了，露出被烟草熏黄的牙齿：“当然。这鬼地方一个人可不行。”",
+                "张三将钥匙递过去：“钟楼顶层的钥匙。齿形特殊，应该能打开旧港档案馆的地下室。”"
+              ],
+              "last_source_turn": 1,
+              "updated_at": "2026-04-09T21:07:08.971547",
+              "version": 1,
+              "metadata": {}
+            },
+            {
+              "story_id": "b251ebd6-f925-4a31-9f2a-30599f5887d1",
+              "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+              "entity_id": "25189a64-1ef3-4bc7-b681-84f5dd61eff8",
+              "entity_type": "character",
+              "display_name": "李四",
+              "current_location": "钟楼顶层",
+              "inventory": [],
+              "status_tags": [],
+              "companions": [
+                "86cf19d8-6b99-43b8-af29-0732ab1fe0d8"
+              ],
+              "short_goal": null,
+              "state_summary": null,
+              "evidence": [
+                "楼梯传来急促的脚步声。李四喘着气出现在门口，额头上挂着汗珠",
+                "“结伴行动？”张三问，语气平静得像在讨论天气。李四咧嘴笑了，露出被烟草熏黄的牙齿：“当然。这鬼地方一个人可不行。”"
+              ],
+              "last_source_turn": 1,
+              "updated_at": "2026-04-09T21:07:08.971547",
+              "version": 1,
+              "metadata": {}
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "session_entity_rebuild_api_updates_visible",
+      "passed": true,
+      "detail": {
+        "updates_preview": [
+          {
+            "event_id": "a5138916-2823-46bf-99ff-32dd646b2c18",
+            "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+            "operation_id": "entity_state_session_rebuild_api:2e13918d-a6b7-4f1f-822f-7a502b92a020",
+            "sequence": 1,
+            "display_kind": "write",
+            "memory_layer": "entity_state",
+            "action": "rebuilt",
+            "source": "entity_state_session_rebuild_api",
+            "source_turn": 1,
+            "memory_key": "86cf19d8-6b99-43b8-af29-0732ab1fe0d8",
+            "title": "实体状态已通过事件回放重建: 张三",
+            "reason": "event_replay:6",
+            "before": {
+              "display_name": "张三",
+              "current_location": "钟楼顶层",
+              "inventory": [
+                "铜钥匙"
+              ],
+              "status_tags": [],
+              "companions": [
+                "25189a64-1ef3-4bc7-b681-84f5dd61eff8"
+              ],
+              "short_goal": "前往旧港档案馆地下室",
+              "last_source_turn": 1
+            },
+            "after": {
+              "display_name": "张三",
+              "current_location": "钟楼顶层",
+              "inventory": [
+                "铜钥匙"
+              ],
+              "status_tags": [],
+              "companions": [
+                "25189a64-1ef3-4bc7-b681-84f5dd61eff8"
+              ],
+              "short_goal": "前往旧港档案馆地下室",
+              "last_source_turn": 1
+            },
+            "status": "committed",
+            "committed_at": "2026-04-09T21:07:50.888163"
+          },
+          {
+            "event_id": "48bcd96a-69b9-4cd1-b3dc-3bcf17ed2ef5",
+            "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+            "operation_id": "entity_state_session_rebuild_api:2e13918d-a6b7-4f1f-822f-7a502b92a020",
+            "sequence": 2,
+            "display_kind": "write",
+            "memory_layer": "entity_state",
+            "action": "rebuilt",
+            "source": "entity_state_session_rebuild_api",
+            "source_turn": 1,
+            "memory_key": "25189a64-1ef3-4bc7-b681-84f5dd61eff8",
+            "title": "实体状态已通过事件回放重建: 李四",
+            "reason": "event_replay:6",
+            "before": {
+              "display_name": "李四",
+              "current_location": "钟楼顶层",
+              "inventory": [],
+              "status_tags": [],
+              "companions": [
+                "86cf19d8-6b99-43b8-af29-0732ab1fe0d8"
+              ],
+              "short_goal": null,
+              "last_source_turn": 1
+            },
+            "after": {
+              "display_name": "李四",
+              "current_location": "钟楼顶层",
+              "inventory": [],
+              "status_tags": [],
+              "companions": [
+                "86cf19d8-6b99-43b8-af29-0732ab1fe0d8"
+              ],
+              "short_goal": null,
+              "last_source_turn": 1
+            },
+            "status": "committed",
+            "committed_at": "2026-04-09T21:07:50.888163"
+          }
+        ],
+        "total": 2
+      }
+    },
+    {
+      "name": "session_entity_rebuild_prefers_replay_when_events_exist",
+      "passed": true,
+      "detail": {
+        "pre_event_count": 6,
+        "replay_reason_found": true,
+        "reasons_preview": [
+          "event_replay:6",
+          "event_replay:6"
+        ]
+      }
+    },
+    {
+      "name": "seed_story_segments",
+      "passed": true,
+      "detail": {
+        "status_seg1": 200,
+        "status_seg2": 200,
+        "segment_count": 2
+      }
+    },
+    {
+      "name": "seed_segment_id_available",
+      "passed": true,
+      "detail": {
+        "segment2_id": "0cab03d6-dbd1-431d-bf4b-a93026e2f731"
+      }
+    },
+    {
+      "name": "story_adjustment_commit_rebuild_entity",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "rebuild_entity_state_rebuilt": true
+      }
+    },
+    {
+      "name": "story_adjustment_commit_entity_updates_visible",
+      "passed": true,
+      "detail": {
+        "memory_updates": [
+          {
+            "event_id": "6bc74deb-6aba-45f8-9a58-7b5aa0481a19",
+            "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+            "operation_id": "story_adjustment_commit:040b4d8c-bb8a-40d3-ab05-06734fefaae8",
+            "sequence": 1,
+            "display_kind": "session_rebuild",
+            "memory_layer": "episodic",
+            "action": "rebuilt",
+            "source": "story_adjustment_commit",
+            "source_turn": null,
+            "memory_key": null,
+            "title": "会话消息已按故事正文重建",
+            "reason": null,
+            "before": null,
+            "after": {
+              "message_count": 4,
+              "segment_count": 2
+            },
+            "status": "committed",
+            "committed_at": "2026-04-09T21:07:50.987709"
+          },
+          {
+            "event_id": "1f9be302-326f-4416-bc69-6ed300868e15",
+            "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+            "operation_id": "story_adjustment_commit:040b4d8c-bb8a-40d3-ab05-06734fefaae8",
+            "sequence": 2,
+            "display_kind": "index_rebuild",
+            "memory_layer": "episodic",
+            "action": "reindexed",
+            "source": "story_adjustment_commit",
+            "source_turn": null,
+            "memory_key": "conversation_history_index",
+            "title": "历史向量索引已重建",
+            "reason": null,
+            "before": null,
+            "after": {
+              "indexed_message_count": 4
+            },
+            "status": "committed",
+            "committed_at": "2026-04-09T21:07:51.225708"
+          },
+          {
+            "event_id": "32214a75-fdea-4e22-bfee-834110d0b45c",
+            "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+            "operation_id": "story_adjustment_commit:040b4d8c-bb8a-40d3-ab05-06734fefaae8",
+            "sequence": 3,
+            "display_kind": "write",
+            "memory_layer": "entity_state",
+            "action": "rebuilt",
+            "source": "story_adjustment_commit",
+            "source_turn": 2,
+            "memory_key": "86cf19d8-6b99-43b8-af29-0732ab1fe0d8",
+            "title": "实体状态已重建: 张三",
+            "reason": null,
+            "before": {
+              "display_name": "张三",
+              "current_location": "钟楼顶层",
+              "inventory": [
+                "铜钥匙"
+              ],
+              "status_tags": [],
+              "companions": [
+                "25189a64-1ef3-4bc7-b681-84f5dd61eff8"
+              ],
+              "short_goal": "前往旧港档案馆地下室",
+              "last_source_turn": 1
+            },
+            "after": {
+              "display_name": "张三",
+              "current_location": "地下仓库",
+              "inventory": [
+                "铜钥匙"
+              ],
+              "status_tags": [
+                "警觉"
+              ],
+              "companions": [
+                "25189a64-1ef3-4bc7-b681-84f5dd61eff8"
+              ],
+              "short_goal": "封锁入口并警惕回头路",
+              "last_source_turn": 2
+            },
+            "status": "committed",
+            "committed_at": "2026-04-09T21:07:51.228830"
+          },
+          {
+            "event_id": "17c96d34-4423-48c7-b5ee-b6ec89df5053",
+            "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+            "operation_id": "story_adjustment_commit:040b4d8c-bb8a-40d3-ab05-06734fefaae8",
+            "sequence": 4,
+            "display_kind": "write",
+            "memory_layer": "entity_state",
+            "action": "rebuilt",
+            "source": "story_adjustment_commit",
+            "source_turn": 2,
+            "memory_key": "25189a64-1ef3-4bc7-b681-84f5dd61eff8",
+            "title": "实体状态已重建: 李四",
+            "reason": null,
+            "before": {
+              "display_name": "李四",
+              "current_location": "钟楼顶层",
+              "inventory": [],
+              "status_tags": [],
+              "companions": [
+                "86cf19d8-6b99-43b8-af29-0732ab1fe0d8"
+              ],
+              "short_goal": null,
+              "last_source_turn": 1
+            },
+            "after": {
+              "display_name": "李四",
+              "current_location": "地下仓库",
+              "inventory": [
+                "火折子",
+                "铜钥匙"
+              ],
+              "status_tags": [
+                "警觉"
+              ],
+              "companions": [
+                "86cf19d8-6b99-43b8-af29-0732ab1fe0d8"
+              ],
+              "short_goal": "封锁入口并警惕回头路",
+              "last_source_turn": 2
+            },
+            "status": "committed",
+            "committed_at": "2026-04-09T21:07:51.228830"
+          }
+        ],
+        "total": 4
+      }
+    },
+    {
+      "name": "story_segment_rollback_rebuild_entity",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "rebuild_entity_state_rebuilt": true
+      }
+    },
+    {
+      "name": "story_segment_rollback_entity_updates_visible",
+      "passed": true,
+      "detail": {
+        "memory_updates": [
+          {
+            "event_id": "08117b11-72a6-49d3-b766-f6ee7baff762",
+            "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+            "operation_id": "story_segment_rollback:9f17ed27-18b5-461d-bfed-11d56580ea30",
+            "sequence": 1,
+            "display_kind": "session_rebuild",
+            "memory_layer": "episodic",
+            "action": "rebuilt",
+            "source": "story_segment_rollback",
+            "source_turn": null,
+            "memory_key": null,
+            "title": "会话消息已按故事正文重建",
+            "reason": null,
+            "before": null,
+            "after": {
+              "message_count": 2,
+              "segment_count": 1
+            },
+            "status": "committed",
+            "committed_at": "2026-04-09T21:07:51.289346"
+          },
+          {
+            "event_id": "395c061e-45bd-4c70-96bc-238f2c46ba29",
+            "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+            "operation_id": "story_segment_rollback:9f17ed27-18b5-461d-bfed-11d56580ea30",
+            "sequence": 2,
+            "display_kind": "index_rebuild",
+            "memory_layer": "episodic",
+            "action": "reindexed",
+            "source": "story_segment_rollback",
+            "source_turn": null,
+            "memory_key": "conversation_history_index",
+            "title": "历史向量索引已重建",
+            "reason": null,
+            "before": null,
+            "after": {
+              "indexed_message_count": 2
+            },
+            "status": "committed",
+            "committed_at": "2026-04-09T21:07:51.457441"
+          },
+          {
+            "event_id": "71be50ee-a5d0-4ecc-9af6-06f1a26ed814",
+            "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+            "operation_id": "story_segment_rollback:9f17ed27-18b5-461d-bfed-11d56580ea30",
+            "sequence": 3,
+            "display_kind": "write",
+            "memory_layer": "entity_state",
+            "action": "rebuilt",
+            "source": "story_segment_rollback",
+            "source_turn": 1,
+            "memory_key": "86cf19d8-6b99-43b8-af29-0732ab1fe0d8",
+            "title": "实体状态已通过事件回放重建: 张三",
+            "reason": "event_replay:6",
+            "before": {
+              "display_name": "张三",
+              "current_location": "地下仓库",
+              "inventory": [
+                "铜钥匙"
+              ],
+              "status_tags": [
+                "警觉"
+              ],
+              "companions": [
+                "25189a64-1ef3-4bc7-b681-84f5dd61eff8"
+              ],
+              "short_goal": "封锁入口并警惕回头路",
+              "last_source_turn": 2
+            },
+            "after": {
+              "display_name": "张三",
+              "current_location": "钟楼顶层",
+              "inventory": [
+                "铜钥匙"
+              ],
+              "status_tags": [],
+              "companions": [
+                "25189a64-1ef3-4bc7-b681-84f5dd61eff8"
+              ],
+              "short_goal": "前往旧港档案馆地下室",
+              "last_source_turn": 1
+            },
+            "status": "committed",
+            "committed_at": "2026-04-09T21:07:51.460545"
+          },
+          {
+            "event_id": "d39f1467-1540-4a28-917d-a8137c427980",
+            "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+            "operation_id": "story_segment_rollback:9f17ed27-18b5-461d-bfed-11d56580ea30",
+            "sequence": 4,
+            "display_kind": "write",
+            "memory_layer": "entity_state",
+            "action": "rebuilt",
+            "source": "story_segment_rollback",
+            "source_turn": 1,
+            "memory_key": "25189a64-1ef3-4bc7-b681-84f5dd61eff8",
+            "title": "实体状态已通过事件回放重建: 李四",
+            "reason": "event_replay:6",
+            "before": {
+              "display_name": "李四",
+              "current_location": "地下仓库",
+              "inventory": [
+                "火折子",
+                "铜钥匙"
+              ],
+              "status_tags": [
+                "警觉"
+              ],
+              "companions": [
+                "86cf19d8-6b99-43b8-af29-0732ab1fe0d8"
+              ],
+              "short_goal": "封锁入口并警惕回头路",
+              "last_source_turn": 2
+            },
+            "after": {
+              "display_name": "李四",
+              "current_location": "钟楼顶层",
+              "inventory": [],
+              "status_tags": [],
+              "companions": [
+                "86cf19d8-6b99-43b8-af29-0732ab1fe0d8"
+              ],
+              "short_goal": null,
+              "last_source_turn": 1
+            },
+            "status": "committed",
+            "committed_at": "2026-04-09T21:07:51.460545"
+          }
+        ],
+        "total": 4
+      }
+    },
+    {
+      "name": "story_segment_rollback_prefers_replay_when_events_exist",
+      "passed": true,
+      "detail": {
+        "pre_event_count": 6,
+        "replay_reason_found": true,
+        "reasons_preview": [
+          "event_replay:6",
+          "event_replay:6"
+        ]
+      }
+    },
+    {
+      "name": "story_entity_rebuild_api_success",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "body": {
+          "story_id": "b251ebd6-f925-4a31-9f2a-30599f5887d1",
+          "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+          "rebuilt": true,
+          "entity_count": 2,
+          "memory_updates": [
+            {
+              "event_id": "b005bf59-cbe3-4090-9a7c-c91be950e604",
+              "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+              "operation_id": "entity_state_story_rebuild_api:159dbceb-4aae-44ba-9439-989fccd98427",
+              "sequence": 1,
+              "display_kind": "write",
+              "memory_layer": "entity_state",
+              "action": "rebuilt",
+              "source": "entity_state_story_rebuild_api",
+              "source_turn": 1,
+              "memory_key": "86cf19d8-6b99-43b8-af29-0732ab1fe0d8",
+              "title": "实体状态已通过事件回放重建: 张三",
+              "reason": "event_replay:6",
+              "before": {
+                "display_name": "张三",
+                "current_location": "钟楼顶层",
+                "inventory": [
+                  "铜钥匙"
+                ],
+                "status_tags": [],
+                "companions": [
+                  "25189a64-1ef3-4bc7-b681-84f5dd61eff8"
+                ],
+                "short_goal": "前往旧港档案馆地下室",
+                "last_source_turn": 1
+              },
+              "after": {
+                "display_name": "张三",
+                "current_location": "钟楼顶层",
+                "inventory": [
+                  "铜钥匙"
+                ],
+                "status_tags": [],
+                "companions": [
+                  "25189a64-1ef3-4bc7-b681-84f5dd61eff8"
+                ],
+                "short_goal": "前往旧港档案馆地下室",
+                "last_source_turn": 1
+              },
+              "status": "committed",
+              "committed_at": "2026-04-09T21:07:51.512216"
+            },
+            {
+              "event_id": "7e0ca0d0-a6e7-4508-8cf4-7f1f1213bc76",
+              "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+              "operation_id": "entity_state_story_rebuild_api:159dbceb-4aae-44ba-9439-989fccd98427",
+              "sequence": 2,
+              "display_kind": "write",
+              "memory_layer": "entity_state",
+              "action": "rebuilt",
+              "source": "entity_state_story_rebuild_api",
+              "source_turn": 1,
+              "memory_key": "25189a64-1ef3-4bc7-b681-84f5dd61eff8",
+              "title": "实体状态已通过事件回放重建: 李四",
+              "reason": "event_replay:6",
+              "before": {
+                "display_name": "李四",
+                "current_location": "钟楼顶层",
+                "inventory": [],
+                "status_tags": [],
+                "companions": [
+                  "86cf19d8-6b99-43b8-af29-0732ab1fe0d8"
+                ],
+                "short_goal": null,
+                "last_source_turn": 1
+              },
+              "after": {
+                "display_name": "李四",
+                "current_location": "钟楼顶层",
+                "inventory": [],
+                "status_tags": [],
+                "companions": [
+                  "86cf19d8-6b99-43b8-af29-0732ab1fe0d8"
+                ],
+                "short_goal": null,
+                "last_source_turn": 1
+              },
+              "status": "committed",
+              "committed_at": "2026-04-09T21:07:51.512216"
+            }
+          ],
+          "warnings": [],
+          "items": [
+            {
+              "story_id": "b251ebd6-f925-4a31-9f2a-30599f5887d1",
+              "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+              "entity_id": "86cf19d8-6b99-43b8-af29-0732ab1fe0d8",
+              "entity_type": "character",
+              "display_name": "张三",
+              "current_location": "钟楼顶层",
+              "inventory": [
+                "铜钥匙"
+              ],
+              "status_tags": [],
+              "companions": [
+                "25189a64-1ef3-4bc7-b681-84f5dd61eff8"
+              ],
+              "short_goal": "前往旧港档案馆地下室",
+              "state_summary": null,
+              "evidence": [
+                "张三推开沉重的木门时，锈蚀的铰链发出刺耳的呻吟。他站在平台边缘，俯瞰着旧港",
+                "他蹲下身，从石缝里抠出一把铜钥匙。钥匙表面布满绿锈，但齿纹依然清晰，在掌心沉甸甸的。",
+                "“结伴行动？”张三问，语气平静得像在讨论天气。李四咧嘴笑了，露出被烟草熏黄的牙齿：“当然。这鬼地方一个人可不行。”",
+                "张三将钥匙递过去：“钟楼顶层的钥匙。齿形特殊，应该能打开旧港档案馆的地下室。”"
+              ],
+              "last_source_turn": 1,
+              "updated_at": "2026-04-09T21:07:08.971547",
+              "version": 1,
+              "metadata": {}
+            },
+            {
+              "story_id": "b251ebd6-f925-4a31-9f2a-30599f5887d1",
+              "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+              "entity_id": "25189a64-1ef3-4bc7-b681-84f5dd61eff8",
+              "entity_type": "character",
+              "display_name": "李四",
+              "current_location": "钟楼顶层",
+              "inventory": [],
+              "status_tags": [],
+              "companions": [
+                "86cf19d8-6b99-43b8-af29-0732ab1fe0d8"
+              ],
+              "short_goal": null,
+              "state_summary": null,
+              "evidence": [
+                "楼梯传来急促的脚步声。李四喘着气出现在门口，额头上挂着汗珠",
+                "“结伴行动？”张三问，语气平静得像在讨论天气。李四咧嘴笑了，露出被烟草熏黄的牙齿：“当然。这鬼地方一个人可不行。”"
+              ],
+              "last_source_turn": 1,
+              "updated_at": "2026-04-09T21:07:08.971547",
+              "version": 1,
+              "metadata": {}
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "story_entity_rebuild_api_updates_visible",
+      "passed": true,
+      "detail": {
+        "memory_updates": [
+          {
+            "event_id": "b005bf59-cbe3-4090-9a7c-c91be950e604",
+            "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+            "operation_id": "entity_state_story_rebuild_api:159dbceb-4aae-44ba-9439-989fccd98427",
+            "sequence": 1,
+            "display_kind": "write",
+            "memory_layer": "entity_state",
+            "action": "rebuilt",
+            "source": "entity_state_story_rebuild_api",
+            "source_turn": 1,
+            "memory_key": "86cf19d8-6b99-43b8-af29-0732ab1fe0d8",
+            "title": "实体状态已通过事件回放重建: 张三",
+            "reason": "event_replay:6",
+            "before": {
+              "display_name": "张三",
+              "current_location": "钟楼顶层",
+              "inventory": [
+                "铜钥匙"
+              ],
+              "status_tags": [],
+              "companions": [
+                "25189a64-1ef3-4bc7-b681-84f5dd61eff8"
+              ],
+              "short_goal": "前往旧港档案馆地下室",
+              "last_source_turn": 1
+            },
+            "after": {
+              "display_name": "张三",
+              "current_location": "钟楼顶层",
+              "inventory": [
+                "铜钥匙"
+              ],
+              "status_tags": [],
+              "companions": [
+                "25189a64-1ef3-4bc7-b681-84f5dd61eff8"
+              ],
+              "short_goal": "前往旧港档案馆地下室",
+              "last_source_turn": 1
+            },
+            "status": "committed",
+            "committed_at": "2026-04-09T21:07:51.512216"
+          },
+          {
+            "event_id": "7e0ca0d0-a6e7-4508-8cf4-7f1f1213bc76",
+            "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+            "operation_id": "entity_state_story_rebuild_api:159dbceb-4aae-44ba-9439-989fccd98427",
+            "sequence": 2,
+            "display_kind": "write",
+            "memory_layer": "entity_state",
+            "action": "rebuilt",
+            "source": "entity_state_story_rebuild_api",
+            "source_turn": 1,
+            "memory_key": "25189a64-1ef3-4bc7-b681-84f5dd61eff8",
+            "title": "实体状态已通过事件回放重建: 李四",
+            "reason": "event_replay:6",
+            "before": {
+              "display_name": "李四",
+              "current_location": "钟楼顶层",
+              "inventory": [],
+              "status_tags": [],
+              "companions": [
+                "86cf19d8-6b99-43b8-af29-0732ab1fe0d8"
+              ],
+              "short_goal": null,
+              "last_source_turn": 1
+            },
+            "after": {
+              "display_name": "李四",
+              "current_location": "钟楼顶层",
+              "inventory": [],
+              "status_tags": [],
+              "companions": [
+                "86cf19d8-6b99-43b8-af29-0732ab1fe0d8"
+              ],
+              "short_goal": null,
+              "last_source_turn": 1
+            },
+            "status": "committed",
+            "committed_at": "2026-04-09T21:07:51.512216"
+          }
+        ],
+        "total": 2
+      }
+    },
+    {
+      "name": "story_entity_rebuild_prefers_replay_when_events_exist",
+      "passed": true,
+      "detail": {
+        "pre_event_count": 6,
+        "replay_reason_found": true,
+        "reasons_preview": [
+          "event_replay:6",
+          "event_replay:6"
+        ]
+      }
+    },
+    {
+      "name": "timeline_contains_required_entity_sources",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "entity_sources": [
+          "entity_state_session_rebuild_api",
+          "entity_state_story_rebuild_api",
+          "generate",
+          "regenerate",
+          "rollback",
+          "story_adjustment_commit",
+          "story_segment_rollback"
+        ],
+        "missing_sources": []
+      }
+    },
+    {
+      "name": "memory_updates_filter_entity_state_generate",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "total": 10
+      }
+    },
+    {
+      "name": "story_delete_success",
+      "passed": true,
+      "detail": {
+        "status": 200,
+        "body": {
+          "success": true,
+          "story_id": "b251ebd6-f925-4a31-9f2a-30599f5887d1"
+        }
+      }
+    },
+    {
+      "name": "story_delete_cleans_entity_state_events",
+      "passed": true,
+      "detail": {
+        "story_id": "b251ebd6-f925-4a31-9f2a-30599f5887d1",
+        "pre_delete_event_count": 6,
+        "post_delete_event_count": 0
+      }
+    }
+  ],
+  "evidence": {
+    "world_id": "f88b0232-0716-44f4-8f24-030616511873",
+    "story_id": "b251ebd6-f925-4a31-9f2a-30599f5887d1",
+    "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+    "lorebook_entry_ids": {
+      "location_top": "f23b1be7-eb24-472c-923c-7aa5d6119038",
+      "location_warehouse": "e9782783-02ee-476e-80bf-7aeda27849ac",
+      "zhangsan": "86cf19d8-6b99-43b8-af29-0732ab1fe0d8",
+      "lisi": "25189a64-1ef3-4bc7-b681-84f5dd61eff8"
+    },
+    "db_path": "E:\\CODE\\AI_ChatBox\\story_rag_service\\data\\chatbox.db",
+    "generate": {
+      "used_prompt": "请推进剧情并明确写出：张三来到钟楼顶层，张三拿到铜钥匙，李四与张三结伴行动。",
+      "attempts": [
+        {
+          "status": 200,
+          "prompt": "请推进剧情并明确写出：张三来到钟楼顶层，张三拿到铜钥匙，李四与张三结伴行动。",
+          "patch_count": 6,
+          "update_count": 6,
+          "has_snapshot": true
+        }
+      ],
+      "entity_state_snapshot": {
+        "story_id": "b251ebd6-f925-4a31-9f2a-30599f5887d1",
+        "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+        "entity_type": null,
+        "items": [
+          {
+            "story_id": "b251ebd6-f925-4a31-9f2a-30599f5887d1",
+            "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+            "entity_id": "86cf19d8-6b99-43b8-af29-0732ab1fe0d8",
+            "entity_type": "character",
+            "display_name": "张三",
+            "current_location": "钟楼顶层",
+            "inventory": [
+              "铜钥匙"
+            ],
+            "status_tags": [],
+            "companions": [
+              "25189a64-1ef3-4bc7-b681-84f5dd61eff8"
+            ],
+            "short_goal": "前往旧港档案馆地下室",
+            "state_summary": null,
+            "evidence": [
+              "张三推开沉重的木门时，锈蚀的铰链发出刺耳的呻吟。他站在平台边缘，俯瞰着旧港",
+              "他蹲下身，从石缝里抠出一把铜钥匙。钥匙表面布满绿锈，但齿纹依然清晰，在掌心沉甸甸的。",
+              "“结伴行动？”张三问，语气平静得像在讨论天气。李四咧嘴笑了，露出被烟草熏黄的牙齿：“当然。这鬼地方一个人可不行。”",
+              "张三将钥匙递过去：“钟楼顶层的钥匙。齿形特殊，应该能打开旧港档案馆的地下室。”"
+            ],
+            "last_source_turn": 1,
+            "updated_at": "2026-04-09T21:07:08.971547",
+            "version": 1,
+            "metadata": {}
+          },
+          {
+            "story_id": "b251ebd6-f925-4a31-9f2a-30599f5887d1",
+            "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+            "entity_id": "25189a64-1ef3-4bc7-b681-84f5dd61eff8",
+            "entity_type": "character",
+            "display_name": "李四",
+            "current_location": "钟楼顶层",
+            "inventory": [],
+            "status_tags": [],
+            "companions": [
+              "86cf19d8-6b99-43b8-af29-0732ab1fe0d8"
+            ],
+            "short_goal": null,
+            "state_summary": null,
+            "evidence": [
+              "楼梯传来急促的脚步声。李四喘着气出现在门口，额头上挂着汗珠",
+              "“结伴行动？”张三问，语气平静得像在讨论天气。李四咧嘴笑了，露出被烟草熏黄的牙齿：“当然。这鬼地方一个人可不行。”"
+            ],
+            "last_source_turn": 1,
+            "updated_at": "2026-04-09T21:07:08.971547",
+            "version": 1,
+            "metadata": {}
+          }
+        ],
+        "total": 2
+      },
+      "entity_state_updates_preview": [
+        {
+          "event_id": "83205f12-eb7e-43b1-a563-0a73ea769437",
+          "story_id": "b251ebd6-f925-4a31-9f2a-30599f5887d1",
+          "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+          "entity_id": "86cf19d8-6b99-43b8-af29-0732ab1fe0d8",
+          "entity_type": "character",
+          "entity_name": "张三",
+          "field_name": "current_location",
+          "op": "set",
+          "value": "钟楼顶层",
+          "before": null,
+          "after": "钟楼顶层",
+          "evidence_text": "张三推开沉重的木门时，锈蚀的铰链发出刺耳的呻吟。他站在平台边缘，俯瞰着旧港",
+          "source_turn": 1,
+          "source": "generate",
+          "operation_id": "generate:87b5733c-f382-46ac-8748-20597ed7cb4d",
+          "sequence": 2,
+          "confidence": 1.0,
+          "status": "committed",
+          "committed_at": "2026-04-09T21:07:08.971547",
+          "metadata": {}
+        },
+        {
+          "event_id": "ced38929-4983-4e77-8d75-f676b3992879",
+          "story_id": "b251ebd6-f925-4a31-9f2a-30599f5887d1",
+          "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+          "entity_id": "86cf19d8-6b99-43b8-af29-0732ab1fe0d8",
+          "entity_type": "character",
+          "entity_name": "张三",
+          "field_name": "inventory",
+          "op": "add",
+          "value": "铜钥匙",
+          "before": null,
+          "after": [
+            "铜钥匙"
+          ],
+          "evidence_text": "他蹲下身，从石缝里抠出一把铜钥匙。钥匙表面布满绿锈，但齿纹依然清晰，在掌心沉甸甸的。",
+          "source_turn": 1,
+          "source": "generate",
+          "operation_id": "generate:87b5733c-f382-46ac-8748-20597ed7cb4d",
+          "sequence": 3,
+          "confidence": 1.0,
+          "status": "committed",
+          "committed_at": "2026-04-09T21:07:08.971547",
+          "metadata": {}
+        },
+        {
+          "event_id": "0eed6f32-a98e-4d4e-a31e-b4735a2ff671",
+          "story_id": "b251ebd6-f925-4a31-9f2a-30599f5887d1",
+          "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+          "entity_id": "86cf19d8-6b99-43b8-af29-0732ab1fe0d8",
+          "entity_type": "character",
+          "entity_name": "张三",
+          "field_name": "companions",
+          "op": "add",
+          "value": [
+            "25189a64-1ef3-4bc7-b681-84f5dd61eff8"
+          ],
+          "before": null,
+          "after": [
+            "25189a64-1ef3-4bc7-b681-84f5dd61eff8"
+          ],
+          "evidence_text": "“结伴行动？”张三问，语气平静得像在讨论天气。李四咧嘴笑了，露出被烟草熏黄的牙齿：“当然。这鬼地方一个人可不行。”",
+          "source_turn": 1,
+          "source": "generate",
+          "operation_id": "generate:87b5733c-f382-46ac-8748-20597ed7cb4d",
+          "sequence": 4,
+          "confidence": 1.0,
+          "status": "committed",
+          "committed_at": "2026-04-09T21:07:08.971547",
+          "metadata": {}
+        },
+        {
+          "event_id": "fa879bc7-1a38-4b35-8f5e-e26ddc5e99aa",
+          "story_id": "b251ebd6-f925-4a31-9f2a-30599f5887d1",
+          "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+          "entity_id": "86cf19d8-6b99-43b8-af29-0732ab1fe0d8",
+          "entity_type": "character",
+          "entity_name": "张三",
+          "field_name": "short_goal",
+          "op": "set",
+          "value": "前往旧港档案馆地下室",
+          "before": null,
+          "after": "前往旧港档案馆地下室",
+          "evidence_text": "张三将钥匙递过去：“钟楼顶层的钥匙。齿形特殊，应该能打开旧港档案馆的地下室。”",
+          "source_turn": 1,
+          "source": "generate",
+          "operation_id": "generate:87b5733c-f382-46ac-8748-20597ed7cb4d",
+          "sequence": 5,
+          "confidence": 1.0,
+          "status": "committed",
+          "committed_at": "2026-04-09T21:07:08.971547",
+          "metadata": {}
+        },
+        {
+          "event_id": "29fe1593-d832-4a7a-be36-c45ab16c706a",
+          "story_id": "b251ebd6-f925-4a31-9f2a-30599f5887d1",
+          "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+          "entity_id": "25189a64-1ef3-4bc7-b681-84f5dd61eff8",
+          "entity_type": "character",
+          "entity_name": "李四",
+          "field_name": "current_location",
+          "op": "set",
+          "value": "钟楼顶层",
+          "before": null,
+          "after": "钟楼顶层",
+          "evidence_text": "楼梯传来急促的脚步声。李四喘着气出现在门口，额头上挂着汗珠",
+          "source_turn": 1,
+          "source": "generate",
+          "operation_id": "generate:87b5733c-f382-46ac-8748-20597ed7cb4d",
+          "sequence": 6,
+          "confidence": 1.0,
+          "status": "committed",
+          "committed_at": "2026-04-09T21:07:08.971547",
+          "metadata": {}
+        },
+        {
+          "event_id": "80047007-e473-482c-83c3-38b15f141225",
+          "story_id": "b251ebd6-f925-4a31-9f2a-30599f5887d1",
+          "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+          "entity_id": "25189a64-1ef3-4bc7-b681-84f5dd61eff8",
+          "entity_type": "character",
+          "entity_name": "李四",
+          "field_name": "companions",
+          "op": "add",
+          "value": [
+            "86cf19d8-6b99-43b8-af29-0732ab1fe0d8"
+          ],
+          "before": null,
+          "after": [
+            "86cf19d8-6b99-43b8-af29-0732ab1fe0d8"
+          ],
+          "evidence_text": "“结伴行动？”张三问，语气平静得像在讨论天气。李四咧嘴笑了，露出被烟草熏黄的牙齿：“当然。这鬼地方一个人可不行。”",
+          "source_turn": 1,
+          "source": "generate",
+          "operation_id": "generate:87b5733c-f382-46ac-8748-20597ed7cb4d",
+          "sequence": 7,
+          "confidence": 1.0,
+          "status": "committed",
+          "committed_at": "2026-04-09T21:07:08.971547",
+          "metadata": {}
+        }
+      ],
+      "world_update": {
+        "entity_patch": {
+          "patch_count": 6,
+          "warnings": [],
+          "fallback_used": false
+        }
+      },
+      "shared_operation_ids": [
+        "generate:87b5733c-f382-46ac-8748-20597ed7cb4d"
+      ],
+      "db_events_preview": []
+    },
+    "stream": {
+      "entity_state_snapshot": {
+        "story_id": "b251ebd6-f925-4a31-9f2a-30599f5887d1",
+        "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+        "entity_type": null,
+        "items": [
+          {
+            "story_id": "b251ebd6-f925-4a31-9f2a-30599f5887d1",
+            "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+            "entity_id": "86cf19d8-6b99-43b8-af29-0732ab1fe0d8",
+            "entity_type": "character",
+            "display_name": "张三",
+            "current_location": "钟楼顶层",
+            "inventory": [],
+            "status_tags": [],
+            "companions": [
+              "25189a64-1ef3-4bc7-b681-84f5dd61eff8"
+            ],
+            "short_goal": "前往旧港档案馆地下室",
+            "state_summary": null,
+            "evidence": [
+              "张三推开沉重的木门时，锈蚀的铰链发出刺耳的呻吟。他站在平台边缘，俯瞰着旧港",
+              "他蹲下身，从石缝里抠出一把铜钥匙。钥匙表面布满绿锈，但齿纹依然清晰，在掌心沉甸甸的。",
+              "“结伴行动？”张三问，语气平静得像在讨论天气。李四咧嘴笑了，露出被烟草熏黄的牙齿：“当然。这鬼地方一个人可不行。”",
+              "张三将钥匙递过去：“钟楼顶层的钥匙。齿形特殊，应该能打开旧港档案馆的地下室。”",
+              "他走到钟楼边缘的石栏前，将铜钥匙轻轻放在一块风化的石墩上。"
+            ],
+            "last_source_turn": 2,
+            "updated_at": "2026-04-09T21:07:31.077624",
+            "version": 1,
+            "metadata": {}
+          },
+          {
+            "story_id": "b251ebd6-f925-4a31-9f2a-30599f5887d1",
+            "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+            "entity_id": "25189a64-1ef3-4bc7-b681-84f5dd61eff8",
+            "entity_type": "character",
+            "display_name": "李四",
+            "current_location": "钟楼顶层",
+            "inventory": [],
+            "status_tags": [],
+            "companions": [
+              "86cf19d8-6b99-43b8-af29-0732ab1fe0d8"
+            ],
+            "short_goal": null,
+            "state_summary": null,
+            "evidence": [
+              "楼梯传来急促的脚步声。李四喘着气出现在门口，额头上挂着汗珠",
+              "“结伴行动？”张三问，语气平静得像在讨论天气。李四咧嘴笑了，露出被烟草熏黄的牙齿：“当然。这鬼地方一个人可不行。”"
+            ],
+            "last_source_turn": 1,
+            "updated_at": "2026-04-09T21:07:08.971547",
+            "version": 1,
+            "metadata": {}
+          }
+        ],
+        "total": 2
+      },
+      "entity_state_updates_preview": [
+        {
+          "event_id": "85e13e4e-3603-4189-ad7d-8e78aeae4ad2",
+          "story_id": "b251ebd6-f925-4a31-9f2a-30599f5887d1",
+          "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+          "entity_id": "86cf19d8-6b99-43b8-af29-0732ab1fe0d8",
+          "entity_type": "character",
+          "entity_name": "张三",
+          "field_name": "inventory",
+          "op": "remove",
+          "value": "铜钥匙",
+          "before": [
+            "铜钥匙"
+          ],
+          "after": [],
+          "evidence_text": "他走到钟楼边缘的石栏前，将铜钥匙轻轻放在一块风化的石墩上。",
+          "source_turn": 2,
+          "source": "generate",
+          "operation_id": "generate:0c451208-c747-46bb-8fd4-f3534be8ecb3",
+          "sequence": 2,
+          "confidence": 1.0,
+          "status": "committed",
+          "committed_at": "2026-04-09T21:07:31.077624",
+          "metadata": {}
+        }
+      ],
+      "world_update": {
+        "entity_patch": {
+          "patch_count": 1,
+          "warnings": [
+            "unknown location skipped: 地下仓库入口（向下石阶）",
+            "unknown location skipped: 地下仓库入口（向下石阶）"
+          ],
+          "fallback_used": false
+        }
+      },
+      "shared_operation_ids": [
+        "generate:0c451208-c747-46bb-8fd4-f3534be8ecb3"
+      ]
+    },
+    "regenerate": {
+      "entity_state_snapshot": {
+        "story_id": "b251ebd6-f925-4a31-9f2a-30599f5887d1",
+        "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+        "entity_type": null,
+        "items": [
+          {
+            "story_id": "b251ebd6-f925-4a31-9f2a-30599f5887d1",
+            "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+            "entity_id": "86cf19d8-6b99-43b8-af29-0732ab1fe0d8",
+            "entity_type": "character",
+            "display_name": "张三",
+            "current_location": "地下仓库",
+            "inventory": [],
+            "status_tags": [],
+            "companions": [
+              "25189a64-1ef3-4bc7-b681-84f5dd61eff8"
+            ],
+            "short_goal": "前往旧港档案馆地下室",
+            "state_summary": null,
+            "evidence": [
+              "张三推开沉重的木门时，锈蚀的铰链发出刺耳的呻吟。他站在平台边缘，俯瞰着旧港",
+              "他蹲下身，从石缝里抠出一把铜钥匙。钥匙表面布满绿锈，但齿纹依然清晰，在掌心沉甸甸的。",
+              "“结伴行动？”张三问，语气平静得像在讨论天气。李四咧嘴笑了，露出被烟草熏黄的牙齿：“当然。这鬼地方一个人可不行。”",
+              "张三将钥匙递过去：“钟楼顶层的钥匙。齿形特殊，应该能打开旧港档案馆的地下室。”",
+              "张三站在仓库中央，他刚从钟楼赶来",
+              "那把铜钥匙，此刻正静静躺在顶层平台的石缝原处"
+            ],
+            "last_source_turn": 2,
+            "updated_at": "2026-04-09T21:07:50.513974",
+            "version": 1,
+            "metadata": {}
+          },
+          {
+            "story_id": "b251ebd6-f925-4a31-9f2a-30599f5887d1",
+            "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+            "entity_id": "25189a64-1ef3-4bc7-b681-84f5dd61eff8",
+            "entity_type": "character",
+            "display_name": "李四",
+            "current_location": "地下仓库",
+            "inventory": [],
+            "status_tags": [],
+            "companions": [
+              "86cf19d8-6b99-43b8-af29-0732ab1fe0d8"
+            ],
+            "short_goal": null,
+            "state_summary": null,
+            "evidence": [
+              "楼梯传来急促的脚步声。李四喘着气出现在门口，额头上挂着汗珠",
+              "“结伴行动？”张三问，语气平静得像在讨论天气。李四咧嘴笑了，露出被烟草熏黄的牙齿：“当然。这鬼地方一个人可不行。”",
+              "李四从两排箱子间的窄道里闪身出来"
+            ],
+            "last_source_turn": 2,
+            "updated_at": "2026-04-09T21:07:50.513974",
+            "version": 1,
+            "metadata": {}
+          }
+        ],
+        "total": 2
+      },
+      "entity_state_updates_preview": [
+        {
+          "event_id": "0edd397c-55b8-4fd9-b0f2-1d2e84974bdf",
+          "story_id": "b251ebd6-f925-4a31-9f2a-30599f5887d1",
+          "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+          "entity_id": "86cf19d8-6b99-43b8-af29-0732ab1fe0d8",
+          "entity_type": "character",
+          "entity_name": "张三",
+          "field_name": "current_location",
+          "op": "set",
+          "value": "地下仓库",
+          "before": "钟楼顶层",
+          "after": "地下仓库",
+          "evidence_text": "张三站在仓库中央，他刚从钟楼赶来",
+          "source_turn": 2,
+          "source": "generate",
+          "operation_id": "regenerate:69f6a3ec-b00e-4a64-b762-58868037c377",
+          "sequence": 6,
+          "confidence": 1.0,
+          "status": "committed",
+          "committed_at": "2026-04-09T21:07:50.513974",
+          "metadata": {}
+        },
+        {
+          "event_id": "c6e486f9-f29c-4198-a2aa-11de0877dc41",
+          "story_id": "b251ebd6-f925-4a31-9f2a-30599f5887d1",
+          "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+          "entity_id": "86cf19d8-6b99-43b8-af29-0732ab1fe0d8",
+          "entity_type": "character",
+          "entity_name": "张三",
+          "field_name": "inventory",
+          "op": "remove",
+          "value": "铜钥匙",
+          "before": [
+            "铜钥匙"
+          ],
+          "after": [],
+          "evidence_text": "那把铜钥匙，此刻正静静躺在顶层平台的石缝原处",
+          "source_turn": 2,
+          "source": "generate",
+          "operation_id": "regenerate:69f6a3ec-b00e-4a64-b762-58868037c377",
+          "sequence": 7,
+          "confidence": 1.0,
+          "status": "committed",
+          "committed_at": "2026-04-09T21:07:50.513974",
+          "metadata": {}
+        },
+        {
+          "event_id": "765d3f39-fb29-4a11-bb64-6651831a5195",
+          "story_id": "b251ebd6-f925-4a31-9f2a-30599f5887d1",
+          "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+          "entity_id": "25189a64-1ef3-4bc7-b681-84f5dd61eff8",
+          "entity_type": "character",
+          "entity_name": "李四",
+          "field_name": "current_location",
+          "op": "set",
+          "value": "地下仓库",
+          "before": "钟楼顶层",
+          "after": "地下仓库",
+          "evidence_text": "李四从两排箱子间的窄道里闪身出来",
+          "source_turn": 2,
+          "source": "generate",
+          "operation_id": "regenerate:69f6a3ec-b00e-4a64-b762-58868037c377",
+          "sequence": 8,
+          "confidence": 1.0,
+          "status": "committed",
+          "committed_at": "2026-04-09T21:07:50.513974",
+          "metadata": {}
+        }
+      ],
+      "world_update": {
+        "entity_patch": {
+          "patch_count": 3,
+          "warnings": [],
+          "fallback_used": false
+        }
+      },
+      "operation_ids": [
+        "regenerate:69f6a3ec-b00e-4a64-b762-58868037c377"
+      ]
+    },
+    "final_timeline_entity_sources": [
+      "entity_state_session_rebuild_api",
+      "entity_state_story_rebuild_api",
+      "generate",
+      "regenerate",
+      "rollback",
+      "story_adjustment_commit",
+      "story_segment_rollback"
+    ],
+    "timeline_preview": [
+      {
+        "event_id": "7e0ca0d0-a6e7-4508-8cf4-7f1f1213bc76",
+        "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+        "operation_id": "entity_state_story_rebuild_api:159dbceb-4aae-44ba-9439-989fccd98427",
+        "sequence": 2,
+        "display_kind": "write",
+        "world_id": "f88b0232-0716-44f4-8f24-030616511873",
+        "memory_layer": "entity_state",
+        "action": "rebuilt",
+        "source": "entity_state_story_rebuild_api",
+        "source_turn": 1,
+        "memory_key": "25189a64-1ef3-4bc7-b681-84f5dd61eff8",
+        "title": "实体状态已通过事件回放重建: 李四",
+        "reason": "event_replay:6",
+        "before": {
+          "companions": [
+            "86cf19d8-6b99-43b8-af29-0732ab1fe0d8"
+          ],
+          "current_location": "钟楼顶层",
+          "display_name": "李四",
+          "inventory": [],
+          "last_source_turn": 1,
+          "short_goal": null,
+          "status_tags": []
+        },
+        "after": {
+          "companions": [
+            "86cf19d8-6b99-43b8-af29-0732ab1fe0d8"
+          ],
+          "current_location": "钟楼顶层",
+          "display_name": "李四",
+          "inventory": [],
+          "last_source_turn": 1,
+          "short_goal": null,
+          "status_tags": []
+        },
+        "status": "committed",
+        "committed_at": "2026-04-09T21:07:51.512216"
+      },
+      {
+        "event_id": "b005bf59-cbe3-4090-9a7c-c91be950e604",
+        "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+        "operation_id": "entity_state_story_rebuild_api:159dbceb-4aae-44ba-9439-989fccd98427",
+        "sequence": 1,
+        "display_kind": "write",
+        "world_id": "f88b0232-0716-44f4-8f24-030616511873",
+        "memory_layer": "entity_state",
+        "action": "rebuilt",
+        "source": "entity_state_story_rebuild_api",
+        "source_turn": 1,
+        "memory_key": "86cf19d8-6b99-43b8-af29-0732ab1fe0d8",
+        "title": "实体状态已通过事件回放重建: 张三",
+        "reason": "event_replay:6",
+        "before": {
+          "companions": [
+            "25189a64-1ef3-4bc7-b681-84f5dd61eff8"
+          ],
+          "current_location": "钟楼顶层",
+          "display_name": "张三",
+          "inventory": [
+            "铜钥匙"
+          ],
+          "last_source_turn": 1,
+          "short_goal": "前往旧港档案馆地下室",
+          "status_tags": []
+        },
+        "after": {
+          "companions": [
+            "25189a64-1ef3-4bc7-b681-84f5dd61eff8"
+          ],
+          "current_location": "钟楼顶层",
+          "display_name": "张三",
+          "inventory": [
+            "铜钥匙"
+          ],
+          "last_source_turn": 1,
+          "short_goal": "前往旧港档案馆地下室",
+          "status_tags": []
+        },
+        "status": "committed",
+        "committed_at": "2026-04-09T21:07:51.512216"
+      },
+      {
+        "event_id": "d39f1467-1540-4a28-917d-a8137c427980",
+        "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+        "operation_id": "story_segment_rollback:9f17ed27-18b5-461d-bfed-11d56580ea30",
+        "sequence": 4,
+        "display_kind": "write",
+        "world_id": "f88b0232-0716-44f4-8f24-030616511873",
+        "memory_layer": "entity_state",
+        "action": "rebuilt",
+        "source": "story_segment_rollback",
+        "source_turn": 1,
+        "memory_key": "25189a64-1ef3-4bc7-b681-84f5dd61eff8",
+        "title": "实体状态已通过事件回放重建: 李四",
+        "reason": "event_replay:6",
+        "before": {
+          "companions": [
+            "86cf19d8-6b99-43b8-af29-0732ab1fe0d8"
+          ],
+          "current_location": "地下仓库",
+          "display_name": "李四",
+          "inventory": [
+            "火折子",
+            "铜钥匙"
+          ],
+          "last_source_turn": 2,
+          "short_goal": "封锁入口并警惕回头路",
+          "status_tags": [
+            "警觉"
+          ]
+        },
+        "after": {
+          "companions": [
+            "86cf19d8-6b99-43b8-af29-0732ab1fe0d8"
+          ],
+          "current_location": "钟楼顶层",
+          "display_name": "李四",
+          "inventory": [],
+          "last_source_turn": 1,
+          "short_goal": null,
+          "status_tags": []
+        },
+        "status": "committed",
+        "committed_at": "2026-04-09T21:07:51.460545"
+      },
+      {
+        "event_id": "71be50ee-a5d0-4ecc-9af6-06f1a26ed814",
+        "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+        "operation_id": "story_segment_rollback:9f17ed27-18b5-461d-bfed-11d56580ea30",
+        "sequence": 3,
+        "display_kind": "write",
+        "world_id": "f88b0232-0716-44f4-8f24-030616511873",
+        "memory_layer": "entity_state",
+        "action": "rebuilt",
+        "source": "story_segment_rollback",
+        "source_turn": 1,
+        "memory_key": "86cf19d8-6b99-43b8-af29-0732ab1fe0d8",
+        "title": "实体状态已通过事件回放重建: 张三",
+        "reason": "event_replay:6",
+        "before": {
+          "companions": [
+            "25189a64-1ef3-4bc7-b681-84f5dd61eff8"
+          ],
+          "current_location": "地下仓库",
+          "display_name": "张三",
+          "inventory": [
+            "铜钥匙"
+          ],
+          "last_source_turn": 2,
+          "short_goal": "封锁入口并警惕回头路",
+          "status_tags": [
+            "警觉"
+          ]
+        },
+        "after": {
+          "companions": [
+            "25189a64-1ef3-4bc7-b681-84f5dd61eff8"
+          ],
+          "current_location": "钟楼顶层",
+          "display_name": "张三",
+          "inventory": [
+            "铜钥匙"
+          ],
+          "last_source_turn": 1,
+          "short_goal": "前往旧港档案馆地下室",
+          "status_tags": []
+        },
+        "status": "committed",
+        "committed_at": "2026-04-09T21:07:51.460545"
+      },
+      {
+        "event_id": "395c061e-45bd-4c70-96bc-238f2c46ba29",
+        "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+        "operation_id": "story_segment_rollback:9f17ed27-18b5-461d-bfed-11d56580ea30",
+        "sequence": 2,
+        "display_kind": "index_rebuild",
+        "world_id": "f88b0232-0716-44f4-8f24-030616511873",
+        "memory_layer": "episodic",
+        "action": "reindexed",
+        "source": "story_segment_rollback",
+        "source_turn": null,
+        "memory_key": "conversation_history_index",
+        "title": "历史向量索引已重建",
+        "reason": null,
+        "before": null,
+        "after": {
+          "indexed_message_count": 2
+        },
+        "status": "committed",
+        "committed_at": "2026-04-09T21:07:51.457441"
+      },
+      {
+        "event_id": "08117b11-72a6-49d3-b766-f6ee7baff762",
+        "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+        "operation_id": "story_segment_rollback:9f17ed27-18b5-461d-bfed-11d56580ea30",
+        "sequence": 1,
+        "display_kind": "session_rebuild",
+        "world_id": "f88b0232-0716-44f4-8f24-030616511873",
+        "memory_layer": "episodic",
+        "action": "rebuilt",
+        "source": "story_segment_rollback",
+        "source_turn": null,
+        "memory_key": null,
+        "title": "会话消息已按故事正文重建",
+        "reason": null,
+        "before": null,
+        "after": {
+          "message_count": 2,
+          "segment_count": 1
+        },
+        "status": "committed",
+        "committed_at": "2026-04-09T21:07:51.289346"
+      },
+      {
+        "event_id": "17c96d34-4423-48c7-b5ee-b6ec89df5053",
+        "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+        "operation_id": "story_adjustment_commit:040b4d8c-bb8a-40d3-ab05-06734fefaae8",
+        "sequence": 4,
+        "display_kind": "write",
+        "world_id": "f88b0232-0716-44f4-8f24-030616511873",
+        "memory_layer": "entity_state",
+        "action": "rebuilt",
+        "source": "story_adjustment_commit",
+        "source_turn": 2,
+        "memory_key": "25189a64-1ef3-4bc7-b681-84f5dd61eff8",
+        "title": "实体状态已重建: 李四",
+        "reason": null,
+        "before": {
+          "companions": [
+            "86cf19d8-6b99-43b8-af29-0732ab1fe0d8"
+          ],
+          "current_location": "钟楼顶层",
+          "display_name": "李四",
+          "inventory": [],
+          "last_source_turn": 1,
+          "short_goal": null,
+          "status_tags": []
+        },
+        "after": {
+          "companions": [
+            "86cf19d8-6b99-43b8-af29-0732ab1fe0d8"
+          ],
+          "current_location": "地下仓库",
+          "display_name": "李四",
+          "inventory": [
+            "火折子",
+            "铜钥匙"
+          ],
+          "last_source_turn": 2,
+          "short_goal": "封锁入口并警惕回头路",
+          "status_tags": [
+            "警觉"
+          ]
+        },
+        "status": "committed",
+        "committed_at": "2026-04-09T21:07:51.228830"
+      },
+      {
+        "event_id": "32214a75-fdea-4e22-bfee-834110d0b45c",
+        "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+        "operation_id": "story_adjustment_commit:040b4d8c-bb8a-40d3-ab05-06734fefaae8",
+        "sequence": 3,
+        "display_kind": "write",
+        "world_id": "f88b0232-0716-44f4-8f24-030616511873",
+        "memory_layer": "entity_state",
+        "action": "rebuilt",
+        "source": "story_adjustment_commit",
+        "source_turn": 2,
+        "memory_key": "86cf19d8-6b99-43b8-af29-0732ab1fe0d8",
+        "title": "实体状态已重建: 张三",
+        "reason": null,
+        "before": {
+          "companions": [
+            "25189a64-1ef3-4bc7-b681-84f5dd61eff8"
+          ],
+          "current_location": "钟楼顶层",
+          "display_name": "张三",
+          "inventory": [
+            "铜钥匙"
+          ],
+          "last_source_turn": 1,
+          "short_goal": "前往旧港档案馆地下室",
+          "status_tags": []
+        },
+        "after": {
+          "companions": [
+            "25189a64-1ef3-4bc7-b681-84f5dd61eff8"
+          ],
+          "current_location": "地下仓库",
+          "display_name": "张三",
+          "inventory": [
+            "铜钥匙"
+          ],
+          "last_source_turn": 2,
+          "short_goal": "封锁入口并警惕回头路",
+          "status_tags": [
+            "警觉"
+          ]
+        },
+        "status": "committed",
+        "committed_at": "2026-04-09T21:07:51.228830"
+      },
+      {
+        "event_id": "1f9be302-326f-4416-bc69-6ed300868e15",
+        "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+        "operation_id": "story_adjustment_commit:040b4d8c-bb8a-40d3-ab05-06734fefaae8",
+        "sequence": 2,
+        "display_kind": "index_rebuild",
+        "world_id": "f88b0232-0716-44f4-8f24-030616511873",
+        "memory_layer": "episodic",
+        "action": "reindexed",
+        "source": "story_adjustment_commit",
+        "source_turn": null,
+        "memory_key": "conversation_history_index",
+        "title": "历史向量索引已重建",
+        "reason": null,
+        "before": null,
+        "after": {
+          "indexed_message_count": 4
+        },
+        "status": "committed",
+        "committed_at": "2026-04-09T21:07:51.225708"
+      },
+      {
+        "event_id": "6bc74deb-6aba-45f8-9a58-7b5aa0481a19",
+        "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+        "operation_id": "story_adjustment_commit:040b4d8c-bb8a-40d3-ab05-06734fefaae8",
+        "sequence": 1,
+        "display_kind": "session_rebuild",
+        "world_id": "f88b0232-0716-44f4-8f24-030616511873",
+        "memory_layer": "episodic",
+        "action": "rebuilt",
+        "source": "story_adjustment_commit",
+        "source_turn": null,
+        "memory_key": null,
+        "title": "会话消息已按故事正文重建",
+        "reason": null,
+        "before": null,
+        "after": {
+          "message_count": 4,
+          "segment_count": 2
+        },
+        "status": "committed",
+        "committed_at": "2026-04-09T21:07:50.987709"
+      },
+      {
+        "event_id": "48bcd96a-69b9-4cd1-b3dc-3bcf17ed2ef5",
+        "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+        "operation_id": "entity_state_session_rebuild_api:2e13918d-a6b7-4f1f-822f-7a502b92a020",
+        "sequence": 2,
+        "display_kind": "write",
+        "world_id": "f88b0232-0716-44f4-8f24-030616511873",
+        "memory_layer": "entity_state",
+        "action": "rebuilt",
+        "source": "entity_state_session_rebuild_api",
+        "source_turn": 1,
+        "memory_key": "25189a64-1ef3-4bc7-b681-84f5dd61eff8",
+        "title": "实体状态已通过事件回放重建: 李四",
+        "reason": "event_replay:6",
+        "before": {
+          "companions": [
+            "86cf19d8-6b99-43b8-af29-0732ab1fe0d8"
+          ],
+          "current_location": "钟楼顶层",
+          "display_name": "李四",
+          "inventory": [],
+          "last_source_turn": 1,
+          "short_goal": null,
+          "status_tags": []
+        },
+        "after": {
+          "companions": [
+            "86cf19d8-6b99-43b8-af29-0732ab1fe0d8"
+          ],
+          "current_location": "钟楼顶层",
+          "display_name": "李四",
+          "inventory": [],
+          "last_source_turn": 1,
+          "short_goal": null,
+          "status_tags": []
+        },
+        "status": "committed",
+        "committed_at": "2026-04-09T21:07:50.888163"
+      },
+      {
+        "event_id": "a5138916-2823-46bf-99ff-32dd646b2c18",
+        "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+        "operation_id": "entity_state_session_rebuild_api:2e13918d-a6b7-4f1f-822f-7a502b92a020",
+        "sequence": 1,
+        "display_kind": "write",
+        "world_id": "f88b0232-0716-44f4-8f24-030616511873",
+        "memory_layer": "entity_state",
+        "action": "rebuilt",
+        "source": "entity_state_session_rebuild_api",
+        "source_turn": 1,
+        "memory_key": "86cf19d8-6b99-43b8-af29-0732ab1fe0d8",
+        "title": "实体状态已通过事件回放重建: 张三",
+        "reason": "event_replay:6",
+        "before": {
+          "companions": [
+            "25189a64-1ef3-4bc7-b681-84f5dd61eff8"
+          ],
+          "current_location": "钟楼顶层",
+          "display_name": "张三",
+          "inventory": [
+            "铜钥匙"
+          ],
+          "last_source_turn": 1,
+          "short_goal": "前往旧港档案馆地下室",
+          "status_tags": []
+        },
+        "after": {
+          "companions": [
+            "25189a64-1ef3-4bc7-b681-84f5dd61eff8"
+          ],
+          "current_location": "钟楼顶层",
+          "display_name": "张三",
+          "inventory": [
+            "铜钥匙"
+          ],
+          "last_source_turn": 1,
+          "short_goal": "前往旧港档案馆地下室",
+          "status_tags": []
+        },
+        "status": "committed",
+        "committed_at": "2026-04-09T21:07:50.888163"
+      },
+      {
+        "event_id": "ca2a1d87-5e5c-4d0f-a7c2-a18c872a6da4",
+        "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+        "operation_id": "rollback:34692724-c69c-4ab8-9f8f-a869e9ab46f7",
+        "sequence": 4,
+        "display_kind": "write",
+        "world_id": "f88b0232-0716-44f4-8f24-030616511873",
+        "memory_layer": "entity_state",
+        "action": "rebuilt",
+        "source": "rollback",
+        "source_turn": 1,
+        "memory_key": "25189a64-1ef3-4bc7-b681-84f5dd61eff8",
+        "title": "实体状态已通过事件回放重建: 李四",
+        "reason": "event_replay:6",
+        "before": {
+          "companions": [
+            "86cf19d8-6b99-43b8-af29-0732ab1fe0d8"
+          ],
+          "current_location": "地下仓库",
+          "display_name": "李四",
+          "inventory": [],
+          "last_source_turn": 2,
+          "short_goal": null,
+          "status_tags": []
+        },
+        "after": {
+          "companions": [
+            "86cf19d8-6b99-43b8-af29-0732ab1fe0d8"
+          ],
+          "current_location": "钟楼顶层",
+          "display_name": "李四",
+          "inventory": [],
+          "last_source_turn": 1,
+          "short_goal": null,
+          "status_tags": []
+        },
+        "status": "committed",
+        "committed_at": "2026-04-09T21:07:50.841377"
+      },
+      {
+        "event_id": "d4f8d5b6-4301-49c3-aa09-45e07d142164",
+        "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+        "operation_id": "rollback:34692724-c69c-4ab8-9f8f-a869e9ab46f7",
+        "sequence": 3,
+        "display_kind": "write",
+        "world_id": "f88b0232-0716-44f4-8f24-030616511873",
+        "memory_layer": "entity_state",
+        "action": "rebuilt",
+        "source": "rollback",
+        "source_turn": 1,
+        "memory_key": "86cf19d8-6b99-43b8-af29-0732ab1fe0d8",
+        "title": "实体状态已通过事件回放重建: 张三",
+        "reason": "event_replay:6",
+        "before": {
+          "companions": [
+            "25189a64-1ef3-4bc7-b681-84f5dd61eff8"
+          ],
+          "current_location": "地下仓库",
+          "display_name": "张三",
+          "inventory": [],
+          "last_source_turn": 2,
+          "short_goal": "前往旧港档案馆地下室",
+          "status_tags": []
+        },
+        "after": {
+          "companions": [
+            "25189a64-1ef3-4bc7-b681-84f5dd61eff8"
+          ],
+          "current_location": "钟楼顶层",
+          "display_name": "张三",
+          "inventory": [
+            "铜钥匙"
+          ],
+          "last_source_turn": 1,
+          "short_goal": "前往旧港档案馆地下室",
+          "status_tags": []
+        },
+        "status": "committed",
+        "committed_at": "2026-04-09T21:07:50.841377"
+      },
+      {
+        "event_id": "1d65f2a0-f0ac-4a99-b689-9625432ddbdd",
+        "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+        "operation_id": "rollback:34692724-c69c-4ab8-9f8f-a869e9ab46f7",
+        "sequence": 2,
+        "display_kind": "index_rebuild",
+        "world_id": "f88b0232-0716-44f4-8f24-030616511873",
+        "memory_layer": "episodic",
+        "action": "reindexed",
+        "source": "rollback",
+        "source_turn": null,
+        "memory_key": "conversation_history_index",
+        "title": "历史向量索引已重建",
+        "reason": null,
+        "before": null,
+        "after": {
+          "indexed_message_count": 4
+        },
+        "status": "committed",
+        "committed_at": "2026-04-09T21:07:50.821283"
+      },
+      {
+        "event_id": "6440c3e8-43fa-4624-a0b5-7a43737ae682",
+        "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+        "operation_id": "rollback:34692724-c69c-4ab8-9f8f-a869e9ab46f7",
+        "sequence": 1,
+        "display_kind": "session_rebuild",
+        "world_id": "f88b0232-0716-44f4-8f24-030616511873",
+        "memory_layer": "episodic",
+        "action": "rebuilt",
+        "source": "rollback",
+        "source_turn": null,
+        "memory_key": "story_session_messages",
+        "title": "会话上下文已根据最新消息重建",
+        "reason": null,
+        "before": null,
+        "after": {
+          "message_count": 4
+        },
+        "status": "committed",
+        "committed_at": "2026-04-09T21:07:50.577663"
+      },
+      {
+        "event_id": "98289b5f-5aea-4146-9165-bd4d50b1b5de",
+        "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+        "operation_id": "regenerate:69f6a3ec-b00e-4a64-b762-58868037c377",
+        "sequence": 8,
+        "display_kind": "write",
+        "world_id": "f88b0232-0716-44f4-8f24-030616511873",
+        "memory_layer": "entity_state",
+        "action": "patched",
+        "source": "generate",
+        "source_turn": 2,
+        "memory_key": "25189a64-1ef3-4bc7-b681-84f5dd61eff8:current_location",
+        "title": "实体状态字段已更新: 李四.current_location",
+        "reason": "李四从两排箱子间的窄道里闪身出来",
+        "before": {
+          "field": "current_location",
+          "value": "钟楼顶层"
+        },
+        "after": {
+          "field": "current_location",
+          "value": "地下仓库"
+        },
+        "status": "committed",
+        "committed_at": "2026-04-09T21:07:50.525184"
+      },
+      {
+        "event_id": "ca0ffc99-4004-4508-a4de-57a4aecf8b3f",
+        "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+        "operation_id": "regenerate:69f6a3ec-b00e-4a64-b762-58868037c377",
+        "sequence": 7,
+        "display_kind": "write",
+        "world_id": "f88b0232-0716-44f4-8f24-030616511873",
+        "memory_layer": "entity_state",
+        "action": "patched",
+        "source": "generate",
+        "source_turn": 2,
+        "memory_key": "86cf19d8-6b99-43b8-af29-0732ab1fe0d8:inventory",
+        "title": "实体状态字段已更新: 张三.inventory",
+        "reason": "那把铜钥匙，此刻正静静躺在顶层平台的石缝原处",
+        "before": {
+          "field": "inventory",
+          "value": [
+            "铜钥匙"
+          ]
+        },
+        "after": {
+          "field": "inventory",
+          "value": []
+        },
+        "status": "committed",
+        "committed_at": "2026-04-09T21:07:50.525184"
+      },
+      {
+        "event_id": "6d3b4ad1-52cb-4c80-8a51-c2bbe265b0d1",
+        "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+        "operation_id": "regenerate:69f6a3ec-b00e-4a64-b762-58868037c377",
+        "sequence": 6,
+        "display_kind": "write",
+        "world_id": "f88b0232-0716-44f4-8f24-030616511873",
+        "memory_layer": "entity_state",
+        "action": "patched",
+        "source": "generate",
+        "source_turn": 2,
+        "memory_key": "86cf19d8-6b99-43b8-af29-0732ab1fe0d8:current_location",
+        "title": "实体状态字段已更新: 张三.current_location",
+        "reason": "张三站在仓库中央，他刚从钟楼赶来",
+        "before": {
+          "field": "current_location",
+          "value": "钟楼顶层"
+        },
+        "after": {
+          "field": "current_location",
+          "value": "地下仓库"
+        },
+        "status": "committed",
+        "committed_at": "2026-04-09T21:07:50.525184"
+      },
+      {
+        "event_id": "83cd2666-9f96-40f7-9f59-577d6ce67924",
+        "session_id": "story-b251ebd6-f925-4a31-9f2a-30599f5887d1-v2",
+        "operation_id": "regenerate:69f6a3ec-b00e-4a64-b762-58868037c377",
+        "sequence": 5,
+        "display_kind": "write",
+        "world_id": "f88b0232-0716-44f4-8f24-030616511873",
+        "memory_layer": "episodic",
+        "action": "updated",
+        "source": "generate",
+        "source_turn": 2,
+        "memory_key": "story_session_messages",
+        "title": "原始会话消息已写入",
+        "reason": null,
+        "before": null,
+        "after": {
+          "assistant_output_preview": "（钟楼顶层的钥匙交接已完成，剧情已推进至转移阶段）\n\n---\n\n地下仓库的空气像浸了水的抹布，沉甸甸地压在肺上。霉味、朽木和铁锈的气息混杂在一起，随着每一次呼吸钻进鼻腔。昏暗的光线从高处一扇巴掌大的气窗透进来，勉强勾勒出堆积如山的旧木箱轮廓",
+          "roles": [
+            "user",
+            "assistant"
+          ],
+          "user_input_preview": "请明确写出：张三转移到地下仓库，并将铜钥匙留在原处（物品栏移除铜钥匙）。"
+        },
+        "status": "committed",
+        "committed_at": "2026-04-09T21:07:42.861943"
+      }
+    ]
+  }
+}

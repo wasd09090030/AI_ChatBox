@@ -241,6 +241,8 @@ async def build_v2_response_node(state: StoryGraphState) -> Dict[str, Any]:
         ),
         "runtime_state_snapshot": internal_response.runtime_state_snapshot,
         "entity_state_snapshot": internal_response.entity_state_snapshot,
+        "entity_state_updates": internal_response.entity_state_updates,
+        "world_update": internal_response.world_update,
         "creation_mode": internal_response.creation_mode,
         "consistency_check": internal_response.consistency_check,
         "model": internal_response.model_used,

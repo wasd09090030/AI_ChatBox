@@ -53,10 +53,16 @@ def _resolve_snapshot_cache_path(cache_dir: str) -> Optional[str]:
     return None
 
 
-def resolve_embedding_model(cache_dir: str, embedding_model: Optional[str] = None) -> str:
+def resolve_embedding_model(
+    cache_dir: str,
+    embedding_model: Optional[str] = None,
+    allow_online_download: bool = False,
+) -> Optional[str]:
     """解析最终 embedding 模型路径，优先本地缓存或显式传入模型。"""
     if embedding_model:
-        os.environ["TRANSFORMERS_OFFLINE"] = "1" if os.path.exists(embedding_model) else "0"
+        use_offline = os.path.exists(embedding_model)
+        os.environ["TRANSFORMERS_OFFLINE"] = "1" if use_offline else "0"
+        os.environ["HF_HUB_OFFLINE"] = "1" if use_offline else "0"
         return embedding_model
 
     local_model_path = os.path.join(cache_dir, "models", "paraphrase-multilingual-MiniLM-L12-v2")
@@ -73,8 +79,15 @@ def resolve_embedding_model(cache_dir: str, embedding_model: Optional[str] = Non
         os.environ["HF_HUB_OFFLINE"] = "1"
         return snapshot_model_path
 
-    logger.warning("Local embedding model not found, trying online download")
-    logger.info("If network is unavailable, run download_model.py and upload data/huggingface_cache")
-    os.environ["TRANSFORMERS_OFFLINE"] = "0"
-    os.environ["HF_HUB_OFFLINE"] = "0"
-    return DEFAULT_EMBEDDING_MODEL
+    if allow_online_download:
+        logger.warning("Local embedding model not found, trying online download")
+        logger.info("If network is unavailable, run download_model.py and upload data/huggingface_cache")
+        os.environ["TRANSFORMERS_OFFLINE"] = "0"
+        os.environ["HF_HUB_OFFLINE"] = "0"
+        return DEFAULT_EMBEDDING_MODEL
+
+    logger.warning("Local embedding model not found, using lightweight offline fallback embeddings")
+    logger.info("To restore semantic retrieval quality, run download_model.py and upload data/huggingface_cache")
+    os.environ["TRANSFORMERS_OFFLINE"] = "1"
+    os.environ["HF_HUB_OFFLINE"] = "1"
+    return None

@@ -43,7 +43,11 @@ class VectorStoreManager:
         self.collection_name = collection_name or settings.collection_name
 
         cache_dir = prepare_hf_cache(settings.huggingface_cache_dir)
-        model_name = resolve_embedding_model(cache_dir, embedding_model=embedding_model)
+        model_name = resolve_embedding_model(
+            cache_dir,
+            embedding_model=embedding_model,
+            allow_online_download=settings.allow_online_embedding_download,
+        )
 
         self.embeddings = create_embeddings(model_name=model_name, cache_dir=cache_dir)
         self.recovered_from_boot_error = False

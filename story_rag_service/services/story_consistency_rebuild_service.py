@@ -33,6 +33,8 @@ class StoryConsistencyRebuildService:
         history_manager,
         story_runtime_manager=None,
         entity_state_manager=None,
+        entity_state_event_repository=None,
+        entity_state_event_replay_service=None,
     ):
         """初始化一致性重建服务。"""
         self.session_manager = session_manager
@@ -40,6 +42,8 @@ class StoryConsistencyRebuildService:
         self.history_manager = history_manager
         self.story_runtime_manager = story_runtime_manager
         self.entity_state_manager = entity_state_manager
+        self.entity_state_event_repository = entity_state_event_repository
+        self.entity_state_event_replay_service = entity_state_event_replay_service
 
     def rebuild_story_state(
         self,
@@ -47,6 +51,10 @@ class StoryConsistencyRebuildService:
         story,
         session_id: str,
         source: str = "story_adjustment_commit",
+        operation_id: Optional[str] = None,
+        sequence_start: int = 1,
+        prefer_event_replay: bool = False,
+        replay_source_turn_lte: Optional[int] = None,
     ) -> dict[str, Any]:
         """在故事正文调整后重建会话一致性状态。
 
@@ -164,13 +172,46 @@ class StoryConsistencyRebuildService:
             if self.story_runtime_manager is not None:
                 runtime_state = self.story_runtime_manager.get_runtime_state(story.id)
             try:
-                entity_rebuild = self.entity_state_manager.rebuild_story_state(
-                    story=story,
-                    session_id=session_id,
-                    runtime_state=runtime_state,
-                    persist=True,
-                    source=source,
-                )
+                if (
+                    prefer_event_replay
+                    and self.entity_state_event_repository is not None
+                    and self.entity_state_event_replay_service is not None
+                ):
+                    if replay_source_turn_lte is not None:
+                        self.entity_state_event_repository.delete_by_story_id_after_turn(
+                            story.id,
+                            replay_source_turn_lte,
+                        )
+                    entity_rebuild = self.entity_state_event_replay_service.replay_story_state(
+                        story_id=story.id,
+                        session_id=session_id,
+                        source=source,
+                        operation_id=operation_id,
+                        sequence_start=sequence_start + len(memory_updates),
+                        source_turn_lte=replay_source_turn_lte,
+                        allow_empty_result=True,
+                        persist=True,
+                    )
+                    if not entity_rebuild.rebuilt:
+                        entity_rebuild = self.entity_state_manager.rebuild_story_state(
+                            story=story,
+                            session_id=session_id,
+                            runtime_state=runtime_state,
+                            persist=True,
+                            source=source,
+                            operation_id=operation_id,
+                            sequence_start=sequence_start + len(memory_updates),
+                        )
+                else:
+                    entity_rebuild = self.entity_state_manager.rebuild_story_state(
+                        story=story,
+                        session_id=session_id,
+                        runtime_state=runtime_state,
+                        persist=True,
+                        source=source,
+                        operation_id=operation_id,
+                        sequence_start=sequence_start + len(memory_updates),
+                    )
                 entity_state_rebuilt = bool(entity_rebuild.rebuilt)
                 memory_updates.extend(entity_rebuild.memory_updates)
                 warnings.extend(entity_rebuild.warnings)
@@ -189,7 +230,11 @@ class StoryConsistencyRebuildService:
                 )
                 updates_to_persist = list(memory_updates)
 
-        persist_memory_update_events(updates_to_persist)
+        persist_memory_update_events(
+            updates_to_persist,
+            operation_id=operation_id,
+            sequence_start=sequence_start,
+        )
         return {
             "summary_reset": summary_reset,
             "history_reindexed": history_reindexed,

@@ -156,6 +156,16 @@ const currentEntityStateSnapshot = computed(() => {
   if (!sessionId) return null
   return storySessionStore.getEntityStateSnapshot(sessionId)
 })
+const currentEntityStateUpdates = computed(() => {
+  const sessionId = v2SessionId.value || (currentStory.value ? `story-${currentStory.value.id}-v2` : '')
+  if (!sessionId) return []
+  return storySessionStore.getSessionEntityStateUpdates(sessionId, 12)
+})
+const currentWorldUpdate = computed(() => {
+  const sessionId = v2SessionId.value || (currentStory.value ? `story-${currentStory.value.id}-v2` : '')
+  if (!sessionId) return null
+  return storySessionStore.getSessionWorldUpdate(sessionId)
+})
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 const modeLabels: Record<StoryMode, string> = {
@@ -1026,6 +1036,8 @@ async function advanceToNextStage() {
             :last-contexts="lastContexts"
             :last-memory-updates="lastMemoryUpdates"
             :last-entity-state="currentEntityStateSnapshot"
+            :last-entity-state-updates="currentEntityStateUpdates"
+            :last-world-update="currentWorldUpdate"
             @save-progress="saveCurrentProgress"
             @advance-event="advanceToNextEvent"
             @advance-stage="advanceToNextStage"

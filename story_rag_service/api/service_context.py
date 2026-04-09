@@ -11,6 +11,13 @@ from services.lorebook_manager import LorebookManager
 from services.story_generator import StoryGenerator
 from services.story_adjustment_service import StoryAdjustmentService
 from services.story_consistency_rebuild_service import StoryConsistencyRebuildService
+from services.entity_patch_update_service import EntityPatchUpdateService
+from services.entity_state_event_replay_service import EntityStateEventReplayService
+from services.entity_state_manager import EntityStateManager
+from services.entity_state_projection_service import EntityStateProjectionService
+from services.story_generation.entity_patch_applier import EntityPatchApplier
+from services.story_generation.entity_patch_extractor import EntityPatchExtractor
+from services.story_generation.entity_patch_validator import EntityPatchValidator
 from services.world_manager import WorldManager
 from services.story_manager import StoryManager
 from services.conversation_history_manager import ConversationHistoryManager
@@ -18,6 +25,8 @@ from services.session_manager import SessionManager
 from services.roleplay_profile_manager import RoleplayProfileManager
 from services.summary_memory_manager import SummaryMemoryManager
 from services.story_runtime_manager import StoryRuntimeManager
+from repositories.entity_state_event_repository import SqliteEntityStateEventRepository
+from repositories.entity_state_repository import SqliteEntityStateRepository
 from repositories.script_design_repository import SqliteScriptDesignRepository
 from repositories.story_runtime_repository import SqliteStoryRuntimeRepository
 from config import settings
@@ -46,6 +55,14 @@ class ServiceContainer:
     roleplay_manager: RoleplayProfileManager
     summary_memory_manager: SummaryMemoryManager
     story_runtime_manager: StoryRuntimeManager
+    entity_state_manager: EntityStateManager
+    entity_state_event_repository: SqliteEntityStateEventRepository
+    entity_state_projection_service: EntityStateProjectionService
+    entity_state_event_replay_service: EntityStateEventReplayService
+    entity_patch_extractor: EntityPatchExtractor
+    entity_patch_validator: EntityPatchValidator
+    entity_patch_applier: EntityPatchApplier
+    entity_patch_update_service: EntityPatchUpdateService
     user_manager_ref: Optional[object] = None
 
 
@@ -93,6 +110,14 @@ def __getattr__(name: str):
         "roleplay_manager",
         "summary_memory_manager",
         "story_runtime_manager",
+        "entity_state_manager",
+        "entity_state_event_repository",
+        "entity_state_projection_service",
+        "entity_state_event_replay_service",
+        "entity_patch_extractor",
+        "entity_patch_validator",
+        "entity_patch_applier",
+        "entity_patch_update_service",
         "user_manager_ref",
     }:
         container = get_container()
@@ -129,6 +154,29 @@ def init_services(user_manager=None):
     )
     roleplay_manager = RoleplayProfileManager()
     summary_memory_manager = SummaryMemoryManager()
+    entity_state_repository = SqliteEntityStateRepository(settings.database_path)
+    entity_state_event_repository = SqliteEntityStateEventRepository(settings.database_path)
+    entity_state_projection_service = EntityStateProjectionService()
+    entity_state_event_replay_service = EntityStateEventReplayService(
+        entity_state_repository=entity_state_repository,
+        entity_state_event_repository=entity_state_event_repository,
+        entity_state_projection_service=entity_state_projection_service,
+    )
+    entity_patch_extractor = EntityPatchExtractor()
+    entity_patch_validator = EntityPatchValidator()
+    entity_patch_applier = EntityPatchApplier(entity_state_projection_service)
+    entity_state_manager = EntityStateManager(
+        repository=entity_state_repository,
+        lorebook_manager=lorebook_manager,
+    )
+    entity_patch_update_service = EntityPatchUpdateService(
+        lorebook_manager=lorebook_manager,
+        entity_state_manager=entity_state_manager,
+        entity_state_event_repository=entity_state_event_repository,
+        entity_patch_extractor=entity_patch_extractor,
+        entity_patch_validator=entity_patch_validator,
+        entity_patch_applier=entity_patch_applier,
+    )
 
     # 运行时状态服务
     story_runtime_repository = SqliteStoryRuntimeRepository(settings.database_path)
@@ -148,6 +196,9 @@ def init_services(user_manager=None):
         script_design_app=script_design_app,
         summary_memory_manager=summary_memory_manager,
         story_runtime_manager=story_runtime_manager,
+        entity_state_manager=entity_state_manager,
+        entity_patch_update_service=entity_patch_update_service,
+        entity_state_event_replay_service=entity_state_event_replay_service,
     )
     story_adjustment_service = StoryAdjustmentService(
         story_manager=story_manager,
@@ -157,6 +208,10 @@ def init_services(user_manager=None):
         session_manager=session_manager,
         summary_memory_manager=summary_memory_manager,
         history_manager=history_manager,
+        story_runtime_manager=story_runtime_manager,
+        entity_state_manager=entity_state_manager,
+        entity_state_event_repository=entity_state_event_repository,
+        entity_state_event_replay_service=entity_state_event_replay_service,
     )
 
     # 容器聚合与注册
@@ -175,6 +230,14 @@ def init_services(user_manager=None):
         roleplay_manager=roleplay_manager,
         summary_memory_manager=summary_memory_manager,
         story_runtime_manager=story_runtime_manager,
+        entity_state_manager=entity_state_manager,
+        entity_state_event_repository=entity_state_event_repository,
+        entity_state_projection_service=entity_state_projection_service,
+        entity_state_event_replay_service=entity_state_event_replay_service,
+        entity_patch_extractor=entity_patch_extractor,
+        entity_patch_validator=entity_patch_validator,
+        entity_patch_applier=entity_patch_applier,
+        entity_patch_update_service=entity_patch_update_service,
         user_manager_ref=user_manager,
     )
 

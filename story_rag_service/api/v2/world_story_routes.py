@@ -5,6 +5,7 @@ from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
+from application.memory.events import build_memory_operation_id
 from api.service_context import ServiceContainer, get_services
 from api.v2.schemas import EntityStateQueryParams
 from models.entity_state import EntityStateCollection, EntityStateRebuildResponse
@@ -115,6 +116,7 @@ async def delete_story(story_id: str, services: ServiceContainer = Depends(get_s
     if not deleted:
         raise HTTPException(status_code=404, detail="Story not found")
     services.entity_state_manager.delete_story_states(story_id)
+    services.entity_state_event_repository.delete_by_story_id(story_id)
     return {"success": True, "story_id": story_id}
 
 
@@ -177,6 +179,10 @@ async def delete_last_story_segment(
         story=story,
         session_id=session_id,
         source="story_segment_rollback",
+        operation_id=build_memory_operation_id("story_segment_rollback"),
+        sequence_start=1,
+        prefer_event_replay=True,
+        replay_source_turn_lte=len(story.segments),
     )
 
     return StorySegmentRollbackResponse(
@@ -215,6 +221,8 @@ async def commit_story_adjustments(
             story=updated_story,
             session_id=session_id,
             source="story_adjustment_commit",
+            operation_id=build_memory_operation_id("story_adjustment_commit"),
+            sequence_start=1,
         )
         return StoryAdjustmentCommitResponse(
             story=updated_story,
@@ -237,6 +245,8 @@ async def commit_story_adjustments(
                 story=existing_story,
                 session_id=session_id,
                 source="story_adjustment_commit_rollback",
+                operation_id=build_memory_operation_id("story_adjustment_commit_rollback"),
+                sequence_start=1,
             )
         except Exception as rollback_exc:
             logger.error(
@@ -360,6 +370,18 @@ async def rebuild_story_entity_state(
         or (runtime_state.session_id if runtime_state is not None and runtime_state.session_id else None)
         or f"story-{story_id}-v2"
     )
+    if services.entity_state_event_replay_service is not None:
+        replay_result = services.entity_state_event_replay_service.replay_story_state(
+            story_id=story_id,
+            session_id=effective_session_id,
+            source="entity_state_story_rebuild_api",
+            source_turn_lte=len(story.segments),
+            allow_empty_result=False,
+            persist=True,
+        )
+        if replay_result.rebuilt:
+            return replay_result
+
     return services.entity_state_manager.rebuild_story_state(
         story=story,
         session_id=effective_session_id,

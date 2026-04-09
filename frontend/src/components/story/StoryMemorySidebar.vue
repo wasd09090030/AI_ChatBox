@@ -24,6 +24,12 @@ import type {
   SummaryMemorySnapshot,
 } from '@/domains/story/api/storyGenerationApi'
 import {
+  extractWorldUpdateHighlights,
+  getEntityPatchDetail,
+  getEntityPatchHeadline,
+} from '@/domains/story/entityPatchPresentation'
+import type { StoryEntityUpdateRecord, StoryWorldUpdateRecord } from '@/stores/storySession'
+import {
   deriveSummaryLifecycleState,
   formatMemoryPayloadFields,
   getSummaryLifecycleDescriptor,
@@ -58,6 +64,8 @@ const props = withDefaults(
     lastContexts?: StoryContextHit[]
     lastMemoryUpdates?: MemoryUpdateEvent[]
     lastEntityState?: EntityStateCollection | null
+    lastEntityStateUpdates?: StoryEntityUpdateRecord[]
+    lastWorldUpdate?: StoryWorldUpdateRecord | null
   }>(),
   {
     showScriptProgress: true,
@@ -72,6 +80,8 @@ const props = withDefaults(
     lastContexts: () => [],
     lastMemoryUpdates: () => [],
     lastEntityState: null,
+    lastEntityStateUpdates: () => [],
+    lastWorldUpdate: null,
   },
 )
 
@@ -152,6 +162,9 @@ const entityWarnings = computed(() => {
 
   return warnings.slice(0, 3)
 })
+const latestEntityPatch = computed(() => props.lastEntityStateUpdates[0] ?? null)
+const orderedEntityPatches = computed(() => [...props.lastEntityStateUpdates].slice(0, 8))
+const worldUpdateHighlights = computed(() => extractWorldUpdateHighlights(props.lastWorldUpdate))
 
 function formatEntityUpdatedAt(value?: string | null) {
   if (!value) return '未知时间'
@@ -403,6 +416,65 @@ function entityTone(entity: EntityStateSnapshot) {
             </div>
             <p class="mt-2 leading-relaxed text-foreground">{{ latestEntityEvent.title }}</p>
             <p v-if="latestEntityEvent.reason" class="mt-1 leading-relaxed text-muted-foreground">{{ latestEntityEvent.reason }}</p>
+          </div>
+
+          <div
+            v-if="lastWorldUpdate"
+            class="rounded-xl border border-violet-200/70 bg-[linear-gradient(135deg,rgba(245,243,255,0.96),rgba(255,255,255,0.92))] px-3 py-3 text-xs"
+          >
+            <div class="flex items-center justify-between gap-2">
+              <p class="font-medium text-violet-950">结构化 world update</p>
+              <Badge variant="outline" class="bg-white/80 text-[10px] font-mono">
+                {{ lastWorldUpdate.operationId || 'n/a' }}
+              </Badge>
+            </div>
+            <div class="mt-2 space-y-2">
+              <p
+                v-for="line in worldUpdateHighlights"
+                :key="line"
+                class="leading-relaxed text-foreground"
+              >
+                {{ line }}
+              </p>
+            </div>
+          </div>
+
+          <div class="rounded-xl border border-emerald-200/70 bg-emerald-50/60 px-3 py-3 text-xs">
+            <div class="flex items-center justify-between gap-2">
+              <p class="font-medium text-emerald-950">字段级 patch 时间线</p>
+              <Badge variant="outline" class="bg-white/80 text-[10px] font-mono">
+                {{ orderedEntityPatches.length }} 条
+              </Badge>
+            </div>
+            <p v-if="latestEntityPatch" class="mt-2 leading-relaxed text-muted-foreground">
+              最近一条：{{ getEntityPatchHeadline(latestEntityPatch) }}
+            </p>
+            <div v-if="orderedEntityPatches.length" class="mt-3 space-y-2">
+              <article
+                v-for="patch in orderedEntityPatches"
+                :key="patch.eventId"
+                class="rounded-lg border border-emerald-200/70 bg-white/80 px-3 py-2.5"
+              >
+                <div class="flex items-start justify-between gap-2">
+                  <div class="min-w-0">
+                    <p class="text-[11px] font-medium text-foreground">{{ getEntityPatchHeadline(patch) }}</p>
+                    <p class="mt-1 text-[11px] leading-relaxed text-muted-foreground">{{ getEntityPatchDetail(patch) }}</p>
+                  </div>
+                  <Badge variant="outline" class="shrink-0 text-[10px] font-mono">
+                    {{ patch.sequence ?? '-' }}
+                  </Badge>
+                </div>
+                <p class="mt-2 text-[10px] text-muted-foreground">
+                  {{ patch.source }}
+                  <span v-if="patch.sourceTurn"> · Turn {{ patch.sourceTurn }}</span>
+                  <span> · {{ formatEntityUpdatedAt(patch.committedAt) }}</span>
+                </p>
+                <p v-if="patch.evidenceText" class="mt-1 text-[10px] leading-relaxed text-foreground/80">
+                  证据：{{ patch.evidenceText }}
+                </p>
+              </article>
+            </div>
+            <p v-else class="mt-3 italic text-muted-foreground">当前轮次还没有字段级 patch。</p>
           </div>
         </div>
       </div>

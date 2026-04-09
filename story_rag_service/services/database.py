@@ -86,6 +86,7 @@ class Database:
             self._ensure_lorebook_schema(cursor)
             self._ensure_memory_update_journal_schema(cursor)
             self._ensure_story_runtime_schema(cursor)
+            self._ensure_entity_state_event_schema(cursor)
 
     def _migrate_user_settings_columns(self, cursor) -> None:
         """为 user_settings 增量补齐新列（幂等迁移）。"""
@@ -244,6 +245,49 @@ class Database:
         cursor.execute("""
             CREATE INDEX IF NOT EXISTS idx_memory_update_journal_operation_id
             ON memory_update_journal(operation_id)
+        """)
+
+    def _ensure_entity_state_event_schema(self, cursor) -> None:
+        """创建实体状态事件流表与索引。"""
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS entity_state_events (
+                event_id TEXT PRIMARY KEY,
+                story_id TEXT NOT NULL,
+                session_id TEXT NOT NULL,
+                entity_id TEXT NOT NULL,
+                entity_type TEXT NOT NULL,
+                entity_name TEXT,
+                field_name TEXT NOT NULL,
+                op TEXT NOT NULL,
+                value_payload TEXT,
+                before_payload TEXT,
+                after_payload TEXT,
+                evidence_text TEXT,
+                source_turn INTEGER,
+                source TEXT NOT NULL,
+                operation_id TEXT,
+                sequence INTEGER,
+                confidence REAL,
+                status TEXT NOT NULL DEFAULT 'committed',
+                committed_at TIMESTAMP NOT NULL,
+                metadata TEXT DEFAULT NULL
+            )
+        """)
+        cursor.execute("""
+            CREATE INDEX IF NOT EXISTS idx_entity_state_events_story_id
+            ON entity_state_events(story_id)
+        """)
+        cursor.execute("""
+            CREATE INDEX IF NOT EXISTS idx_entity_state_events_session_id
+            ON entity_state_events(session_id)
+        """)
+        cursor.execute("""
+            CREATE INDEX IF NOT EXISTS idx_entity_state_events_operation_id
+            ON entity_state_events(operation_id)
+        """)
+        cursor.execute("""
+            CREATE INDEX IF NOT EXISTS idx_entity_state_events_entity_id
+            ON entity_state_events(entity_id)
         """)
 
     def _ensure_story_runtime_schema(self, cursor) -> None:

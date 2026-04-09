@@ -60,6 +60,29 @@ export const EntityStateCollectionSchema = z.object({
   total: z.number(),
 })
 
+export const EntityStateUpdateSchema = z.object({
+  event_id: z.string(),
+  story_id: z.string(),
+  session_id: z.string(),
+  entity_id: z.string(),
+  entity_type: z.literal('character'),
+  entity_name: z.string().nullable().optional(),
+  field_name: z.string(),
+  op: z.string(),
+  value: z.unknown().nullable().optional(),
+  before: z.unknown().nullable().optional(),
+  after: z.unknown().nullable().optional(),
+  evidence_text: z.string().nullable().optional(),
+  source_turn: z.number().nullable().optional(),
+  source: z.string(),
+  operation_id: z.string().nullable().optional(),
+  sequence: z.number().nullable().optional(),
+  confidence: z.number().nullable().optional(),
+  status: z.string(),
+  committed_at: z.string(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
+})
+
 export const V2GenerateResponseSchema = z.object({
   session_id: z.string(),
   thread_id: z.string(),
@@ -71,6 +94,8 @@ export const V2GenerateResponseSchema = z.object({
   summary_memory_snapshot: SummaryMemorySnapshotSchema.nullable().optional(),
   runtime_state_snapshot: z.record(z.string(), z.unknown()).nullable().optional(),
   entity_state_snapshot: EntityStateCollectionSchema.nullable().optional(),
+  entity_state_updates: z.array(EntityStateUpdateSchema).nullable().optional(),
+  world_update: z.record(z.string(), z.unknown()).nullable().optional(),
   creation_mode: z.string().nullable().optional(),
   consistency_check: z.record(z.string(), z.unknown()).nullable().optional(),
   model: z.string(),

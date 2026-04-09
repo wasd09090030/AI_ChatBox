@@ -39,6 +39,11 @@ import {
   groupMemoryEventsByOperation,
   type SummaryLifecycleState,
 } from '@/domains/memory/memoryUpdatePresentation'
+import {
+  extractWorldUpdateHighlights,
+  getEntityPatchDetail,
+  getEntityPatchHeadline,
+} from '@/domains/story/entityPatchPresentation'
 import { useMemoryUpdateDashboardStore } from '@/stores/memoryUpdateDashboard'
 import { useStorySessionStore } from '@/stores/storySession'
 
@@ -217,6 +222,12 @@ const latestTimelineEvent = computed(() => {
 const selectedEntitySnapshot = computed(() => (
   selectedSessionId.value ? storySessionStore.getEntityStateSnapshot(selectedSessionId.value) : null
 ))
+const selectedEntityPatchUpdates = computed(() => (
+  selectedSessionId.value ? storySessionStore.getSessionEntityStateUpdates(selectedSessionId.value, 50) : []
+))
+const selectedWorldUpdate = computed(() => (
+  selectedSessionId.value ? storySessionStore.getSessionWorldUpdate(selectedSessionId.value) : null
+))
 const selectedEntityNameMap = computed(() => new Map(
   (selectedEntitySnapshot.value?.items ?? []).map((item) => [item.entity_id, item.display_name]),
 ))
@@ -244,6 +255,7 @@ const selectedEntityWarnings = computed(() => {
 const selectedEntityLocationCount = computed(() => new Set(
   (selectedEntitySnapshot.value?.items ?? []).map((item) => item.current_location).filter(Boolean),
 ).size)
+const selectedWorldUpdateHighlights = computed(() => extractWorldUpdateHighlights(selectedWorldUpdate.value))
 
 function formatTimestamp(value?: string | null) {
   if (!value) return '未知时间'
@@ -573,6 +585,10 @@ function resolveEntityCompanionLabel(companionId: string) {
                       <p class="mt-1 text-sm font-semibold text-foreground">{{ entityEvents.length }}</p>
                     </div>
                     <div class="rounded-xl border border-border/60 bg-background/80 px-3 py-2">
+                      <p class="text-muted-foreground">Patch</p>
+                      <p class="mt-1 text-sm font-semibold text-foreground">{{ selectedEntityPatchUpdates.length }}</p>
+                    </div>
+                    <div class="rounded-xl border border-border/60 bg-background/80 px-3 py-2">
                       <p class="text-muted-foreground">失败</p>
                       <p class="mt-1 text-sm font-semibold text-foreground">{{ failedEvents.length }}</p>
                     </div>
@@ -886,6 +902,25 @@ function resolveEntityCompanionLabel(companionId: string) {
                     </div>
 
                     <div class="space-y-4">
+                      <div class="rounded-[24px] border border-violet-200/70 bg-violet-50/40 p-4">
+                        <div class="flex items-center gap-2">
+                          <Sparkles class="h-4 w-4 text-violet-600" />
+                          <p class="text-sm font-semibold text-foreground">结构化 world update</p>
+                        </div>
+                        <div v-if="selectedWorldUpdateHighlights.length" class="mt-4 space-y-2">
+                          <p
+                            v-for="line in selectedWorldUpdateHighlights"
+                            :key="line"
+                            class="rounded-xl border border-violet-200/70 bg-white/80 px-3 py-2 text-[11px] leading-5 text-foreground"
+                          >
+                            {{ line }}
+                          </p>
+                        </div>
+                        <p v-else class="mt-4 text-sm text-muted-foreground">
+                          当前 session 还没有缓存到结构化 world update。
+                        </p>
+                      </div>
+
                       <div class="rounded-[24px] border border-border/70 bg-muted/10 p-4">
                         <div class="flex items-center gap-2">
                           <MapPinned class="h-4 w-4 text-orange-600" />
@@ -928,6 +963,40 @@ function resolveEntityCompanionLabel(companionId: string) {
                           </article>
                         </div>
                         <p v-else class="mt-4 text-sm text-muted-foreground">当前 session 还没有 entity_state 事件。</p>
+                      </div>
+
+                      <div class="rounded-[24px] border border-emerald-200/70 bg-emerald-50/40 p-4">
+                        <div class="flex items-center gap-2">
+                          <Sparkles class="h-4 w-4 text-emerald-600" />
+                          <p class="text-sm font-semibold text-foreground">字段级 patch 时间线</p>
+                        </div>
+                        <div v-if="selectedEntityPatchUpdates.length" class="mt-4 space-y-3">
+                          <article
+                            v-for="patch in selectedEntityPatchUpdates"
+                            :key="patch.eventId"
+                            class="rounded-2xl border border-emerald-200/70 bg-white/80 p-3"
+                          >
+                            <div class="flex flex-wrap items-center gap-2">
+                              <Badge class="border text-[10px]" :class="layerBadgeClass('entity_state')">entity_patch</Badge>
+                              <Badge variant="outline" class="text-[10px] font-mono">{{ patch.op }}</Badge>
+                              <Badge v-if="patch.sequence !== null" variant="secondary" class="text-[10px] font-mono">
+                                seq {{ patch.sequence }}
+                              </Badge>
+                              <Badge class="border text-[10px]" :class="statusBadgeClass(patch.status)">{{ patch.status }}</Badge>
+                            </div>
+                            <p class="mt-2 text-sm font-medium text-foreground">{{ getEntityPatchHeadline(patch) }}</p>
+                            <p class="mt-1 text-xs leading-5 text-muted-foreground">{{ getEntityPatchDetail(patch) }}</p>
+                            <p class="mt-2 text-[11px] text-muted-foreground">
+                              {{ getMemorySourceLabel(patch.source) }}
+                              <span v-if="patch.sourceTurn"> · Turn {{ patch.sourceTurn }}</span>
+                              <span> · {{ formatTimestamp(patch.committedAt) }}</span>
+                            </p>
+                            <p v-if="patch.evidenceText" class="mt-2 text-[11px] leading-5 text-foreground/80">
+                              证据：{{ patch.evidenceText }}
+                            </p>
+                          </article>
+                        </div>
+                        <p v-else class="mt-4 text-sm text-muted-foreground">当前 session 还没有字段级 entity patch 记录。</p>
                       </div>
                     </div>
                   </div>

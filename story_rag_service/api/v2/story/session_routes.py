@@ -105,16 +105,37 @@ def _reconcile_session_memory_after_mutation(
 
     if services.entity_state_manager is not None and effective_story_id:
         try:
-            entity_rebuild = services.entity_state_manager.rebuild_session_state(
-                session_id=session_id,
-                story_id=effective_story_id,
-                world_id=world_id,
-                messages=messages,
-                persist=True,
-                source=source,
-                operation_id=operation_id,
-                sequence_start=sequence_start + len(updates_to_persist),
-            )
+            completed_turns = sum(1 for message in messages if getattr(message, "role", None) == "assistant")
+            if services.entity_state_event_repository is not None:
+                services.entity_state_event_repository.delete_by_session_id_after_turn(
+                    session_id,
+                    completed_turns,
+                )
+
+            entity_rebuild = None
+            if services.entity_state_event_replay_service is not None:
+                entity_rebuild = services.entity_state_event_replay_service.replay_session_state(
+                    story_id=effective_story_id,
+                    session_id=session_id,
+                    source=source,
+                    operation_id=operation_id,
+                    sequence_start=sequence_start + len(updates_to_persist),
+                    source_turn_lte=completed_turns,
+                    allow_empty_result=True,
+                    persist=True,
+                )
+
+            if entity_rebuild is None or not entity_rebuild.rebuilt:
+                entity_rebuild = services.entity_state_manager.rebuild_session_state(
+                    session_id=session_id,
+                    story_id=effective_story_id,
+                    world_id=world_id,
+                    messages=messages,
+                    persist=True,
+                    source=source,
+                    operation_id=operation_id,
+                    sequence_start=sequence_start + len(updates_to_persist),
+                )
             memory_updates.extend(entity_rebuild.memory_updates)
         except Exception as exc:
             memory_updates.append(
@@ -201,10 +222,13 @@ async def delete_last_message(
     if not deleted:
         raise HTTPException(status_code=404, detail="No messages found for this session")
 
+    operation_id = build_memory_operation_id("rollback")
     memory_updates, _ = _reconcile_session_memory_after_mutation(
         session_id=session_id,
         services=services,
         source="rollback",
+        operation_id=operation_id,
+        sequence_start=1,
         story_id=services.story_runtime_manager.derive_story_id(session_id),
     )
 
@@ -318,6 +342,20 @@ async def rebuild_session_entity_state(
     meta = services.session_manager.get_session_metadata(session_id) or {}
     resolved_world_id = world_id or meta.get("world_id")
     messages = services.session_manager.load_session_messages(session_id, limit=500)
+    completed_turns = sum(1 for message in messages if getattr(message, "role", None) == "assistant")
+
+    if services.entity_state_event_replay_service is not None:
+        replay_result = services.entity_state_event_replay_service.replay_session_state(
+            story_id=effective_story_id,
+            session_id=session_id,
+            source="entity_state_session_rebuild_api",
+            source_turn_lte=completed_turns,
+            allow_empty_result=False,
+            persist=True,
+        )
+        if replay_result.rebuilt:
+            return replay_result
+
     return services.entity_state_manager.rebuild_session_state(
         session_id=session_id,
         story_id=effective_story_id,

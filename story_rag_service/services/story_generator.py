@@ -64,6 +64,8 @@ class StoryGenerator:
         summary_memory_manager: Optional[SummaryMemoryManager] = None,
         story_runtime_manager=None,
         entity_state_manager=None,
+        entity_patch_update_service=None,
+        entity_state_event_replay_service=None,
     ):
         """初始化故事生成编排器。
 
@@ -78,6 +80,8 @@ class StoryGenerator:
         self.summary_memory_manager = summary_memory_manager
         self.story_runtime_manager = story_runtime_manager
         self.entity_state_manager = entity_state_manager
+        self.entity_patch_update_service = entity_patch_update_service
+        self.entity_state_event_replay_service = entity_state_event_replay_service
         self.lorebook_compressor = LorebookCompressor()
         self.recent_message_count = 5
         self.memory_orchestrator = MemoryOrchestrator(
@@ -589,6 +593,132 @@ class StoryGenerator:
             )
             return None, []
 
+    @staticmethod
+    def _normalize_entity_update_result(result: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+        payload = dict(result or {})
+        return {
+            "entity_state_snapshot": payload.get("entity_state_snapshot"),
+            "entity_state_updates": list(payload.get("entity_state_updates") or []),
+            "world_update": payload.get("world_update"),
+            "memory_updates": list(payload.get("memory_updates") or []),
+            "warnings": list(payload.get("warnings") or []),
+            "used_fallback_rebuild": bool(payload.get("used_fallback_rebuild", False)),
+        }
+
+    async def _update_entity_state_after_generation_async(
+        self,
+        *,
+        request: StoryGenerationRequest,
+        world_id: Optional[str],
+        context: StoryContext,
+        generated_text: str,
+        llm: Any,
+        patch_llm: Any | None = None,
+        memory_update_count: int,
+        source: str,
+        activation_logs: List[Dict[str, Any]],
+    ) -> Dict[str, Any]:
+        operation_id = getattr(request, "memory_operation_id", None)
+        sequence_start = int(getattr(request, "memory_operation_sequence_start", 1) or 1) + memory_update_count
+
+        if self.entity_patch_update_service is not None:
+            try:
+                return self._normalize_entity_update_result(
+                    await self.entity_patch_update_service.process_async(
+                        request=request,
+                        world_id=world_id,
+                        generated_text=generated_text,
+                        llm=patch_llm or llm,
+                        source=source,
+                        operation_id=operation_id,
+                        sequence_start=sequence_start,
+                        activation_logs=activation_logs,
+                    )
+                )
+            except Exception as exc:
+                logger.warning("Entity patch async orchestration failed, fallback to rebuild: %s", exc)
+                activation_logs.append(
+                    {
+                        "source": "entity_patch",
+                        "event": "orchestration_failed",
+                        "reason": str(exc),
+                    }
+                )
+
+        entity_state_snapshot, entity_state_updates = self._rebuild_entity_state_after_generation(
+            request=request,
+            world_id=world_id,
+            context=context,
+            memory_update_count=memory_update_count,
+            source=source,
+            activation_logs=activation_logs,
+        )
+        return self._normalize_entity_update_result(
+            {
+                "entity_state_snapshot": entity_state_snapshot,
+                "entity_state_updates": [],
+                "world_update": None,
+                "memory_updates": entity_state_updates,
+            }
+        )
+
+    def _update_entity_state_after_generation_sync(
+        self,
+        *,
+        request: StoryGenerationRequest,
+        world_id: Optional[str],
+        context: StoryContext,
+        generated_text: str,
+        llm: Any,
+        patch_llm: Any | None = None,
+        memory_update_count: int,
+        source: str,
+        activation_logs: List[Dict[str, Any]],
+    ) -> Dict[str, Any]:
+        operation_id = getattr(request, "memory_operation_id", None)
+        sequence_start = int(getattr(request, "memory_operation_sequence_start", 1) or 1) + memory_update_count
+
+        if self.entity_patch_update_service is not None:
+            try:
+                return self._normalize_entity_update_result(
+                    self.entity_patch_update_service.process_sync(
+                        request=request,
+                        world_id=world_id,
+                        generated_text=generated_text,
+                        llm=patch_llm or llm,
+                        source=source,
+                        operation_id=operation_id,
+                        sequence_start=sequence_start,
+                        activation_logs=activation_logs,
+                    )
+                )
+            except Exception as exc:
+                logger.warning("Entity patch sync orchestration failed, fallback to rebuild: %s", exc)
+                activation_logs.append(
+                    {
+                        "source": "entity_patch",
+                        "event": "orchestration_failed",
+                        "reason": str(exc),
+                    }
+                )
+
+        entity_state_snapshot, entity_state_updates = self._rebuild_entity_state_after_generation(
+            request=request,
+            world_id=world_id,
+            context=context,
+            memory_update_count=memory_update_count,
+            source=source,
+            activation_logs=activation_logs,
+        )
+        return self._normalize_entity_update_result(
+            {
+                "entity_state_snapshot": entity_state_snapshot,
+                "entity_state_updates": [],
+                "world_update": None,
+                "memory_updates": entity_state_updates,
+            }
+        )
+
     def _apply_scripted_post_generation(
         self,
         *,
@@ -738,16 +868,17 @@ class StoryGenerator:
         )
         updated_summary = update_result["summary_snapshot"]
         memory_updates = update_result["memory_updates"]
-        entity_state_snapshot, entity_state_updates = self._rebuild_entity_state_after_generation(
+        entity_update_result = await self._update_entity_state_after_generation_async(
             request=request,
             world_id=world_id,
             context=context,
+            generated_text=generated_text,
+            llm=llm,
             memory_update_count=len(memory_updates),
             source="generate",
             activation_logs=activation_logs,
         )
-        if entity_state_updates:
-            memory_updates = list(memory_updates) + list(entity_state_updates)
+        memory_updates = list(memory_updates) + list(entity_update_result["memory_updates"])
 
         generation_time = time.time() - start_time
         formatted_contexts = self._format_retrieved_contexts(retrieved_contexts, retrieved_history)
@@ -764,7 +895,9 @@ class StoryGenerator:
             runtime_state_snapshot=(
                 updated_runtime_state.model_dump(mode="json") if updated_runtime_state else None
             ),
-            entity_state_snapshot=entity_state_snapshot,
+            entity_state_snapshot=entity_update_result["entity_state_snapshot"],
+            entity_state_updates=entity_update_result["entity_state_updates"],
+            world_update=entity_update_result["world_update"],
             creation_mode=request.creation_mode,
             consistency_check=(
                 consistency_check.model_dump(mode="json") if consistency_check else None
@@ -929,16 +1062,17 @@ class StoryGenerator:
         )
         updated_summary = update_result["summary_snapshot"]
         memory_updates = update_result["memory_updates"]
-        entity_state_snapshot, entity_state_updates = self._rebuild_entity_state_after_generation(
+        entity_update_result = self._update_entity_state_after_generation_sync(
             request=request,
             world_id=world_id,
             context=context,
+            generated_text=generated_text,
+            llm=llm,
             memory_update_count=len(memory_updates),
             source="generate",
             activation_logs=activation_logs,
         )
-        if entity_state_updates:
-            memory_updates = list(memory_updates) + list(entity_state_updates)
+        memory_updates = list(memory_updates) + list(entity_update_result["memory_updates"])
 
         generation_time = time.time() - start_time
         formatted_contexts = self._format_retrieved_contexts(retrieved_contexts, retrieved_history)
@@ -955,7 +1089,9 @@ class StoryGenerator:
             runtime_state_snapshot=(
                 updated_runtime_state.model_dump(mode="json") if updated_runtime_state else None
             ),
-            entity_state_snapshot=entity_state_snapshot,
+            entity_state_snapshot=entity_update_result["entity_state_snapshot"],
+            entity_state_updates=entity_update_result["entity_state_updates"],
+            world_update=entity_update_result["world_update"],
             creation_mode=request.creation_mode,
             consistency_check=(
                 consistency_check.model_dump(mode="json") if consistency_check else None
@@ -1020,7 +1156,18 @@ class StoryGenerator:
             len(self._last_retrieved_history),
         )
 
-        # P1-A: 自适应 temperature（提前创建 LLM 供压缩与输入扩写复用）
+        # 非流式前处理专用 LLM：输入增强 / lorebook 压缩 / patch 抽取
+        preprocess_llm = self._get_llm(
+            model=request.model,
+            temperature=self._resolve_temperature(request.temperature, world_config),
+            max_tokens=request.max_tokens,
+            user_id=user_id,
+            for_streaming=False,
+            provider=getattr(request, "provider", None),
+            base_url=getattr(request, "base_url", None),
+        )
+
+        # 正文流式输出专用 LLM：仅用于 astream
         llm = self._get_llm(
             model=request.model,
             temperature=self._resolve_temperature(request.temperature, world_config),
@@ -1035,7 +1182,7 @@ class StoryGenerator:
         effective_user_input = request.user_input
         if getattr(request, "enhance_input", False):
             hint = self._build_enhance_context_hint(context, retrieved_contexts)
-            enhanced = await self._enhance_user_input(request.user_input, hint, llm)
+            enhanced = await self._enhance_user_input(request.user_input, hint, preprocess_llm)
             if enhanced and enhanced != request.user_input:
                 effective_user_input = enhanced
                 self._last_activation_logs.append(
@@ -1052,7 +1199,10 @@ class StoryGenerator:
             effective_user_input += "\n[叙事提示：请推进新的情节，不要重复已发生的动作或场景]"
 
         # P2-C: 长条目压缩
-        retrieved_contexts = await self.lorebook_compressor.compress_contexts(retrieved_contexts, llm)
+        retrieved_contexts = await self.lorebook_compressor.compress_contexts(
+            retrieved_contexts,
+            preprocess_llm,
+        )
         self._last_retrieved_contexts = retrieved_contexts
         self._sync_bundle_retrieved_contexts(bundle, retrieved_contexts)
 
@@ -1103,6 +1253,7 @@ class StoryGenerator:
             assistant_output=full_text,
             activation_logs=self._last_activation_logs,
             summary_update_mode="sync",
+            llm=preprocess_llm,
             log_prefix="(stream) ",
             source="generate",
             operation_id=getattr(request, "memory_operation_id", None),
@@ -1110,16 +1261,18 @@ class StoryGenerator:
         )
         updated_summary = update_result["summary_snapshot"]
         memory_updates = update_result["memory_updates"]
-        entity_state_snapshot, entity_state_updates = self._rebuild_entity_state_after_generation(
+        entity_update_result = await self._update_entity_state_after_generation_async(
             request=request,
             world_id=world_id,
             context=context,
+            generated_text=full_text,
+            llm=llm,
+            patch_llm=preprocess_llm,
             memory_update_count=len(memory_updates),
             source="generate",
             activation_logs=self._last_activation_logs,
         )
-        if entity_state_updates:
-            memory_updates = list(memory_updates) + list(entity_state_updates)
+        memory_updates = list(memory_updates) + list(entity_update_result["memory_updates"])
 
         generation_time = time.time() - stream_start
         formatted_contexts = self._format_retrieved_contexts(
@@ -1189,7 +1342,9 @@ class StoryGenerator:
             "runtime_state_snapshot": (
                 updated_runtime_state.model_dump(mode="json") if updated_runtime_state else None
             ),
-            "entity_state_snapshot": entity_state_snapshot,
+            "entity_state_snapshot": entity_update_result["entity_state_snapshot"],
+            "entity_state_updates": entity_update_result["entity_state_updates"],
+            "world_update": entity_update_result["world_update"],
             "creation_mode": request.creation_mode,
             "consistency_check": (
                 consistency_check.model_dump(mode="json") if consistency_check else None

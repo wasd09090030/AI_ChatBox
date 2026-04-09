@@ -44,6 +44,7 @@ class Settings(BaseSettings):
     
     # HuggingFace 配置
     huggingface_cache_dir: str = str(DATA_DIR / "huggingface_cache")
+    allow_online_embedding_download: bool = False
     
     # 数据库配置
     database_path: str = str(DATA_DIR / "chatbox.db")

@@ -12,7 +12,11 @@
  */
 import { defineStore } from 'pinia'
 import { ref, watch } from 'vue'
-import type { EntityStateCollection, MemoryUpdateEvent } from '@/domains/story/api/storyGenerationApi'
+import type {
+  EntityStateCollection,
+  EntityStateUpdate,
+  MemoryUpdateEvent,
+} from '@/domains/story/api/storyGenerationApi'
 import {
   deriveSummaryLifecycleState,
   type SummaryLifecycleState,
@@ -50,6 +54,40 @@ export interface StoryMemoryEventRecord {
   committedAt: string
 }
 
+export interface StoryEntityUpdateRecord {
+  eventId: string
+  sessionId: string
+  storyTitle: string
+  worldId: string
+  storyId: string
+  entityId: string
+  entityType: 'character'
+  entityName: string | null
+  fieldName: string
+  op: string
+  value: unknown
+  before: unknown
+  after: unknown
+  evidenceText: string | null
+  sourceTurn: number | null
+  source: string
+  operationId: string | null
+  sequence: number | null
+  confidence: number | null
+  status: string
+  committedAt: string
+  metadata: Record<string, unknown>
+}
+
+export interface StoryWorldUpdateRecord {
+  sessionId: string
+  storyTitle: string
+  worldId: string
+  operationId: string | null
+  updatedAt: string
+  payload: Record<string, unknown>
+}
+
 // ── Branch Tree Types ────────────────────────────────────────────────────────
 
 /** A single node in the story exploration tree */
@@ -84,6 +122,8 @@ export const useStorySessionStore = defineStore('storySession', () => {
     summaryMap: 'story-summary-map',
     memoryEvents: 'story-memory-events',
     entityStates: 'story-entity-state-map',
+    entityUpdates: 'story-entity-update-map',
+    worldUpdates: 'story-world-update-map',
     runtimeSummaryStates: 'story-runtime-summary-states',
     branchTrees: 'story-branch-trees',
   } as const
@@ -92,6 +132,8 @@ export const useStorySessionStore = defineStore('storySession', () => {
   const summaryMap  = ref<Record<string, StorySummaryRecord>>({})
   const runtimeMemoryEventsBySession = ref<Record<string, StoryMemoryEventRecord[]>>({})
   const entityStateMap = ref<Record<string, EntityStateCollection>>({})
+  const entityUpdateMap = ref<Record<string, StoryEntityUpdateRecord[]>>({})
+  const worldUpdateMap = ref<Record<string, StoryWorldUpdateRecord>>({})
   const memoryEventMap = runtimeMemoryEventsBySession
   const runtimeSummaryStateBySession = ref<Record<string, SummaryLifecycleState>>({})
   const branchTrees = ref<Record<string, StoryBranchTree>>({})
@@ -111,6 +153,8 @@ export const useStorySessionStore = defineStore('storySession', () => {
     let summaryRaw  = await storage.getStorage(STORAGE_KEYS.summaryMap)
     let eventsRaw   = await storage.getStorage(STORAGE_KEYS.memoryEvents)
     let entityStatesRaw = await storage.getStorage(STORAGE_KEYS.entityStates)
+    let entityUpdatesRaw = await storage.getStorage(STORAGE_KEYS.entityUpdates)
+    let worldUpdatesRaw = await storage.getStorage(STORAGE_KEYS.worldUpdates)
     let runtimeSummaryStatesRaw = await storage.getStorage(STORAGE_KEYS.runtimeSummaryStates)
     let treesRaw    = await storage.getStorage(STORAGE_KEYS.branchTrees)
 
@@ -118,6 +162,8 @@ export const useStorySessionStore = defineStore('storySession', () => {
     if (!summaryRaw)  summaryRaw  = await storage.pullFromRemote(STORAGE_KEYS.summaryMap)
     if (!eventsRaw)   eventsRaw   = await storage.pullFromRemote(STORAGE_KEYS.memoryEvents)
     if (!entityStatesRaw) entityStatesRaw = await storage.pullFromRemote(STORAGE_KEYS.entityStates)
+    if (!entityUpdatesRaw) entityUpdatesRaw = await storage.pullFromRemote(STORAGE_KEYS.entityUpdates)
+    if (!worldUpdatesRaw) worldUpdatesRaw = await storage.pullFromRemote(STORAGE_KEYS.worldUpdates)
     if (!runtimeSummaryStatesRaw) runtimeSummaryStatesRaw = await storage.pullFromRemote(STORAGE_KEYS.runtimeSummaryStates)
     if (!treesRaw)    treesRaw    = await storage.pullFromRemote(STORAGE_KEYS.branchTrees)
 
@@ -129,6 +175,12 @@ export const useStorySessionStore = defineStore('storySession', () => {
     }
     if (entityStatesRaw) {
       try { entityStateMap.value = JSON.parse(entityStatesRaw) } catch { /* corrupt */ }
+    }
+    if (entityUpdatesRaw) {
+      try { entityUpdateMap.value = JSON.parse(entityUpdatesRaw) } catch { /* corrupt */ }
+    }
+    if (worldUpdatesRaw) {
+      try { worldUpdateMap.value = JSON.parse(worldUpdatesRaw) } catch { /* corrupt */ }
     }
     if (runtimeSummaryStatesRaw) {
       try { runtimeSummaryStateBySession.value = JSON.parse(runtimeSummaryStatesRaw) } catch { /* corrupt */ }
@@ -156,6 +208,16 @@ export const useStorySessionStore = defineStore('storySession', () => {
     await storage.setStorage(STORAGE_KEYS.entityStates, JSON.stringify(entityStateMap.value))
   }
 
+  async function _persistEntityUpdates() {
+    if (!_loaded.value) return
+    await storage.setStorage(STORAGE_KEYS.entityUpdates, JSON.stringify(entityUpdateMap.value))
+  }
+
+  async function _persistWorldUpdates() {
+    if (!_loaded.value) return
+    await storage.setStorage(STORAGE_KEYS.worldUpdates, JSON.stringify(worldUpdateMap.value))
+  }
+
   async function _persistRuntimeSummaryStates() {
     if (!_loaded.value) return
     await storage.setStorage(STORAGE_KEYS.runtimeSummaryStates, JSON.stringify(runtimeSummaryStateBySession.value))
@@ -170,6 +232,8 @@ export const useStorySessionStore = defineStore('storySession', () => {
   let _summaryTimer: ReturnType<typeof setTimeout> | null = null
   let _eventsTimer:  ReturnType<typeof setTimeout> | null = null
   let _entityStatesTimer: ReturnType<typeof setTimeout> | null = null
+  let _entityUpdatesTimer: ReturnType<typeof setTimeout> | null = null
+  let _worldUpdatesTimer: ReturnType<typeof setTimeout> | null = null
   let _runtimeSummaryStateTimer: ReturnType<typeof setTimeout> | null = null
   let _treesTimer:   ReturnType<typeof setTimeout> | null = null
 
@@ -186,6 +250,16 @@ export const useStorySessionStore = defineStore('storySession', () => {
   watch(entityStateMap, () => {
     if (_entityStatesTimer) clearTimeout(_entityStatesTimer)
     _entityStatesTimer = setTimeout(_persistEntityStates, 300)
+  }, { deep: true })
+
+  watch(entityUpdateMap, () => {
+    if (_entityUpdatesTimer) clearTimeout(_entityUpdatesTimer)
+    _entityUpdatesTimer = setTimeout(_persistEntityUpdates, 300)
+  }, { deep: true })
+
+  watch(worldUpdateMap, () => {
+    if (_worldUpdatesTimer) clearTimeout(_worldUpdatesTimer)
+    _worldUpdatesTimer = setTimeout(_persistWorldUpdates, 300)
   }, { deep: true })
 
   watch(runtimeSummaryStateBySession, () => {
@@ -230,6 +304,81 @@ export const useStorySessionStore = defineStore('storySession', () => {
 
   function removeEntityStateSnapshot(sessionId: string) {
     delete entityStateMap.value[sessionId]
+  }
+
+  function appendEntityStateUpdates(
+    sessionId: string,
+    storyTitle: string,
+    worldId: string,
+    updates: EntityStateUpdate[],
+  ) {
+    if (!updates.length) return
+    const existing = entityUpdateMap.value[sessionId] ?? []
+    const normalized = updates.map((update) => ({
+      eventId: update.event_id,
+      sessionId,
+      storyTitle,
+      worldId,
+      storyId: update.story_id,
+      entityId: update.entity_id,
+      entityType: update.entity_type,
+      entityName: update.entity_name ?? null,
+      fieldName: update.field_name,
+      op: update.op,
+      value: update.value ?? null,
+      before: update.before ?? null,
+      after: update.after ?? null,
+      evidenceText: update.evidence_text ?? null,
+      sourceTurn: update.source_turn ?? null,
+      source: update.source,
+      operationId: update.operation_id ?? null,
+      sequence: update.sequence ?? null,
+      confidence: update.confidence ?? null,
+      status: update.status,
+      committedAt: update.committed_at,
+      metadata: { ...(update.metadata ?? {}) },
+    }))
+    const merged = [...normalized, ...existing]
+    const deduped = Array.from(new Map(merged.map((item) => [item.eventId, item])).values())
+    deduped.sort((a, b) => {
+      const timeCompare = b.committedAt.localeCompare(a.committedAt)
+      if (timeCompare !== 0) return timeCompare
+      return (b.sequence ?? 0) - (a.sequence ?? 0)
+    })
+    entityUpdateMap.value[sessionId] = deduped.slice(0, 120)
+  }
+
+  function getSessionEntityStateUpdates(sessionId: string, limit = 30): StoryEntityUpdateRecord[] {
+    return [...(entityUpdateMap.value[sessionId] ?? [])]
+      .sort((a, b) => {
+        const timeCompare = b.committedAt.localeCompare(a.committedAt)
+        if (timeCompare !== 0) return timeCompare
+        return (b.sequence ?? 0) - (a.sequence ?? 0)
+      })
+      .slice(0, limit)
+  }
+
+  function recordWorldUpdate(
+    sessionId: string,
+    storyTitle: string,
+    worldId: string,
+    payload: Record<string, unknown> | null | undefined,
+    updatedAt?: string,
+    operationId?: string | null,
+  ) {
+    if (!payload) return
+    worldUpdateMap.value[sessionId] = {
+      sessionId,
+      storyTitle,
+      worldId,
+      operationId: operationId ?? null,
+      updatedAt: updatedAt ?? new Date().toISOString(),
+      payload: { ...payload },
+    }
+  }
+
+  function getSessionWorldUpdate(sessionId: string): StoryWorldUpdateRecord | null {
+    return worldUpdateMap.value[sessionId] ?? null
   }
 
   function syncRuntimeSummaryState(sessionId: string) {
@@ -325,12 +474,16 @@ export const useStorySessionStore = defineStore('storySession', () => {
     summaryMap.value  = {}
     runtimeMemoryEventsBySession.value = {}
     entityStateMap.value = {}
+    entityUpdateMap.value = {}
+    worldUpdateMap.value = {}
     runtimeSummaryStateBySession.value = {}
     branchTrees.value = {}
     await Promise.all([
       storage.deleteStorage(STORAGE_KEYS.summaryMap),
       storage.deleteStorage(STORAGE_KEYS.memoryEvents),
       storage.deleteStorage(STORAGE_KEYS.entityStates),
+      storage.deleteStorage(STORAGE_KEYS.entityUpdates),
+      storage.deleteStorage(STORAGE_KEYS.worldUpdates),
       storage.deleteStorage(STORAGE_KEYS.runtimeSummaryStates),
       storage.deleteStorage(STORAGE_KEYS.branchTrees),
     ])
@@ -426,18 +579,24 @@ export const useStorySessionStore = defineStore('storySession', () => {
     summaryMap,
     runtimeMemoryEventsBySession,
     entityStateMap,
+    entityUpdateMap,
+    worldUpdateMap,
     memoryEventMap,
     runtimeSummaryStateBySession,
     branchTrees,
     loadFromStorage,
     updateSummary,
     updateEntityStateSnapshot,
+    appendEntityStateUpdates,
     appendMemoryEvents,
     getAllSummaries,
     getRecentMemoryEvents,
     getSessionMemoryEvents,
     getEntityStateSnapshot,
+    getSessionEntityStateUpdates,
+    getSessionWorldUpdate,
     getRuntimeSummaryState,
+    recordWorldUpdate,
     removeSummary,
     removeEntityStateSnapshot,
     clearAll,

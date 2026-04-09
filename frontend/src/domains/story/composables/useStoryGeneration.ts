@@ -1,6 +1,7 @@
 import { computed, nextTick, onUnmounted, ref, type ComputedRef, type Ref } from 'vue'
 import { useToast } from '@/components/ui/toast'
 import {
+  type EntityStateUpdate,
   type MemoryUpdateEvent,
   previewEnhancedStoryInput,
   regenerateStoryApi,
@@ -160,6 +161,8 @@ export function useStoryGeneration(args: UseStoryGenerationArgs) {
   const lastContexts = ref<StoryContextHit[]>([])
   const lastSummary = ref<SummaryMemorySnapshot | null>(null)
   const lastMemoryUpdates = ref<MemoryUpdateEvent[]>([])
+  const lastEntityStateUpdates = ref<EntityStateUpdate[]>([])
+  const lastWorldUpdate = ref<Record<string, unknown> | null>(null)
   const lastSummaryDiff = ref<StorySummaryDiff | null>(null)
 
   function applyRuntimeSnapshot(runtimeState: Record<string, unknown> | StoryRuntimeState | null | undefined) {
@@ -224,6 +227,8 @@ export function useStoryGeneration(args: UseStoryGenerationArgs) {
     lastContexts.value = []
     lastSummary.value = null
     lastMemoryUpdates.value = []
+    lastEntityStateUpdates.value = []
+    lastWorldUpdate.value = null
     lastSummaryDiff.value = null
     lastCommittedNodeId.value = null
     lastChoices.value = story?.segments[story.segments.length - 1]?.choices ?? []
@@ -407,6 +412,30 @@ export function useStoryGeneration(args: UseStoryGenerationArgs) {
           if (event.entity_state_snapshot) {
             args.storySessionStore.updateEntityStateSnapshot(event.entity_state_snapshot)
           }
+          if (event.entity_state_updates?.length) {
+            lastEntityStateUpdates.value = event.entity_state_updates
+            args.storySessionStore.appendEntityStateUpdates(
+              sessionId,
+              args.currentStory.value?.title ?? '',
+              args.selectedWorldId.value,
+              event.entity_state_updates,
+            )
+          } else {
+            lastEntityStateUpdates.value = []
+          }
+          if (event.world_update) {
+            lastWorldUpdate.value = event.world_update
+            args.storySessionStore.recordWorldUpdate(
+              sessionId,
+              args.currentStory.value?.title ?? '',
+              args.selectedWorldId.value,
+              event.world_update,
+              new Date().toISOString(),
+              event.entity_state_updates?.[0]?.operation_id ?? event.memory_updates?.[0]?.operation_id ?? null,
+            )
+          } else {
+            lastWorldUpdate.value = null
+          }
           if (event.creation_mode === 'scripted') {
             args.followScriptDesign.value = true
             args.creationMode.value = 'scripted'
@@ -505,6 +534,8 @@ export function useStoryGeneration(args: UseStoryGenerationArgs) {
       }
       const rollbackEvents = rollbackResponse.memory_updates ?? []
       lastMemoryUpdates.value = rollbackEvents
+      lastEntityStateUpdates.value = []
+      lastWorldUpdate.value = null
       if (rollbackEvents.length) {
         args.storySessionStore.appendMemoryEvents(
           args.v2SessionId.value,
@@ -620,6 +651,30 @@ export function useStoryGeneration(args: UseStoryGenerationArgs) {
       }
       if (response.entity_state_snapshot) {
         args.storySessionStore.updateEntityStateSnapshot(response.entity_state_snapshot)
+      }
+      if (response.entity_state_updates?.length) {
+        lastEntityStateUpdates.value = response.entity_state_updates
+        args.storySessionStore.appendEntityStateUpdates(
+          args.v2SessionId.value,
+          args.currentStory.value?.title ?? '',
+          args.selectedWorldId.value,
+          response.entity_state_updates,
+        )
+      } else {
+        lastEntityStateUpdates.value = []
+      }
+      if (response.world_update) {
+        lastWorldUpdate.value = response.world_update
+        args.storySessionStore.recordWorldUpdate(
+          args.v2SessionId.value,
+          args.currentStory.value?.title ?? '',
+          args.selectedWorldId.value,
+          response.world_update,
+          new Date().toISOString(),
+          response.entity_state_updates?.[0]?.operation_id ?? response.memory_updates?.[0]?.operation_id ?? null,
+        )
+      } else {
+        lastWorldUpdate.value = null
       }
       if (response.creation_mode === 'scripted') {
         args.followScriptDesign.value = true
@@ -778,6 +833,8 @@ export function useStoryGeneration(args: UseStoryGenerationArgs) {
     lastContexts,
     lastSummary,
     lastMemoryUpdates,
+    lastEntityStateUpdates,
+    lastWorldUpdate,
     lastSummaryDiff,
     previewSourceText,
     enhancedInputPreview,

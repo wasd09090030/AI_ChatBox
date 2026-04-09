@@ -78,6 +78,8 @@ export interface V2GenerateResponse {
   summary_memory_snapshot?: SummaryMemorySnapshot | null
   runtime_state_snapshot?: Record<string, unknown> | null
   entity_state_snapshot?: EntityStateCollection | null
+  entity_state_updates?: EntityStateUpdate[] | null
+  world_update?: Record<string, unknown> | null
   creation_mode?: string | null
   consistency_check?: Record<string, unknown> | null
   model: string
@@ -158,6 +160,29 @@ export interface EntityStateCollection {
   total: number
 }
 
+export interface EntityStateUpdate {
+  event_id: string
+  story_id: string
+  session_id: string
+  entity_id: string
+  entity_type: 'character'
+  entity_name?: string | null
+  field_name: string
+  op: string
+  value?: unknown
+  before?: unknown
+  after?: unknown
+  evidence_text?: string | null
+  source_turn?: number | null
+  source: string
+  operation_id?: string | null
+  sequence?: number | null
+  confidence?: number | null
+  status: string
+  committed_at: string
+  metadata?: Record<string, unknown>
+}
+
 export interface StoryActivationLog {
   source?: string
   selection_mode?: 'explicit' | 'rag' | string
@@ -199,6 +224,8 @@ export interface StreamEvent {
   summary_memory_snapshot?: SummaryMemorySnapshot | null
   runtime_state_snapshot?: Record<string, unknown> | null
   entity_state_snapshot?: EntityStateCollection | null
+  entity_state_updates?: EntityStateUpdate[] | null
+  world_update?: Record<string, unknown> | null
   creation_mode?: string | null
   consistency_check?: Record<string, unknown> | null
   tokens_used?: { input_tokens: number; output_tokens: number; total_tokens: number } | null
@@ -295,6 +322,8 @@ export async function* streamStoryV2(
           summary_memory_snapshot: (raw['summary_memory_snapshot'] ?? null) as SummaryMemorySnapshot | null,
           runtime_state_snapshot: (raw['runtime_state_snapshot'] ?? null) as Record<string, unknown> | null,
           entity_state_snapshot: (raw['entity_state_snapshot'] ?? null) as EntityStateCollection | null,
+          entity_state_updates: (raw['entity_state_updates'] ?? null) as EntityStateUpdate[] | null,
+          world_update: (raw['world_update'] ?? null) as Record<string, unknown> | null,
           creation_mode: (raw['creation_mode'] ?? null) as string | null,
           consistency_check: (raw['consistency_check'] ?? null) as Record<string, unknown> | null,
           tokens_used: (raw['tokens_used'] ?? null) as { input_tokens: number; output_tokens: number; total_tokens: number } | null,

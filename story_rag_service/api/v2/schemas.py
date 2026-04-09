@@ -204,6 +204,8 @@ class V2GenerateResponse(BaseModel):
     summary_memory_snapshot: Optional[Dict[str, Any]] = None
     runtime_state_snapshot: Optional[Dict[str, Any]] = None
     entity_state_snapshot: Optional[Dict[str, Any]] = None
+    entity_state_updates: Optional[List[Dict[str, Any]]] = None
+    world_update: Optional[Dict[str, Any]] = None
     creation_mode: Optional[str] = None
     consistency_check: Optional[Dict[str, Any]] = None
     model: str

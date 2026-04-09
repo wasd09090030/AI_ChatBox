@@ -103,7 +103,7 @@ frontend/
 - Pinia 状态中心，负责本地长生命周期状态。
 - 重点文件：
   - `config.ts`：Provider、模型、API Key 状态与全局配置。
-  - `storySession.ts`：故事会话相关快照，包含摘要记忆、实体状态、记忆事件、分支树等。
+  - `storySession.ts`：故事会话相关快照，包含摘要记忆、实体状态、字段级 `entity patch`、`world_update`、记忆事件、分支树等。
   - `storyDraftState.ts`：按故事与路由隔离的输入草稿状态。
   - `storyWorkspace.ts`：故事工作区相关状态。
   - `memoryUpdateDashboard.ts`：记忆可视化页面状态。
@@ -125,6 +125,9 @@ frontend/
   - `domains/settings/`
   - `domains/analytics/`
   - `domains/user/`
+- `frontend/src/domains/story/entityPatchPresentation.ts`
+  - 统一格式化 `entity_state_updates` / `world_update` 的展示文案
+  - 供故事页侧栏与 dashboard 共享，避免重复实现 patch 展示逻辑
 
 #### `frontend/src/services/`
 
@@ -157,7 +160,9 @@ frontend/
   - 解析 SSE 事件
   - 定义 TypeScript 侧契约
 - `schemas.ts` 用 Zod 校验后端返回。
-- `storySession.ts` 把摘要记忆、实体状态、分支树等会话级数据持久化到前端状态中。
+- `storySession.ts` 把摘要记忆、实体状态、`entity patch` 时间线、`world_update` 与分支树等会话级数据持久化到前端状态中。
+- `StoryMemorySidebar.vue` 会展示当前 session 的实体快照、结构化 `world update` 与字段级 patch 时间线。
+- `DashboardStoryMemoryView.vue` 会聚合展示服务端 journal、本地实体快照、`world update` 摘要与 patch 时间线。
 
 ### 3.5 前端高频改动落点
 
@@ -193,6 +198,7 @@ frontend/
   - 挂载上传文件静态目录
 - 配置入口：`story_rag_service/config.py`
   - 统一管理 API Key、默认模型、数据库路径、Chroma 路径、检索参数、LangGraph checkpoint 等
+  - `allow_online_embedding_download` 默认关闭；本地模型缺失时会退回轻量离线嵌入以保证服务可启动
 
 ### 4.2 后端目录职责
 
@@ -277,11 +283,23 @@ story_rag_service/
     - 流式故事生成主编排
     - 仍是 SSE 路径核心
     - 也负责输入增强预览等生成辅助能力
+    - 当前已接入“双路生成”中的实体 patch 后处理编排入口
+    - 构造函数已支持注入 `entity_state_event_replay_service`，与 `service_context.py` 保持一致
+  - `entity_patch_update_service.py`
+    - 实体 patch 后处理编排服务
+    - 串联 extractor / validator / applier / event repository / fallback rebuild
+  - `entity_state_event_replay_service.py`
+    - 基于 `entity_state_events` 回放当前实体快照
+    - 供 rollback / rebuild / repair fallback 优先使用
   - `story_generation/`
     - `llm_factory.py`：构造模型调用能力
     - `prompt_builder.py`：Prompt 组装
     - `context_helpers.py`：检索与上下文拼装辅助
     - `summary_helpers.py`：摘要相关辅助逻辑
+    - `entity_patch_prompt.py`：结构化 patch 抽取提示词
+    - `entity_patch_extractor.py`：第二路结构化 patch 抽取
+    - `entity_patch_validator.py`：patch 校验与归一化
+    - `entity_patch_applier.py`：patch -> 事件 / 快照应用
   - `story_manager.py`
     - 故事本体持久化与读取
   - `session_manager.py`
@@ -295,9 +313,12 @@ story_rag_service/
   - `lorebook_manager.py`
     - 世界设定管理与检索对接
   - `vector_store/`
+    - 启动时优先读取 `data/huggingface_cache/` 本地模型
+    - 若本地模型缺失且未开启在线下载，会使用轻量离线嵌入兜底，保证 FastAPI 可启动
     - 向量存储抽象
   - `ai_proxy/`
     - Provider 注册与流式封装
+    - `streamers.py` 已加入 `stream_options` 被拒绝时的自动回退，提升 OpenAI-compatible / custom provider 的兼容性
 
 #### `story_rag_service/application/`
 
@@ -319,13 +340,14 @@ story_rag_service/
   - `story_runtime_repository.py`
   - `script_design_repository.py`
   - `entity_state_repository.py`
+  - `entity_state_event_repository.py`
   - `world_repository.py`
   - `user_repository.py`
 
 #### `story_rag_service/models/`
 
 - 领域模型与存储结构模型。
-- 包括故事、世界、Lorebook、角色扮演、运行态、剧本设计、实体状态等模型定义。
+- 包括故事、世界、Lorebook、角色扮演、运行态、剧本设计、实体状态、实体 patch / 事件流等模型定义。
 
 #### `story_rag_service/migrations/`
 
@@ -423,11 +445,16 @@ story_rag_service/
 
 - 前端展示与缓存：
   - `frontend/src/stores/storySession.ts`
+  - `frontend/src/domains/story/entityPatchPresentation.ts`
+  - `frontend/src/components/story/StoryMemorySidebar.vue`
+  - `frontend/src/views/DashboardStoryMemoryView.vue`
   - `frontend/src/domains/memory/*`
 - 后端编排与输出：
   - `story_rag_service/application/memory/*`
   - `story_rag_service/services/summary_memory_manager.py`
   - `story_rag_service/services/entity_state_manager.py`
+  - `story_rag_service/services/entity_patch_update_service.py`
+  - `story_rag_service/services/entity_state_projection_service.py`
   - `story_rag_service/api/v2/memory_routes.py`
 
 ## 6. 建议的 AI Agent 阅读顺序
@@ -467,6 +494,11 @@ story_rag_service/
 - `story_rag_service/docs/`
 
 这些内容是历史兼容、设计方案或验证记录。需要追根溯源时再进入，不建议作为第一入口。
+其中 `story_rag_service/docs/plan/` 当前已包含：
+
+- 双路生成与结构化 patch 方案文档
+- 流式 OpenAI compat 风险与修复计划
+- 实体状态精度提升优先级清单
 
 ## 8. 检索与排噪建议
 
