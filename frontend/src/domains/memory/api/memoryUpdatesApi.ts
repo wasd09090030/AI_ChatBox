@@ -1,5 +1,9 @@
 import api from '@/services/api'
-import type { MemoryUpdateEvent, SummaryMemorySnapshot } from '@/domains/story/api/storyGenerationApi'
+import type {
+  MemoryUpdateEvent,
+  StoryMemoryPayload,
+  SummaryMemorySnapshot,
+} from '@/domains/story/api/storyGenerationApi'
 
 export interface MemoryUpdateTimelineItem extends MemoryUpdateEvent {
   world_id?: string | null
@@ -41,6 +45,16 @@ export interface MemorySessionTimelineResponse {
   summary_state: MemorySummaryState
 }
 
+export interface StoryMemorySnapshotResponse {
+  session_id: string
+  story_id?: string | null
+  world_id?: string | null
+  timeline_total: number
+  timeline_page: number
+  timeline_page_size: number
+  story_memory: StoryMemoryPayload
+}
+
 export async function getMemoryUpdates(filters: MemoryUpdateQueryFilters = {}): Promise<MemoryUpdateQueryResponse> {
   const response = await api.get<MemoryUpdateQueryResponse>('/memory-updates', { params: filters })
   return response.data
@@ -54,6 +68,25 @@ export async function getSessionMemoryTimeline(
   const response = await api.get<MemorySessionTimelineResponse>(
     `/story/session/${sessionId}/memory-updates`,
     { params: { page, page_size: pageSize } },
+  )
+  return response.data
+}
+
+export async function getSessionStoryMemory(
+  sessionId: string,
+  page = 1,
+  pageSize = 100,
+  storyId?: string | null,
+): Promise<StoryMemorySnapshotResponse> {
+  const response = await api.get<StoryMemorySnapshotResponse>(
+    `/story/session/${sessionId}/story-memory`,
+    {
+      params: {
+        page,
+        page_size: pageSize,
+        story_id: storyId ?? undefined,
+      },
+    },
   )
   return response.data
 }

@@ -75,6 +75,7 @@ export interface V2GenerateResponse {
   activation_logs?: Array<Record<string, unknown>>
   memory_updates?: MemoryUpdateEvent[]
   story_state_snapshot?: Record<string, unknown> | null
+  story_memory?: StoryMemoryPayload | null
   summary_memory_snapshot?: SummaryMemorySnapshot | null
   runtime_state_snapshot?: Record<string, unknown> | null
   entity_state_snapshot?: EntityStateCollection | null
@@ -183,6 +184,38 @@ export interface EntityStateUpdate {
   metadata?: Record<string, unknown>
 }
 
+export interface StoryMemoryOperation {
+  operation_id?: string | null
+  source?: string | null
+  status: string
+  committed_at?: string | null
+  sequence_min?: number | null
+  sequence_max?: number | null
+  event_count?: number
+  entity_update_count?: number
+}
+
+export interface StoryMemoryPayload {
+  session_id: string
+  story_id?: string | null
+  world_id?: string | null
+  operation?: StoryMemoryOperation | null
+  semantic?: {
+    summary_memory_snapshot?: SummaryMemorySnapshot | null
+  } | null
+  runtime?: {
+    runtime_state_snapshot?: Record<string, unknown> | null
+  } | null
+  entity?: {
+    entity_state_snapshot?: EntityStateCollection | null
+    entity_state_updates?: EntityStateUpdate[]
+    world_update?: Record<string, unknown> | null
+  } | null
+  timeline?: {
+    memory_updates?: MemoryUpdateEvent[]
+  } | null
+}
+
 export interface StoryActivationLog {
   source?: string
   selection_mode?: 'explicit' | 'rag' | string
@@ -221,6 +254,7 @@ export interface StreamEvent {
   choices?: string[]
   activation_logs?: StoryActivationLog[]
   memory_updates?: MemoryUpdateEvent[]
+  story_memory?: StoryMemoryPayload | null
   summary_memory_snapshot?: SummaryMemorySnapshot | null
   runtime_state_snapshot?: Record<string, unknown> | null
   entity_state_snapshot?: EntityStateCollection | null
@@ -319,6 +353,7 @@ export async function* streamStoryV2(
           generation_time: raw['generation_time'] as number | undefined,
           activation_logs: raw['activation_logs'] as StoryActivationLog[] | undefined,
           memory_updates: raw['memory_updates'] as MemoryUpdateEvent[] | undefined,
+          story_memory: (raw['story_memory'] ?? null) as StoryMemoryPayload | null,
           summary_memory_snapshot: (raw['summary_memory_snapshot'] ?? null) as SummaryMemorySnapshot | null,
           runtime_state_snapshot: (raw['runtime_state_snapshot'] ?? null) as Record<string, unknown> | null,
           entity_state_snapshot: (raw['entity_state_snapshot'] ?? null) as EntityStateCollection | null,

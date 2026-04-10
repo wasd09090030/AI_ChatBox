@@ -3,6 +3,7 @@ import { computed, unref, type MaybeRef } from 'vue'
 import {
   getMemoryUpdates,
   getSessionMemoryTimeline,
+  getSessionStoryMemory,
   type MemoryUpdateQueryFilters,
 } from '@/domains/memory/api/memoryUpdatesApi'
 
@@ -11,6 +12,8 @@ export const MEMORY_UPDATE_KEYS = {
   list: (filtersKey: string) => ['memory-updates', 'list', filtersKey] as const,
   session: (sessionId: string, page: number, pageSize: number) =>
     ['memory-updates', 'session', sessionId, page, pageSize] as const,
+  storyMemory: (sessionId: string, page: number, pageSize: number, storyId: string) =>
+    ['memory-updates', 'story-memory', sessionId, page, pageSize, storyId] as const,
 }
 
 function createFiltersKey(filters: MemoryUpdateQueryFilters) {
@@ -44,6 +47,30 @@ export function useSessionMemoryTimelineQuery(
   return useQuery({
     queryKey: computed(() => MEMORY_UPDATE_KEYS.session(unref(sessionId) || 'none', unref(page), unref(pageSize))),
     queryFn: () => getSessionMemoryTimeline(unref(sessionId) || '', unref(page), unref(pageSize)),
+    enabled: computed(() => !!unref(sessionId)),
+    refetchInterval: 30000,
+  })
+}
+
+export function useSessionStoryMemoryQuery(
+  sessionId: MaybeRef<string | null | undefined>,
+  page: MaybeRef<number> = 1,
+  pageSize: MaybeRef<number> = 100,
+  storyId: MaybeRef<string | null | undefined> = null,
+) {
+  return useQuery({
+    queryKey: computed(() => MEMORY_UPDATE_KEYS.storyMemory(
+      unref(sessionId) || 'none',
+      unref(page),
+      unref(pageSize),
+      unref(storyId) || 'none',
+    )),
+    queryFn: () => getSessionStoryMemory(
+      unref(sessionId) || '',
+      unref(page),
+      unref(pageSize),
+      unref(storyId),
+    ),
     enabled: computed(() => !!unref(sessionId)),
     refetchInterval: 30000,
   })

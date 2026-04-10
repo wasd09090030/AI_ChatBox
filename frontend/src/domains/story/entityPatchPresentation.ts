@@ -50,6 +50,22 @@ export function getEntityPatchDetail(update: EntityLikeUpdate): string {
   return formatEntityPatchValue(value)
 }
 
+export function getEntityPatchEventId(update: EntityLikeUpdate): string {
+  return 'event_id' in update ? update.event_id : update.eventId
+}
+
+export function getEntityPatchSourceTurn(update: EntityLikeUpdate): number | null {
+  return isApiEntityUpdate(update) ? (update.source_turn ?? null) : (update.sourceTurn ?? null)
+}
+
+export function getEntityPatchCommittedAt(update: EntityLikeUpdate): string {
+  return 'committed_at' in update ? update.committed_at : update.committedAt
+}
+
+export function getEntityPatchEvidenceText(update: EntityLikeUpdate): string | null {
+  return isApiEntityUpdate(update) ? (update.evidence_text ?? null) : (update.evidenceText ?? null)
+}
+
 export function extractWorldUpdateHighlights(worldUpdate: Record<string, unknown> | StoryWorldUpdateRecord | null | undefined): string[] {
   const payload: Record<string, unknown> | null = worldUpdate
     ? ('payload' in worldUpdate

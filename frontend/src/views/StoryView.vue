@@ -29,6 +29,13 @@ import StoryPromptComposerSheet from '@/components/story/StoryPromptComposerShee
 import StoryScriptSidebar from '@/components/story/StoryScriptSidebar.vue'
 import type { StoryMode } from '@/components/story/types'
 import { STORY_PROMPT_FOCUS_TEMPLATES } from '@/config/prompts'
+import {
+  getStoryMemoryEntitySnapshot,
+  getStoryMemoryEntityUpdates,
+  getStoryMemorySummarySnapshot,
+  getStoryMemoryTimelineEvents,
+  getStoryMemoryWorldUpdate,
+} from '@/domains/story/storyMemoryPayload'
 import { usePersonasQuery } from '@/domains/roleplay/queries/useRoleplayQueries'
 import { useConfigStore } from '@/stores/config'
 import { useStorySessionStore } from '@/stores/storySession'
@@ -151,20 +158,61 @@ const selectedFocusTemplateIdDraft = sharedDraftRef('selectedFocusTemplateId', '
 
 // ── Context / memory sidebar ─────────────────────────────────────────────────
 const showSidebar = ref(false)
+const currentStoryMemoryPayload = computed(() => {
+  const sessionId = v2SessionId.value || (currentStory.value ? `story-${currentStory.value.id}-v2` : '')
+  if (!sessionId) return null
+  return storySessionStore.getStoryMemorySession(sessionId)?.storyMemory ?? null
+})
+const currentSummarySnapshot = computed(() => {
+  const sessionId = v2SessionId.value || (currentStory.value ? `story-${currentStory.value.id}-v2` : '')
+  const summaryFromMemory = getStoryMemorySummarySnapshot(currentStoryMemoryPayload.value)
+  if (summaryFromMemory) return summaryFromMemory
+  return (sessionId ? storySessionStore.getSummarySnapshot(sessionId) : null) ?? lastSummary.value
+})
+const currentMemoryUpdates = computed(() => {
+  const sessionId = v2SessionId.value || (currentStory.value ? `story-${currentStory.value.id}-v2` : '')
+  const storyMemoryUpdates = getStoryMemoryTimelineEvents(currentStoryMemoryPayload.value, 20)
+  if (storyMemoryUpdates.length) return storyMemoryUpdates
+  if (!sessionId) return lastMemoryUpdates.value
+  return storySessionStore.getSessionMemoryEvents(sessionId, 20).map((item) => ({
+    event_id: item.eventId,
+    session_id: item.sessionId,
+    operation_id: item.operationId,
+    sequence: item.sequence,
+    display_kind: item.displayKind,
+    memory_layer: item.memoryLayer,
+    action: item.action,
+    source: item.source,
+    source_turn: item.sourceTurn,
+    memory_key: item.memoryKey,
+    title: item.title,
+    reason: item.reason,
+    before: item.before,
+    after: item.after,
+    status: item.status,
+    committed_at: item.committedAt,
+  }))
+})
 const currentEntityStateSnapshot = computed(() => {
   const sessionId = v2SessionId.value || (currentStory.value ? `story-${currentStory.value.id}-v2` : '')
+  const storyMemorySnapshot = getStoryMemoryEntitySnapshot(currentStoryMemoryPayload.value)
+  if (storyMemorySnapshot) return storyMemorySnapshot
   if (!sessionId) return null
   return storySessionStore.getEntityStateSnapshot(sessionId)
 })
 const currentEntityStateUpdates = computed(() => {
   const sessionId = v2SessionId.value || (currentStory.value ? `story-${currentStory.value.id}-v2` : '')
+  const storyMemoryUpdates = getStoryMemoryEntityUpdates(currentStoryMemoryPayload.value, 12)
+  if (storyMemoryUpdates.length) return storyMemoryUpdates
   if (!sessionId) return []
   return storySessionStore.getSessionEntityStateUpdates(sessionId, 12)
 })
 const currentWorldUpdate = computed(() => {
   const sessionId = v2SessionId.value || (currentStory.value ? `story-${currentStory.value.id}-v2` : '')
+  const storyMemoryWorldUpdate = getStoryMemoryWorldUpdate(currentStoryMemoryPayload.value)
+  if (storyMemoryWorldUpdate) return storyMemoryWorldUpdate
   if (!sessionId) return null
-  return storySessionStore.getSessionWorldUpdate(sessionId)
+  return storySessionStore.getSessionWorldUpdate(sessionId)?.payload ?? null
 })
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -1031,10 +1079,10 @@ async function advanceToNextStage() {
             :can-advance-event="scriptEvents.length > 0 && !!selectedScriptEventId && scriptEvents[scriptEvents.length - 1]?.id !== selectedScriptEventId"
             :can-advance-stage="scriptStages.length > 0 && !!selectedScriptStageId && scriptStages[scriptStages.length - 1]?.id !== selectedScriptStageId"
             :progress-updating="progressUpdating"
-            :last-summary="lastSummary"
+            :last-summary="currentSummarySnapshot"
             :last-summary-diff="lastSummaryDiff"
             :last-contexts="lastContexts"
-            :last-memory-updates="lastMemoryUpdates"
+            :last-memory-updates="currentMemoryUpdates"
             :last-entity-state="currentEntityStateSnapshot"
             :last-entity-state-updates="currentEntityStateUpdates"
             :last-world-update="currentWorldUpdate"

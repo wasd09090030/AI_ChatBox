@@ -236,6 +236,7 @@ async def build_v2_response_node(state: StoryGraphState) -> Dict[str, Any]:
         "activation_logs": activation_logs,
         "memory_updates": list(internal_response.memory_updates or []),
         "story_state_snapshot": story_state_snapshot,
+        "story_memory": internal_response.story_memory,
         "summary_memory_snapshot": (
             internal_response.summary_memory_snapshot if debug_payload_enabled else None
         ),

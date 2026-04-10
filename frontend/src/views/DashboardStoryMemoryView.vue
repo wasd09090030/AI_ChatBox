@@ -29,6 +29,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   useMemoryUpdatesQuery,
   useSessionMemoryTimelineQuery,
+  useSessionStoryMemoryQuery,
 } from '@/domains/memory/queries/useMemoryUpdateQueries'
 import type { MemoryUpdateTimelineItem } from '@/domains/memory/api/memoryUpdatesApi'
 import {
@@ -41,9 +42,20 @@ import {
 } from '@/domains/memory/memoryUpdatePresentation'
 import {
   extractWorldUpdateHighlights,
+  getEntityPatchCommittedAt,
   getEntityPatchDetail,
+  getEntityPatchEvidenceText,
+  getEntityPatchEventId,
   getEntityPatchHeadline,
+  getEntityPatchSourceTurn,
 } from '@/domains/story/entityPatchPresentation'
+import {
+  getStoryMemoryEntitySnapshot,
+  getStoryMemoryEntityUpdates,
+  getStoryMemorySummarySnapshot,
+  getStoryMemoryTimelineEvents,
+  getStoryMemoryWorldUpdate,
+} from '@/domains/story/storyMemoryPayload'
 import { useMemoryUpdateDashboardStore } from '@/stores/memoryUpdateDashboard'
 import { useStorySessionStore } from '@/stores/storySession'
 
@@ -94,7 +106,9 @@ const timeRangeOptions = [
 
 const summaries = computed(() => storySessionStore.getAllSummaries())
 const summaryMap = computed(() => new Map(summaries.value.map((record) => [record.sessionId, record])))
-const entitySnapshotMap = computed(() => storySessionStore.entityStateMap)
+const storyMemorySessionMap = computed(() => new Map(
+  storySessionStore.getAllStoryMemorySessions().map((record) => [record.sessionId, record]),
+))
 
 const {
   data: listResponse,
@@ -139,24 +153,31 @@ const sessionCards = computed(() => {
   return Array.from(grouped.entries())
     .map(([sessionId, events]) => {
       const summary = summaryMap.value.get(sessionId) ?? null
-      const entitySnapshot = entitySnapshotMap.value[sessionId] ?? null
-      const latestEvent = [...events].sort((a, b) => b.committed_at.localeCompare(a.committed_at))[0] ?? null
-      const summaryState = resolveSessionCardState(events, sessionId, summary)
+      const storyMemorySession = storyMemorySessionMap.value.get(sessionId) ?? null
+      const storyMemory = storyMemorySession?.storyMemory ?? null
+      const entitySnapshot = getStoryMemoryEntitySnapshot(storyMemory)
+      const memoryEvents = getStoryMemoryTimelineEvents(storyMemory, 200)
+      const effectiveEvents = memoryEvents.length ? memoryEvents : events
+      const latestEvent = [...effectiveEvents].sort((a, b) => b.committed_at.localeCompare(a.committed_at))[0] ?? null
+      const latestWorldId = [...events].sort((a, b) => b.committed_at.localeCompare(a.committed_at))[0]?.world_id ?? ''
+      const summaryState = resolveSessionCardState(effectiveEvents, sessionId, summary)
       return {
         sessionId,
         summary,
+        storyMemorySession,
         entitySnapshot,
         summaryState,
         summaryDescriptor: getSummaryLifecycleDescriptor(summaryState),
-        storyTitle: summary?.storyTitle ?? sessionId,
-        worldId: latestEvent?.world_id ?? summary?.worldId ?? '',
+        storyTitle: storyMemorySession?.storyTitle ?? summary?.storyTitle ?? sessionId,
+        worldId: storyMemory?.world_id ?? latestWorldId ?? summary?.worldId ?? '',
         latestEvent,
-        eventCount: events.length,
-        semanticCount: events.filter((item) => item.memory_layer === 'semantic').length,
-        episodicCount: events.filter((item) => item.memory_layer === 'episodic').length,
-        entityCount: events.filter((item) => item.memory_layer === 'entity_state').length,
+        eventCount: effectiveEvents.length,
+        semanticCount: effectiveEvents.filter((item) => item.memory_layer === 'semantic').length,
+        episodicCount: effectiveEvents.filter((item) => item.memory_layer === 'episodic').length,
+        entityCount: getStoryMemoryEntityUpdates(storyMemory, 500).length
+          || effectiveEvents.filter((item) => item.memory_layer === 'entity_state').length,
         trackedEntities: entitySnapshot?.total ?? 0,
-        hasFailed: events.some((item) => item.status === 'failed'),
+        hasFailed: storyMemory?.operation?.status === 'failed' || effectiveEvents.some((item) => item.status === 'failed'),
       }
     })
     .sort((a, b) => (b.latestEvent?.committed_at ?? '').localeCompare(a.latestEvent?.committed_at ?? ''))
@@ -201,33 +222,100 @@ watch(timelineResponse, (value) => {
   }
 }, { immediate: true })
 
+const {
+  data: storyMemoryResponse,
+  isFetching: storyMemoryFetching,
+  refetch: refetchStoryMemory,
+} = useSessionStoryMemoryQuery(
+  selectedSessionId,
+  detailPage,
+  detailPageSize,
+)
+
+const effectiveStoryMemoryResponse = computed(() => (
+  storyMemoryResponse.value ?? dashboardStore.getStoryMemorySnapshot(selectedSessionId.value)
+))
+
+watch(storyMemoryResponse, (value) => {
+  if (selectedSessionId.value) {
+    dashboardStore.setStoryMemorySnapshot(selectedSessionId.value, value)
+    if (value?.story_memory) {
+      const currentSessionId = selectedSessionId.value
+      const localStoryMemorySession = storyMemorySessionMap.value.get(currentSessionId) ?? null
+      const localSummary = summaryMap.value.get(currentSessionId) ?? null
+      storySessionStore.upsertStoryMemorySession(
+        currentSessionId,
+        localStoryMemorySession?.storyTitle ?? localSummary?.storyTitle ?? '',
+        value.world_id ?? localStoryMemorySession?.worldId ?? localSummary?.worldId ?? '',
+        value.story_memory,
+      )
+    }
+  }
+}, { immediate: true })
+
 const selectedSessionCard = computed(() => (
   sessionCards.value.find((item) => item.sessionId === selectedSessionId.value) ?? null
 ))
 
+const selectedStoryMemory = computed(() => {
+  if (effectiveStoryMemoryResponse.value?.story_memory) {
+    return effectiveStoryMemoryResponse.value.story_memory
+  }
+  if (!selectedSessionId.value) return null
+  return storySessionStore.getStoryMemorySession(selectedSessionId.value)?.storyMemory ?? null
+})
+
+const selectedSummarySnapshot = computed(() => {
+  const summaryFromMemory = getStoryMemorySummarySnapshot(selectedStoryMemory.value)
+  if (summaryFromMemory) return summaryFromMemory
+  const summary = selectedSessionCard.value?.summary
+  if (!summary || !selectedSessionId.value) return null
+  return {
+    summary_text: summary.summary_text,
+    key_facts: summary.key_facts,
+    last_turn: summary.last_turn,
+    session_id: selectedSessionId.value,
+  }
+})
+
 const detailSummaryDescriptor = computed(() => {
-  const state = effectiveTimelineResponse.value?.summary_state.state ?? 'absent'
-  const reason = effectiveTimelineResponse.value?.summary_state.last_semantic_event?.reason ?? null
+  const state = effectiveTimelineResponse.value?.summary_state.state
+    ?? deriveSummaryLifecycleState(selectedTimelineEvents.value, selectedSummarySnapshot.value)
+  const reason = effectiveTimelineResponse.value?.summary_state.last_semantic_event?.reason
+    ?? semanticEvents.value[0]?.reason
+    ?? null
   return getSummaryLifecycleDescriptor(state, { reason })
 })
 
-const operationGroups = computed(() => groupMemoryEventsByOperation(effectiveTimelineResponse.value?.items ?? []))
-const semanticEvents = computed(() => (effectiveTimelineResponse.value?.items ?? []).filter((event) => event.memory_layer === 'semantic'))
-const entityEvents = computed(() => (effectiveTimelineResponse.value?.items ?? []).filter((event) => event.memory_layer === 'entity_state'))
-const failedEvents = computed(() => (effectiveTimelineResponse.value?.items ?? []).filter((event) => event.status === 'failed'))
+const selectedTimelineEvents = computed(() => {
+  const timelineFromMemory = getStoryMemoryTimelineEvents(selectedStoryMemory.value, detailPageSize.value)
+  if (timelineFromMemory.length) return timelineFromMemory
+  return effectiveTimelineResponse.value?.items ?? []
+})
+
+const operationGroups = computed(() => groupMemoryEventsByOperation(selectedTimelineEvents.value))
+const semanticEvents = computed(() => selectedTimelineEvents.value.filter((event) => event.memory_layer === 'semantic'))
+const entityEvents = computed(() => selectedTimelineEvents.value.filter((event) => event.memory_layer === 'entity_state'))
+const failedEvents = computed(() => selectedTimelineEvents.value.filter((event) => event.status === 'failed'))
 const latestTimelineEvent = computed(() => {
-  const items = effectiveTimelineResponse.value?.items ?? []
+  const items = selectedTimelineEvents.value
   return [...items].sort((a, b) => b.committed_at.localeCompare(a.committed_at))[0] ?? null
 })
-const selectedEntitySnapshot = computed(() => (
-  selectedSessionId.value ? storySessionStore.getEntityStateSnapshot(selectedSessionId.value) : null
-))
-const selectedEntityPatchUpdates = computed(() => (
-  selectedSessionId.value ? storySessionStore.getSessionEntityStateUpdates(selectedSessionId.value, 50) : []
-))
-const selectedWorldUpdate = computed(() => (
-  selectedSessionId.value ? storySessionStore.getSessionWorldUpdate(selectedSessionId.value) : null
-))
+const selectedEntitySnapshot = computed(() => {
+  const storyMemorySnapshot = getStoryMemoryEntitySnapshot(selectedStoryMemory.value)
+  if (storyMemorySnapshot) return storyMemorySnapshot
+  return selectedSessionId.value ? storySessionStore.getEntityStateSnapshot(selectedSessionId.value) : null
+})
+const selectedEntityPatchUpdates = computed(() => {
+  const storyMemoryUpdates = getStoryMemoryEntityUpdates(selectedStoryMemory.value, 50)
+  if (storyMemoryUpdates.length) return storyMemoryUpdates
+  return selectedSessionId.value ? storySessionStore.getSessionEntityStateUpdates(selectedSessionId.value, 50) : []
+})
+const selectedWorldUpdate = computed(() => {
+  const storyMemoryWorldUpdate = getStoryMemoryWorldUpdate(selectedStoryMemory.value)
+  if (storyMemoryWorldUpdate) return storyMemoryWorldUpdate
+  return selectedSessionId.value ? storySessionStore.getSessionWorldUpdate(selectedSessionId.value)?.payload ?? null : null
+})
 const selectedEntityNameMap = computed(() => new Map(
   (selectedEntitySnapshot.value?.items ?? []).map((item) => [item.entity_id, item.display_name]),
 ))
@@ -307,10 +395,10 @@ function resolveEntityCompanionLabel(companionId: string) {
           <div class="space-y-4">
             <div class="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-medium text-sky-700">
               <Sparkles class="h-3.5 w-3.5" />
-              管理区 · 记忆变动审计台
+              管理区 · 故事记忆审计台
             </div>
             <div>
-              <h1 class="text-2xl font-semibold tracking-tight text-foreground">记忆变动总览</h1>
+              <h1 class="text-2xl font-semibold tracking-tight text-foreground">故事记忆总览</h1>
               <p class="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">
                 从服务端 journal 直接回看生成、回滚、重生成和正文调整后的摘要更新、历史修复与语义重建链路。
               </p>
@@ -408,9 +496,9 @@ function resolveEntityCompanionLabel(companionId: string) {
               </div>
               <button
                 class="inline-flex items-center gap-2 rounded-md border border-border px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-muted"
-                @click="() => { refetchList(); refetchTimeline() }"
+                @click="() => { refetchList(); refetchTimeline(); refetchStoryMemory() }"
               >
-                <RefreshCw class="h-3.5 w-3.5" :class="{ 'animate-spin': listFetching || timelineFetching }" />
+                <RefreshCw class="h-3.5 w-3.5" :class="{ 'animate-spin': listFetching || timelineFetching || storyMemoryFetching }" />
                 刷新
               </button>
             </div>
@@ -574,7 +662,7 @@ function resolveEntityCompanionLabel(companionId: string) {
                   <div class="mt-3 grid grid-cols-4 gap-2 text-xs">
                     <div class="rounded-xl border border-border/60 bg-background/80 px-3 py-2">
                       <p class="text-muted-foreground">总数</p>
-                      <p class="mt-1 text-sm font-semibold text-foreground">{{ effectiveTimelineResponse.total }}</p>
+                      <p class="mt-1 text-sm font-semibold text-foreground">{{ effectiveStoryMemoryResponse?.timeline_total ?? effectiveTimelineResponse.total }}</p>
                     </div>
                     <div class="rounded-xl border border-border/60 bg-background/80 px-3 py-2">
                       <p class="text-muted-foreground">Semantic</p>
@@ -973,7 +1061,7 @@ function resolveEntityCompanionLabel(companionId: string) {
                         <div v-if="selectedEntityPatchUpdates.length" class="mt-4 space-y-3">
                           <article
                             v-for="patch in selectedEntityPatchUpdates"
-                            :key="patch.eventId"
+                            :key="getEntityPatchEventId(patch)"
                             class="rounded-2xl border border-emerald-200/70 bg-white/80 p-3"
                           >
                             <div class="flex flex-wrap items-center gap-2">
@@ -988,11 +1076,11 @@ function resolveEntityCompanionLabel(companionId: string) {
                             <p class="mt-1 text-xs leading-5 text-muted-foreground">{{ getEntityPatchDetail(patch) }}</p>
                             <p class="mt-2 text-[11px] text-muted-foreground">
                               {{ getMemorySourceLabel(patch.source) }}
-                              <span v-if="patch.sourceTurn"> · Turn {{ patch.sourceTurn }}</span>
-                              <span> · {{ formatTimestamp(patch.committedAt) }}</span>
+                              <span v-if="getEntityPatchSourceTurn(patch)"> · Turn {{ getEntityPatchSourceTurn(patch) }}</span>
+                              <span> · {{ formatTimestamp(getEntityPatchCommittedAt(patch)) }}</span>
                             </p>
-                            <p v-if="patch.evidenceText" class="mt-2 text-[11px] leading-5 text-foreground/80">
-                              证据：{{ patch.evidenceText }}
+                            <p v-if="getEntityPatchEvidenceText(patch)" class="mt-2 text-[11px] leading-5 text-foreground/80">
+                              证据：{{ getEntityPatchEvidenceText(patch) }}
                             </p>
                           </article>
                         </div>

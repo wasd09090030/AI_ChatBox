@@ -5,6 +5,7 @@ from typing import Optional
 import logging
 from application.world_application import WorldApplicationService
 from application.script_design_application import ScriptDesignApplicationService
+from application.story_memory import StoryMemoryService
 
 from services.vector_store import VectorStoreManager
 from services.lorebook_manager import LorebookManager
@@ -12,6 +13,7 @@ from services.story_generator import StoryGenerator
 from services.story_adjustment_service import StoryAdjustmentService
 from services.story_consistency_rebuild_service import StoryConsistencyRebuildService
 from services.entity_patch_update_service import EntityPatchUpdateService
+from services.entity_state_fallback_service import EntityStateFallbackService
 from services.entity_state_event_replay_service import EntityStateEventReplayService
 from services.entity_state_manager import EntityStateManager
 from services.entity_state_projection_service import EntityStateProjectionService
@@ -56,6 +58,7 @@ class ServiceContainer:
     summary_memory_manager: SummaryMemoryManager
     story_runtime_manager: StoryRuntimeManager
     entity_state_manager: EntityStateManager
+    entity_state_fallback_service: EntityStateFallbackService
     entity_state_event_repository: SqliteEntityStateEventRepository
     entity_state_projection_service: EntityStateProjectionService
     entity_state_event_replay_service: EntityStateEventReplayService
@@ -63,6 +66,7 @@ class ServiceContainer:
     entity_patch_validator: EntityPatchValidator
     entity_patch_applier: EntityPatchApplier
     entity_patch_update_service: EntityPatchUpdateService
+    story_memory_service: StoryMemoryService
     user_manager_ref: Optional[object] = None
 
 
@@ -111,6 +115,7 @@ def __getattr__(name: str):
         "summary_memory_manager",
         "story_runtime_manager",
         "entity_state_manager",
+        "entity_state_fallback_service",
         "entity_state_event_repository",
         "entity_state_projection_service",
         "entity_state_event_replay_service",
@@ -118,6 +123,7 @@ def __getattr__(name: str):
         "entity_patch_validator",
         "entity_patch_applier",
         "entity_patch_update_service",
+        "story_memory_service",
         "user_manager_ref",
     }:
         container = get_container()
@@ -169,21 +175,31 @@ def init_services(user_manager=None):
         repository=entity_state_repository,
         lorebook_manager=lorebook_manager,
     )
+    entity_state_fallback_service = EntityStateFallbackService(
+        entity_state_manager=entity_state_manager,
+        entity_state_event_replay_service=entity_state_event_replay_service,
+    )
     entity_patch_update_service = EntityPatchUpdateService(
         lorebook_manager=lorebook_manager,
         entity_state_manager=entity_state_manager,
+        entity_state_fallback_service=entity_state_fallback_service,
         entity_state_event_repository=entity_state_event_repository,
         entity_patch_extractor=entity_patch_extractor,
         entity_patch_validator=entity_patch_validator,
         entity_patch_applier=entity_patch_applier,
     )
-
     # 运行时状态服务
     story_runtime_repository = SqliteStoryRuntimeRepository(settings.database_path)
     story_runtime_manager = StoryRuntimeManager(
         repository=story_runtime_repository,
         script_design_app=script_design_app,
         story_manager=story_manager,
+    )
+    story_memory_service = StoryMemoryService(
+        session_manager=session_manager,
+        summary_memory_manager=summary_memory_manager,
+        story_runtime_manager=story_runtime_manager,
+        entity_state_event_replay_service=entity_state_event_replay_service,
     )
 
     # 故事生成与后处理编排服务
@@ -197,6 +213,7 @@ def init_services(user_manager=None):
         summary_memory_manager=summary_memory_manager,
         story_runtime_manager=story_runtime_manager,
         entity_state_manager=entity_state_manager,
+        entity_state_fallback_service=entity_state_fallback_service,
         entity_patch_update_service=entity_patch_update_service,
         entity_state_event_replay_service=entity_state_event_replay_service,
     )
@@ -210,6 +227,7 @@ def init_services(user_manager=None):
         history_manager=history_manager,
         story_runtime_manager=story_runtime_manager,
         entity_state_manager=entity_state_manager,
+        entity_state_fallback_service=entity_state_fallback_service,
         entity_state_event_repository=entity_state_event_repository,
         entity_state_event_replay_service=entity_state_event_replay_service,
     )
@@ -231,6 +249,7 @@ def init_services(user_manager=None):
         summary_memory_manager=summary_memory_manager,
         story_runtime_manager=story_runtime_manager,
         entity_state_manager=entity_state_manager,
+        entity_state_fallback_service=entity_state_fallback_service,
         entity_state_event_repository=entity_state_event_repository,
         entity_state_projection_service=entity_state_projection_service,
         entity_state_event_replay_service=entity_state_event_replay_service,
@@ -238,6 +257,7 @@ def init_services(user_manager=None):
         entity_patch_validator=entity_patch_validator,
         entity_patch_applier=entity_patch_applier,
         entity_patch_update_service=entity_patch_update_service,
+        story_memory_service=story_memory_service,
         user_manager_ref=user_manager,
     )
 

@@ -166,6 +166,7 @@ class StoryGenerationResponse(BaseModel):
     activation_logs: List[Dict[str, Any]] = Field(default_factory=list)
     memory_updates: List[Dict[str, Any]] = Field(default_factory=list)
     story_state_snapshot: Optional[Dict[str, Any]] = None
+    story_memory: Optional[Dict[str, Any]] = None
     summary_memory_snapshot: Optional[Dict[str, Any]] = None
     runtime_state_snapshot: Optional[Dict[str, Any]] = None
     entity_state_snapshot: Optional[Dict[str, Any]] = None

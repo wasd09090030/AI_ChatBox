@@ -330,26 +330,21 @@ async def get_story_entity_state(
     query: EntityStateQueryParams = Depends(),
     services: ServiceContainer = Depends(get_services),
 ):
-    """读取故事当前实体状态快照。"""
+    """读取故事当前实体状态快照（兼容桥接，优先事件回放）。"""
     story = services.story_manager.get_story(story_id)
     if story is None:
         raise HTTPException(status_code=404, detail="Story not found")
 
-    items = services.entity_state_manager.list_story_states(
-        story_id,
-        entity_type=query.entity_type,
-    )
     session_id = f"story-{story_id}-v2"
     runtime_state = services.story_runtime_manager.get_runtime_state(story_id)
     if runtime_state is not None and runtime_state.session_id:
         session_id = runtime_state.session_id
 
-    return EntityStateCollection(
+    return services.entity_state_fallback_service.get_story_snapshot(
         story_id=story_id,
         session_id=session_id,
         entity_type=query.entity_type,
-        items=items,
-        total=len(items),
+        source="entity_state_story_snapshot_api",
     )
 
 
@@ -382,10 +377,9 @@ async def rebuild_story_entity_state(
         if replay_result.rebuilt:
             return replay_result
 
-    return services.entity_state_manager.rebuild_story_state(
+    return services.entity_state_fallback_service.rebuild_story_state(
         story=story,
         session_id=effective_session_id,
         runtime_state=runtime_state,
-        persist=True,
         source="entity_state_story_rebuild_api",
     )

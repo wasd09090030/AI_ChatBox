@@ -1,0 +1,708 @@
+{
+  "summary": {
+    "base_url": "http://127.0.0.1:8011",
+    "openapi_status": 200,
+    "total_routes_tested": 69,
+    "available_routes": 69,
+    "unavailable_routes": 0,
+    "status_buckets": {
+      "200": 35,
+      "400": 4,
+      "404": 29,
+      "422": 1
+    }
+  },
+  "unavailable_details": [],
+  "all_results": [
+    {
+      "method": "GET",
+      "path": "/",
+      "probe_url_path": "/",
+      "status": 200,
+      "available": true,
+      "error": null,
+      "query_params_used": {},
+      "body_required": false
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/client-storage",
+      "probe_url_path": "/api/client-storage",
+      "status": 200,
+      "available": true,
+      "error": null,
+      "query_params_used": {},
+      "body_required": false
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/client-storage/{key}",
+      "probe_url_path": "/api/client-storage/probe",
+      "status": 200,
+      "available": true,
+      "error": null,
+      "query_params_used": {},
+      "body_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/client-storage/{key}",
+      "probe_url_path": "/api/client-storage/probe",
+      "status": 404,
+      "available": true,
+      "error": null,
+      "query_params_used": {},
+      "body_required": false
+    },
+    {
+      "method": "PUT",
+      "path": "/api/client-storage/{key}",
+      "probe_url_path": "/api/client-storage/probe",
+      "status": 200,
+      "available": true,
+      "error": null,
+      "query_params_used": {},
+      "body_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/health",
+      "probe_url_path": "/api/v2/health",
+      "status": 200,
+      "available": true,
+      "error": null,
+      "query_params_used": {},
+      "body_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/lorebook/entries",
+      "probe_url_path": "/api/v2/lorebook/entries",
+      "status": 200,
+      "available": true,
+      "error": null,
+      "query_params_used": {},
+      "body_required": false
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v2/lorebook/entry/{entry_id}",
+      "probe_url_path": "/api/v2/lorebook/entry/probe",
+      "status": 200,
+      "available": true,
+      "error": null,
+      "query_params_used": {},
+      "body_required": false
+    },
+    {
+      "method": "PUT",
+      "path": "/api/v2/lorebook/entry/{entry_id}",
+      "probe_url_path": "/api/v2/lorebook/entry/probe",
+      "status": 422,
+      "available": true,
+      "error": null,
+      "query_params_used": {},
+      "body_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/memory-updates",
+      "probe_url_path": "/api/v2/memory-updates",
+      "status": 200,
+      "available": true,
+      "error": null,
+      "query_params_used": {},
+      "body_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/providers",
+      "probe_url_path": "/api/v2/providers",
+      "status": 200,
+      "available": true,
+      "error": null,
+      "query_params_used": {},
+      "body_required": false
+    },
+    {
+      "method": "POST",
+      "path": "/api/v2/providers/config",
+      "probe_url_path": "/api/v2/providers/config",
+      "status": 200,
+      "available": true,
+      "error": null,
+      "query_params_used": {},
+      "body_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/providers/default-selection",
+      "probe_url_path": "/api/v2/providers/default-selection",
+      "status": 200,
+      "available": true,
+      "error": null,
+      "query_params_used": {},
+      "body_required": false
+    },
+    {
+      "method": "PUT",
+      "path": "/api/v2/providers/default-selection",
+      "probe_url_path": "/api/v2/providers/default-selection",
+      "status": 400,
+      "available": true,
+      "error": null,
+      "query_params_used": {},
+      "body_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/providers/scene-models",
+      "probe_url_path": "/api/v2/providers/scene-models",
+      "status": 200,
+      "available": true,
+      "error": null,
+      "query_params_used": {},
+      "body_required": false
+    },
+    {
+      "method": "PUT",
+      "path": "/api/v2/providers/scene-models",
+      "probe_url_path": "/api/v2/providers/scene-models",
+      "status": 400,
+      "available": true,
+      "error": null,
+      "query_params_used": {},
+      "body_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v2/providers/test-connection",
+      "probe_url_path": "/api/v2/providers/test-connection",
+      "status": 200,
+      "available": true,
+      "error": null,
+      "query_params_used": {},
+      "body_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/providers/{provider}/models",
+      "probe_url_path": "/api/v2/providers/probe/models",
+      "status": 400,
+      "available": true,
+      "error": null,
+      "query_params_used": {},
+      "body_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/roleplay/personas",
+      "probe_url_path": "/api/v2/roleplay/personas",
+      "status": 200,
+      "available": true,
+      "error": null,
+      "query_params_used": {},
+      "body_required": false
+    },
+    {
+      "method": "POST",
+      "path": "/api/v2/roleplay/personas",
+      "probe_url_path": "/api/v2/roleplay/personas",
+      "status": 200,
+      "available": true,
+      "error": null,
+      "query_params_used": {},
+      "body_required": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v2/roleplay/personas/{persona_id}",
+      "probe_url_path": "/api/v2/roleplay/personas/probe",
+      "status": 404,
+      "available": true,
+      "error": null,
+      "query_params_used": {},
+      "body_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/roleplay/personas/{persona_id}",
+      "probe_url_path": "/api/v2/roleplay/personas/probe",
+      "status": 404,
+      "available": true,
+      "error": null,
+      "query_params_used": {},
+      "body_required": false
+    },
+    {
+      "method": "PUT",
+      "path": "/api/v2/roleplay/personas/{persona_id}",
+      "probe_url_path": "/api/v2/roleplay/personas/probe",
+      "status": 404,
+      "available": true,
+      "error": null,
+      "query_params_used": {},
+      "body_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/roleplay/story-state/{session_id}",
+      "probe_url_path": "/api/v2/roleplay/story-state/probe",
+      "status": 404,
+      "available": true,
+      "error": null,
+      "query_params_used": {},
+      "body_required": false
+    },
+    {
+      "method": "PUT",
+      "path": "/api/v2/roleplay/story-state/{session_id}",
+      "probe_url_path": "/api/v2/roleplay/story-state/probe",
+      "status": 200,
+      "available": true,
+      "error": null,
+      "query_params_used": {},
+      "body_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/script-designs",
+      "probe_url_path": "/api/v2/script-designs",
+      "status": 200,
+      "available": true,
+      "error": null,
+      "query_params_used": {},
+      "body_required": false
+    },
+    {
+      "method": "POST",
+      "path": "/api/v2/script-designs",
+      "probe_url_path": "/api/v2/script-designs",
+      "status": 404,
+      "available": true,
+      "error": null,
+      "query_params_used": {},
+      "body_required": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v2/script-designs/{script_design_id}",
+      "probe_url_path": "/api/v2/script-designs/probe",
+      "status": 404,
+      "available": true,
+      "error": null,
+      "query_params_used": {},
+      "body_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/script-designs/{script_design_id}",
+      "probe_url_path": "/api/v2/script-designs/probe",
+      "status": 404,
+      "available": true,
+      "error": null,
+      "query_params_used": {},
+      "body_required": false
+    },
+    {
+      "method": "PUT",
+      "path": "/api/v2/script-designs/{script_design_id}",
+      "probe_url_path": "/api/v2/script-designs/probe",
+      "status": 404,
+      "available": true,
+      "error": null,
+      "query_params_used": {},
+      "body_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/script-designs/{script_design_id}/story-bindings",
+      "probe_url_path": "/api/v2/script-designs/probe/story-bindings",
+      "status": 404,
+      "available": true,
+      "error": null,
+      "query_params_used": {},
+      "body_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/stats/daily",
+      "probe_url_path": "/api/v2/stats/daily",
+      "status": 200,
+      "available": true,
+      "error": null,
+      "query_params_used": {},
+      "body_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/stats/filter-options",
+      "probe_url_path": "/api/v2/stats/filter-options",
+      "status": 200,
+      "available": true,
+      "error": null,
+      "query_params_used": {},
+      "body_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/stats/log",
+      "probe_url_path": "/api/v2/stats/log",
+      "status": 200,
+      "available": true,
+      "error": null,
+      "query_params_used": {},
+      "body_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/stats/overview",
+      "probe_url_path": "/api/v2/stats/overview",
+      "status": 200,
+      "available": true,
+      "error": null,
+      "query_params_used": {},
+      "body_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/stories",
+      "probe_url_path": "/api/v2/stories",
+      "status": 200,
+      "available": true,
+      "error": null,
+      "query_params_used": {},
+      "body_required": false
+    },
+    {
+      "method": "POST",
+      "path": "/api/v2/stories",
+      "probe_url_path": "/api/v2/stories",
+      "status": 404,
+      "available": true,
+      "error": null,
+      "query_params_used": {},
+      "body_required": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v2/stories/{story_id}",
+      "probe_url_path": "/api/v2/stories/probe",
+      "status": 404,
+      "available": true,
+      "error": null,
+      "query_params_used": {},
+      "body_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/stories/{story_id}",
+      "probe_url_path": "/api/v2/stories/probe",
+      "status": 404,
+      "available": true,
+      "error": null,
+      "query_params_used": {},
+      "body_required": false
+    },
+    {
+      "method": "PUT",
+      "path": "/api/v2/stories/{story_id}",
+      "probe_url_path": "/api/v2/stories/probe",
+      "status": 404,
+      "available": true,
+      "error": null,
+      "query_params_used": {},
+      "body_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v2/stories/{story_id}/adjustments/commit",
+      "probe_url_path": "/api/v2/stories/probe/adjustments/commit",
+      "status": 404,
+      "available": true,
+      "error": null,
+      "query_params_used": {},
+      "body_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/stories/{story_id}/entity-state",
+      "probe_url_path": "/api/v2/stories/probe/entity-state",
+      "status": 404,
+      "available": true,
+      "error": null,
+      "query_params_used": {},
+      "body_required": false
+    },
+    {
+      "method": "POST",
+      "path": "/api/v2/stories/{story_id}/entity-state/rebuild",
+      "probe_url_path": "/api/v2/stories/probe/entity-state/rebuild",
+      "status": 404,
+      "available": true,
+      "error": null,
+      "query_params_used": {},
+      "body_required": false
+    },
+    {
+      "method": "PUT",
+      "path": "/api/v2/stories/{story_id}/progress",
+      "probe_url_path": "/api/v2/stories/probe/progress",
+      "status": 404,
+      "available": true,
+      "error": null,
+      "query_params_used": {},
+      "body_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/stories/{story_id}/runtime",
+      "probe_url_path": "/api/v2/stories/probe/runtime",
+      "status": 404,
+      "available": true,
+      "error": null,
+      "query_params_used": {},
+      "body_required": false
+    },
+    {
+      "method": "PUT",
+      "path": "/api/v2/stories/{story_id}/runtime",
+      "probe_url_path": "/api/v2/stories/probe/runtime",
+      "status": 404,
+      "available": true,
+      "error": null,
+      "query_params_used": {},
+      "body_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v2/stories/{story_id}/segments",
+      "probe_url_path": "/api/v2/stories/probe/segments",
+      "status": 404,
+      "available": true,
+      "error": null,
+      "query_params_used": {},
+      "body_required": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v2/stories/{story_id}/segments/last",
+      "probe_url_path": "/api/v2/stories/probe/segments/last",
+      "status": 404,
+      "available": true,
+      "error": null,
+      "query_params_used": {},
+      "body_required": false
+    },
+    {
+      "method": "POST",
+      "path": "/api/v2/story/adjustments/polish",
+      "probe_url_path": "/api/v2/story/adjustments/polish",
+      "status": 404,
+      "available": true,
+      "error": null,
+      "query_params_used": {},
+      "body_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v2/story/generate",
+      "probe_url_path": "/api/v2/story/generate",
+      "status": 200,
+      "available": true,
+      "error": null,
+      "query_params_used": {},
+      "body_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v2/story/generate/stream",
+      "probe_url_path": "/api/v2/story/generate/stream",
+      "status": 200,
+      "available": true,
+      "error": null,
+      "query_params_used": {},
+      "body_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v2/story/input-enhancement/preview",
+      "probe_url_path": "/api/v2/story/input-enhancement/preview",
+      "status": 200,
+      "available": true,
+      "error": null,
+      "query_params_used": {},
+      "body_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v2/story/session",
+      "probe_url_path": "/api/v2/story/session",
+      "status": 200,
+      "available": true,
+      "error": null,
+      "query_params_used": {},
+      "body_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/story/session/{session_id}",
+      "probe_url_path": "/api/v2/story/session/probe",
+      "status": 200,
+      "available": true,
+      "error": null,
+      "query_params_used": {},
+      "body_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/story/session/{session_id}/entity-state",
+      "probe_url_path": "/api/v2/story/session/probe/entity-state",
+      "status": 200,
+      "available": true,
+      "error": null,
+      "query_params_used": {},
+      "body_required": false
+    },
+    {
+      "method": "POST",
+      "path": "/api/v2/story/session/{session_id}/entity-state/rebuild",
+      "probe_url_path": "/api/v2/story/session/probe/entity-state/rebuild",
+      "status": 400,
+      "available": true,
+      "error": null,
+      "query_params_used": {},
+      "body_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/story/session/{session_id}/memory-updates",
+      "probe_url_path": "/api/v2/story/session/probe/memory-updates",
+      "status": 200,
+      "available": true,
+      "error": null,
+      "query_params_used": {},
+      "body_required": false
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v2/story/session/{session_id}/messages/last",
+      "probe_url_path": "/api/v2/story/session/probe/messages/last",
+      "status": 200,
+      "available": true,
+      "error": null,
+      "query_params_used": {},
+      "body_required": false
+    },
+    {
+      "method": "POST",
+      "path": "/api/v2/story/session/{session_id}/regenerate",
+      "probe_url_path": "/api/v2/story/session/probe/regenerate",
+      "status": 200,
+      "available": true,
+      "error": null,
+      "query_params_used": {},
+      "body_required": true
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/story/session/{session_id}/story-memory",
+      "probe_url_path": "/api/v2/story/session/probe/story-memory",
+      "status": 200,
+      "available": true,
+      "error": null,
+      "query_params_used": {},
+      "body_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/worlds",
+      "probe_url_path": "/api/v2/worlds",
+      "status": 200,
+      "available": true,
+      "error": null,
+      "query_params_used": {},
+      "body_required": false
+    },
+    {
+      "method": "POST",
+      "path": "/api/v2/worlds",
+      "probe_url_path": "/api/v2/worlds",
+      "status": 200,
+      "available": true,
+      "error": null,
+      "query_params_used": {},
+      "body_required": true
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v2/worlds/{world_id}",
+      "probe_url_path": "/api/v2/worlds/probe",
+      "status": 404,
+      "available": true,
+      "error": null,
+      "query_params_used": {},
+      "body_required": false
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/worlds/{world_id}",
+      "probe_url_path": "/api/v2/worlds/probe",
+      "status": 404,
+      "available": true,
+      "error": null,
+      "query_params_used": {},
+      "body_required": false
+    },
+    {
+      "method": "PUT",
+      "path": "/api/v2/worlds/{world_id}",
+      "probe_url_path": "/api/v2/worlds/probe",
+      "status": 404,
+      "available": true,
+      "error": null,
+      "query_params_used": {},
+      "body_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v2/worlds/{world_id}/lorebook/bulk-import",
+      "probe_url_path": "/api/v2/worlds/probe/lorebook/bulk-import",
+      "status": 200,
+      "available": true,
+      "error": null,
+      "query_params_used": {},
+      "body_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v2/worlds/{world_id}/lorebook/character",
+      "probe_url_path": "/api/v2/worlds/probe/lorebook/character",
+      "status": 404,
+      "available": true,
+      "error": null,
+      "query_params_used": {},
+      "body_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v2/worlds/{world_id}/lorebook/event",
+      "probe_url_path": "/api/v2/worlds/probe/lorebook/event",
+      "status": 404,
+      "available": true,
+      "error": null,
+      "query_params_used": {},
+      "body_required": true
+    },
+    {
+      "method": "POST",
+      "path": "/api/v2/worlds/{world_id}/lorebook/location",
+      "probe_url_path": "/api/v2/worlds/probe/lorebook/location",
+      "status": 404,
+      "available": true,
+      "error": null,
+      "query_params_used": {},
+      "body_required": true
+    }
+  ]
+}

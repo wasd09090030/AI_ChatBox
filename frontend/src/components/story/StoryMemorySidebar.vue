@@ -20,13 +20,18 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import type {
   EntityStateCollection,
   EntityStateSnapshot,
+  EntityStateUpdate,
   MemoryUpdateEvent,
   SummaryMemorySnapshot,
 } from '@/domains/story/api/storyGenerationApi'
 import {
   extractWorldUpdateHighlights,
+  getEntityPatchCommittedAt,
   getEntityPatchDetail,
+  getEntityPatchEvidenceText,
+  getEntityPatchEventId,
   getEntityPatchHeadline,
+  getEntityPatchSourceTurn,
 } from '@/domains/story/entityPatchPresentation'
 import type { StoryEntityUpdateRecord, StoryWorldUpdateRecord } from '@/stores/storySession'
 import {
@@ -64,8 +69,8 @@ const props = withDefaults(
     lastContexts?: StoryContextHit[]
     lastMemoryUpdates?: MemoryUpdateEvent[]
     lastEntityState?: EntityStateCollection | null
-    lastEntityStateUpdates?: StoryEntityUpdateRecord[]
-    lastWorldUpdate?: StoryWorldUpdateRecord | null
+    lastEntityStateUpdates?: Array<EntityStateUpdate | StoryEntityUpdateRecord>
+    lastWorldUpdate?: Record<string, unknown> | StoryWorldUpdateRecord | null
   }>(),
   {
     showScriptProgress: true,
@@ -244,9 +249,9 @@ function entityTone(entity: EntityStateSnapshot) {
       <div class="px-4 pt-4 pb-3 border-b border-border">
         <p class="text-sm font-semibold flex items-center gap-1.5 mb-0.5">
           <Sparkles class="h-3.5 w-3.5 text-amber-500" />
-          本轮记忆解释
+          本轮故事记忆
         </p>
-        <p class="text-xs text-muted-foreground mb-2">把本轮生成、回滚或重生成后的记忆状态变化翻译成可读结论。</p>
+        <p class="text-xs text-muted-foreground mb-2">把本轮生成、回滚或重生成后的故事记忆变化翻译成可读结论。</p>
 
         <div class="space-y-3">
           <div
@@ -452,7 +457,7 @@ function entityTone(entity: EntityStateSnapshot) {
             <div v-if="orderedEntityPatches.length" class="mt-3 space-y-2">
               <article
                 v-for="patch in orderedEntityPatches"
-                :key="patch.eventId"
+                :key="getEntityPatchEventId(patch)"
                 class="rounded-lg border border-emerald-200/70 bg-white/80 px-3 py-2.5"
               >
                 <div class="flex items-start justify-between gap-2">
@@ -466,11 +471,11 @@ function entityTone(entity: EntityStateSnapshot) {
                 </div>
                 <p class="mt-2 text-[10px] text-muted-foreground">
                   {{ patch.source }}
-                  <span v-if="patch.sourceTurn"> · Turn {{ patch.sourceTurn }}</span>
-                  <span> · {{ formatEntityUpdatedAt(patch.committedAt) }}</span>
+                  <span v-if="getEntityPatchSourceTurn(patch)"> · Turn {{ getEntityPatchSourceTurn(patch) }}</span>
+                  <span> · {{ formatEntityUpdatedAt(getEntityPatchCommittedAt(patch)) }}</span>
                 </p>
-                <p v-if="patch.evidenceText" class="mt-1 text-[10px] leading-relaxed text-foreground/80">
-                  证据：{{ patch.evidenceText }}
+                <p v-if="getEntityPatchEvidenceText(patch)" class="mt-1 text-[10px] leading-relaxed text-foreground/80">
+                  证据：{{ getEntityPatchEvidenceText(patch) }}
                 </p>
               </article>
             </div>

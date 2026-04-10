@@ -33,6 +33,7 @@ class StoryConsistencyRebuildService:
         history_manager,
         story_runtime_manager=None,
         entity_state_manager=None,
+        entity_state_fallback_service=None,
         entity_state_event_repository=None,
         entity_state_event_replay_service=None,
     ):
@@ -42,6 +43,7 @@ class StoryConsistencyRebuildService:
         self.history_manager = history_manager
         self.story_runtime_manager = story_runtime_manager
         self.entity_state_manager = entity_state_manager
+        self.entity_state_fallback_service = entity_state_fallback_service
         self.entity_state_event_repository = entity_state_event_repository
         self.entity_state_event_replay_service = entity_state_event_replay_service
 
@@ -167,7 +169,7 @@ class StoryConsistencyRebuildService:
 
         updates_to_persist = list(memory_updates)
 
-        if self.entity_state_manager is not None:
+        if self.entity_state_manager is not None or self.entity_state_fallback_service is not None:
             runtime_state = None
             if self.story_runtime_manager is not None:
                 runtime_state = self.story_runtime_manager.get_runtime_state(story.id)
@@ -193,6 +195,36 @@ class StoryConsistencyRebuildService:
                         persist=True,
                     )
                     if not entity_rebuild.rebuilt:
+                        if self.entity_state_fallback_service is not None:
+                            entity_rebuild = self.entity_state_fallback_service.rebuild_story_state(
+                                story=story,
+                                session_id=session_id,
+                                runtime_state=runtime_state,
+                                source=source,
+                                operation_id=operation_id,
+                                sequence_start=sequence_start + len(memory_updates),
+                            )
+                        else:
+                            entity_rebuild = self.entity_state_manager.rebuild_story_state(
+                                story=story,
+                                session_id=session_id,
+                                runtime_state=runtime_state,
+                                persist=True,
+                                source=source,
+                                operation_id=operation_id,
+                                sequence_start=sequence_start + len(memory_updates),
+                            )
+                else:
+                    if self.entity_state_fallback_service is not None:
+                        entity_rebuild = self.entity_state_fallback_service.rebuild_story_state(
+                            story=story,
+                            session_id=session_id,
+                            runtime_state=runtime_state,
+                            source=source,
+                            operation_id=operation_id,
+                            sequence_start=sequence_start + len(memory_updates),
+                        )
+                    else:
                         entity_rebuild = self.entity_state_manager.rebuild_story_state(
                             story=story,
                             session_id=session_id,
@@ -202,16 +234,6 @@ class StoryConsistencyRebuildService:
                             operation_id=operation_id,
                             sequence_start=sequence_start + len(memory_updates),
                         )
-                else:
-                    entity_rebuild = self.entity_state_manager.rebuild_story_state(
-                        story=story,
-                        session_id=session_id,
-                        runtime_state=runtime_state,
-                        persist=True,
-                        source=source,
-                        operation_id=operation_id,
-                        sequence_start=sequence_start + len(memory_updates),
-                    )
                 entity_state_rebuilt = bool(entity_rebuild.rebuilt)
                 memory_updates.extend(entity_rebuild.memory_updates)
                 warnings.extend(entity_rebuild.warnings)

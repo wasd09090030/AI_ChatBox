@@ -20,6 +20,8 @@ class MemoryOrchestrator:
         roleplay_manager=None,
         script_design_app=None,
         summary_memory_manager=None,
+        story_runtime_manager=None,
+        entity_state_event_replay_service=None,
         recent_message_count: int = 5,
     ):
         self.lorebook_manager = lorebook_manager
@@ -28,6 +30,8 @@ class MemoryOrchestrator:
         self.roleplay_manager = roleplay_manager
         self.script_design_app = script_design_app
         self.summary_memory_manager = summary_memory_manager
+        self.story_runtime_manager = story_runtime_manager
+        self.entity_state_event_replay_service = entity_state_event_replay_service
         self.recent_message_count = recent_message_count
 
     def build_bundle(
@@ -57,6 +61,13 @@ class MemoryOrchestrator:
         dialogue_controls = self._build_dialogue_controls(request)
         summary_memory = self._load_summary_memory(request.session_id, activation_logs)
         script_guidance = self._load_script_guidance(request, activation_logs)
+        story_id = self._resolve_story_id(request.session_id, getattr(request, "story_id", None))
+        runtime_snapshot = self._load_runtime_snapshot(story_id, activation_logs)
+        entity_memory = self._load_entity_memory(
+            story_id=story_id,
+            session_id=request.session_id,
+            activation_logs=activation_logs,
+        )
 
         bundle: MemoryBundle = {
             "episodic": {
@@ -95,6 +106,22 @@ class MemoryOrchestrator:
                 "world_id": world_id,
                 "retrieved_lore": list(retrieved_contexts or []),
                 "world_config": world_config or {},
+            },
+            "runtime": {
+                "story_id": story_id,
+                "runtime_state_id": (runtime_snapshot or {}).get("id"),
+                "current_stage_id": (runtime_snapshot or {}).get("current_stage_id"),
+                "current_event_id": (runtime_snapshot or {}).get("current_event_id"),
+                "creation_mode": (runtime_snapshot or {}).get("creation_mode"),
+                "raw_record": runtime_snapshot,
+            },
+            "entity": {
+                "story_id": story_id,
+                "entity_type": "character",
+                "tracked_entities": int((entity_memory or {}).get("total") or 0),
+                "entity_state_snapshot": entity_memory,
+                "recent_entity_updates": list((entity_memory or {}).get("recent_entity_updates") or []),
+                "raw_record": entity_memory,
             },
             "meta": {
                 "session_id": request.session_id,
@@ -159,3 +186,69 @@ class MemoryOrchestrator:
                 }
             )
         return summary_memory
+
+    def _resolve_story_id(
+        self,
+        session_id: str,
+        explicit_story_id: Optional[str],
+    ) -> Optional[str]:
+        if explicit_story_id:
+            return str(explicit_story_id)
+        if self.story_runtime_manager:
+            return self.story_runtime_manager.derive_story_id(session_id)
+        return None
+
+    def _load_runtime_snapshot(
+        self,
+        story_id: Optional[str],
+        activation_logs: List[Dict[str, Any]],
+    ) -> Optional[Dict[str, Any]]:
+        if not story_id or not self.story_runtime_manager:
+            return None
+        runtime_state = self.story_runtime_manager.get_runtime_state(story_id)
+        if runtime_state:
+            activation_logs.append(
+                {
+                    "source": "story_runtime",
+                    "event": "applied",
+                    "runtime_state_id": runtime_state.id,
+                    "current_stage_id": runtime_state.current_stage_id,
+                    "current_event_id": runtime_state.current_event_id,
+                }
+            )
+            return runtime_state.model_dump(mode="json")
+        return None
+
+    def _load_entity_memory(
+        self,
+        *,
+        story_id: Optional[str],
+        session_id: str,
+        activation_logs: List[Dict[str, Any]],
+    ) -> Optional[Dict[str, Any]]:
+        if not story_id or not self.entity_state_event_replay_service:
+            return None
+        replay_result = self.entity_state_event_replay_service.replay_story_state(
+            story_id=story_id,
+            session_id=session_id,
+            source="story_memory_read",
+            allow_empty_result=True,
+            persist=False,
+        )
+        snapshot = {
+            "story_id": story_id,
+            "session_id": session_id,
+            "entity_type": "character",
+            "items": [item.model_dump(mode="json") for item in replay_result.items],
+            "total": len(replay_result.items),
+            "recent_entity_updates": list(replay_result.memory_updates or [])[-10:],
+        }
+        if replay_result.items:
+            activation_logs.append(
+                {
+                    "source": "entity_memory",
+                    "event": "applied",
+                    "tracked_entities": len(replay_result.items),
+                }
+            )
+        return snapshot

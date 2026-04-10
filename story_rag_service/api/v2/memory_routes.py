@@ -15,6 +15,7 @@ from api.v2.schemas import (
     MemorySummaryStateResponse,
     MemoryUpdateJournalItem,
     MemoryUpdateJournalListResponse,
+    StoryMemorySnapshotResponse,
 )
 from application.memory.journal import list_memory_update_events
 
@@ -134,3 +135,38 @@ async def get_session_memory_updates(
         page_size=result["page_size"],
         summary_state=_derive_summary_state(current_summary=current_summary, items=items),
     )
+
+
+@router.get(
+    "/story/session/{session_id}/story-memory",
+    response_model=StoryMemorySnapshotResponse,
+)
+async def get_story_memory_snapshot(
+    session_id: str,
+    story_id: Optional[str] = Query(default=None),
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=50, ge=1, le=200),
+    services: ServiceContainer = Depends(get_services),
+):
+    """读取单会话统一故事记忆快照。"""
+    metadata = services.session_manager.get_session_metadata(session_id)
+    snapshot = services.story_memory_service.get_story_memory_snapshot(
+        session_id=session_id,
+        story_id=_normalize_optional_query(story_id),
+        world_id=(metadata or {}).get("world_id"),
+        timeline_page=page,
+        timeline_page_size=page_size,
+    )
+    story_memory = snapshot.get("story_memory") or {}
+    semantic_snapshot = ((story_memory.get("semantic") or {}).get("summary_memory_snapshot") or None)
+    runtime_snapshot = ((story_memory.get("runtime") or {}).get("runtime_state_snapshot") or None)
+    entity_snapshot = ((story_memory.get("entity") or {}).get("entity_state_snapshot") or None)
+    if (
+        not metadata
+        and int(snapshot.get("timeline_total") or 0) <= 0
+        and semantic_snapshot is None
+        and runtime_snapshot is None
+        and entity_snapshot is None
+    ):
+        raise HTTPException(status_code=404, detail=f"Session '{session_id}' not found")
+    return StoryMemorySnapshotResponse(**snapshot)

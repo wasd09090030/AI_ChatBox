@@ -201,6 +201,7 @@ class V2GenerateResponse(BaseModel):
     activation_logs: List[Dict[str, Any]] = Field(default_factory=list)
     memory_updates: List[Dict[str, Any]] = Field(default_factory=list)
     story_state_snapshot: Optional[Dict[str, Any]] = None
+    story_memory: Optional[Dict[str, Any]] = None
     summary_memory_snapshot: Optional[Dict[str, Any]] = None
     runtime_state_snapshot: Optional[Dict[str, Any]] = None
     entity_state_snapshot: Optional[Dict[str, Any]] = None
@@ -347,3 +348,14 @@ class MemorySessionTimelineResponse(BaseModel):
     page: int = 1
     page_size: int = 100
     summary_state: MemorySummaryStateResponse = Field(default_factory=MemorySummaryStateResponse)
+
+
+class StoryMemorySnapshotResponse(BaseModel):
+    """统一故事记忆快照响应。"""
+    session_id: str
+    story_id: Optional[str] = None
+    world_id: Optional[str] = None
+    timeline_total: int = 0
+    timeline_page: int = 1
+    timeline_page_size: int = 50
+    story_memory: Dict[str, Any] = Field(default_factory=dict)

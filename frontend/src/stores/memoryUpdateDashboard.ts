@@ -4,6 +4,7 @@ import type {
   MemorySessionTimelineResponse,
   MemoryUpdateQueryFilters,
   MemoryUpdateQueryResponse,
+  StoryMemorySnapshotResponse,
 } from '@/domains/memory/api/memoryUpdatesApi'
 
 export type MemoryUpdateDetailTab = 'timeline' | 'semantic' | 'entity'
@@ -35,6 +36,7 @@ export const useMemoryUpdateDashboardStore = defineStore('memoryUpdateDashboard'
 
   const listSnapshot = ref<MemoryUpdateQueryResponse | null>(null)
   const timelineSnapshotBySession = ref<Record<string, MemorySessionTimelineResponse>>({})
+  const storyMemorySnapshotBySession = ref<Record<string, StoryMemorySnapshotResponse>>({})
 
   const queryFilters = computed<MemoryUpdateQueryFilters>(() => {
     const range = buildDateRange(selectedTimeRange.value)
@@ -104,6 +106,20 @@ export const useMemoryUpdateDashboardStore = defineStore('memoryUpdateDashboard'
     return timelineSnapshotBySession.value[sessionId] ?? null
   }
 
+  function setStoryMemorySnapshot(sessionId: string, value: StoryMemorySnapshotResponse | null | undefined) {
+    if (!sessionId) return
+    if (!value) {
+      delete storyMemorySnapshotBySession.value[sessionId]
+      return
+    }
+    storyMemorySnapshotBySession.value[sessionId] = value
+  }
+
+  function getStoryMemorySnapshot(sessionId: string | null | undefined) {
+    if (!sessionId) return null
+    return storyMemorySnapshotBySession.value[sessionId] ?? null
+  }
+
   function resetDetailState() {
     detailTab.value = 'timeline'
     detailPage.value = 1
@@ -121,6 +137,7 @@ export const useMemoryUpdateDashboardStore = defineStore('memoryUpdateDashboard'
     detailTab,
     listSnapshot,
     timelineSnapshotBySession,
+    storyMemorySnapshotBySession,
     queryFilters,
     setSearchTerm,
     setSelectedSource,
@@ -134,6 +151,8 @@ export const useMemoryUpdateDashboardStore = defineStore('memoryUpdateDashboard'
     setListSnapshot,
     setTimelineSnapshot,
     getTimelineSnapshot,
+    setStoryMemorySnapshot,
+    getStoryMemorySnapshot,
     resetDetailState,
   }
 })

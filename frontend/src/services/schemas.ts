@@ -33,6 +33,17 @@ export const SummaryMemorySnapshotSchema = z.object({
   session_id: z.string().optional(),
 })
 
+export const StoryMemoryOperationSchema = z.object({
+  operation_id: z.string().nullable().optional(),
+  source: z.string().nullable().optional(),
+  status: z.string(),
+  committed_at: z.string().nullable().optional(),
+  sequence_min: z.number().nullable().optional(),
+  sequence_max: z.number().nullable().optional(),
+  event_count: z.number().optional(),
+  entity_update_count: z.number().optional(),
+})
+
 export const EntityStateSnapshotSchema = z.object({
   story_id: z.string(),
   session_id: z.string(),
@@ -83,6 +94,27 @@ export const EntityStateUpdateSchema = z.object({
   metadata: z.record(z.string(), z.unknown()).optional(),
 })
 
+export const StoryMemoryPayloadSchema = z.object({
+  session_id: z.string(),
+  story_id: z.string().nullable().optional(),
+  world_id: z.string().nullable().optional(),
+  operation: StoryMemoryOperationSchema.nullable().optional(),
+  semantic: z.object({
+    summary_memory_snapshot: SummaryMemorySnapshotSchema.nullable().optional(),
+  }).nullable().optional(),
+  runtime: z.object({
+    runtime_state_snapshot: z.record(z.string(), z.unknown()).nullable().optional(),
+  }).nullable().optional(),
+  entity: z.object({
+    entity_state_snapshot: EntityStateCollectionSchema.nullable().optional(),
+    entity_state_updates: z.array(EntityStateUpdateSchema).optional(),
+    world_update: z.record(z.string(), z.unknown()).nullable().optional(),
+  }).nullable().optional(),
+  timeline: z.object({
+    memory_updates: z.array(MemoryUpdateEventSchema).optional(),
+  }).nullable().optional(),
+})
+
 export const V2GenerateResponseSchema = z.object({
   session_id: z.string(),
   thread_id: z.string(),
@@ -91,6 +123,7 @@ export const V2GenerateResponseSchema = z.object({
   activation_logs: z.array(z.record(z.string(), z.unknown())).optional(),
   memory_updates: z.array(MemoryUpdateEventSchema).optional(),
   story_state_snapshot: z.record(z.string(), z.unknown()).nullable().optional(),
+  story_memory: StoryMemoryPayloadSchema.nullable().optional(),
   summary_memory_snapshot: SummaryMemorySnapshotSchema.nullable().optional(),
   runtime_state_snapshot: z.record(z.string(), z.unknown()).nullable().optional(),
   entity_state_snapshot: EntityStateCollectionSchema.nullable().optional(),

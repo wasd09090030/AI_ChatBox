@@ -75,6 +75,24 @@ class MemoryWorldLayer(TypedDict, total=False):
     world_config: Dict[str, Any]
 
 
+class MemoryRuntimeLayer(TypedDict, total=False):
+    story_id: Optional[str]
+    runtime_state_id: Optional[str]
+    current_stage_id: Optional[str]
+    current_event_id: Optional[str]
+    creation_mode: Optional[str]
+    raw_record: Optional[Dict[str, Any]]
+
+
+class MemoryEntityLayer(TypedDict, total=False):
+    story_id: Optional[str]
+    entity_type: Optional[str]
+    tracked_entities: int
+    entity_state_snapshot: Optional[Dict[str, Any]]
+    recent_entity_updates: List[Dict[str, Any]]
+    raw_record: Optional[Dict[str, Any]]
+
+
 class MemoryBundleMeta(TypedDict, total=False):
     session_id: str
     activation_logs: List[Dict[str, Any]]
@@ -86,6 +104,8 @@ class MemoryBundle(TypedDict, total=False):
     profile: MemoryProfileLayer
     procedural: MemoryProceduralLayer
     world: MemoryWorldLayer
+    runtime: MemoryRuntimeLayer
+    entity: MemoryEntityLayer
     meta: MemoryBundleMeta
 
 

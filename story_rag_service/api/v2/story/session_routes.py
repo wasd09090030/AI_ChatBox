@@ -126,12 +126,11 @@ def _reconcile_session_memory_after_mutation(
                 )
 
             if entity_rebuild is None or not entity_rebuild.rebuilt:
-                entity_rebuild = services.entity_state_manager.rebuild_session_state(
+                entity_rebuild = services.entity_state_fallback_service.rebuild_session_state(
                     session_id=session_id,
                     story_id=effective_story_id,
                     world_id=world_id,
                     messages=messages,
-                    persist=True,
                     source=source,
                     operation_id=operation_id,
                     sequence_start=sequence_start + len(updates_to_persist),
@@ -314,16 +313,13 @@ async def get_session_entity_state(
     query: EntityStateQueryParams = Depends(),
     services: ServiceContainer = Depends(get_services),
 ):
-    """读取会话当前实体状态快照。"""
-    items = services.entity_state_manager.list_session_states(
-        session_id,
-        entity_type=query.entity_type,
-    )
-    return EntityStateCollection(
+    """读取会话当前实体状态快照（兼容桥接，优先事件回放）。"""
+    effective_story_id = services.story_runtime_manager.derive_story_id(session_id)
+    return services.entity_state_fallback_service.get_session_snapshot(
         session_id=session_id,
+        story_id=effective_story_id,
         entity_type=query.entity_type,
-        items=items,
-        total=len(items),
+        source="entity_state_session_snapshot_api",
     )
 
 
@@ -356,11 +352,10 @@ async def rebuild_session_entity_state(
         if replay_result.rebuilt:
             return replay_result
 
-    return services.entity_state_manager.rebuild_session_state(
+    return services.entity_state_fallback_service.rebuild_session_state(
         session_id=session_id,
         story_id=effective_story_id,
         world_id=resolved_world_id,
         messages=messages,
-        persist=True,
         source="entity_state_session_rebuild_api",
     )

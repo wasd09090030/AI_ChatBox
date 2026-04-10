@@ -15,8 +15,8 @@ from typing import Any, AsyncGenerator, Dict, List, Optional
 from langchain_core.messages import HumanMessage, SystemMessage
 
 from application.memory import MemoryBundle, MemoryOrchestrator, MemoryUpdateService
+from application.story_memory import build_story_memory_payload
 from config import settings
-from models.entity_state import EntityStateCollection
 from models.story import (
     Message,
     RetrievedContext,
@@ -64,6 +64,7 @@ class StoryGenerator:
         summary_memory_manager: Optional[SummaryMemoryManager] = None,
         story_runtime_manager=None,
         entity_state_manager=None,
+        entity_state_fallback_service=None,
         entity_patch_update_service=None,
         entity_state_event_replay_service=None,
     ):
@@ -80,6 +81,7 @@ class StoryGenerator:
         self.summary_memory_manager = summary_memory_manager
         self.story_runtime_manager = story_runtime_manager
         self.entity_state_manager = entity_state_manager
+        self.entity_state_fallback_service = entity_state_fallback_service
         self.entity_patch_update_service = entity_patch_update_service
         self.entity_state_event_replay_service = entity_state_event_replay_service
         self.lorebook_compressor = LorebookCompressor()
@@ -91,6 +93,8 @@ class StoryGenerator:
             roleplay_manager=self.roleplay_manager,
             script_design_app=self.script_design_app,
             summary_memory_manager=self.summary_memory_manager,
+            story_runtime_manager=self.story_runtime_manager,
+            entity_state_event_replay_service=self.entity_state_event_replay_service,
             recent_message_count=self.recent_message_count,
         )
         self.memory_update_service = MemoryUpdateService(
@@ -531,7 +535,7 @@ class StoryGenerator:
         )
         return request, runtime_state, contract, script_design
 
-    def _rebuild_entity_state_after_generation(
+    def _fallback_entity_state_after_generation(
         self,
         *,
         request: StoryGenerationRequest,
@@ -541,57 +545,28 @@ class StoryGenerator:
         source: str,
         activation_logs: List[Dict[str, Any]],
     ) -> tuple[Optional[Dict[str, Any]], List[Dict[str, Any]]]:
-        """在生成后重建实体状态快照，并返回新增记忆更新记录。"""
-        if self.entity_state_manager is None:
+        """在 patch 失败时通过 fallback 服务重建实体状态。"""
+        if self.entity_state_fallback_service is None:
             return None, []
 
         story_id = self._resolve_story_id(request)
         if not story_id:
             return None, []
 
-        try:
-            entity_rebuild = self.entity_state_manager.rebuild_session_state(
-                session_id=request.session_id,
-                story_id=story_id,
-                world_id=world_id,
-                messages=context.messages,
-                persist=True,
-                source=source,
-                operation_id=getattr(request, "memory_operation_id", None),
-                sequence_start=int(getattr(request, "memory_operation_sequence_start", 1) or 1)
-                + memory_update_count,
-            )
-            activation_logs.append(
-                {
-                    "source": "entity_state",
-                    "event": "rebuilt",
-                    "story_id": story_id,
-                    "entity_count": len(entity_rebuild.items),
-                }
-            )
-            snapshot = EntityStateCollection(
-                story_id=story_id,
-                session_id=request.session_id,
-                entity_type=None,
-                items=entity_rebuild.items,
-                total=len(entity_rebuild.items),
-            )
-            return snapshot.model_dump(mode="json"), entity_rebuild.memory_updates
-        except Exception as exc:
-            logger.warning(
-                "Entity-state rebuild failed after generation for session %s: %s",
-                request.session_id,
-                exc,
-            )
-            activation_logs.append(
-                {
-                    "source": "entity_state",
-                    "event": "rebuild_failed",
-                    "story_id": story_id,
-                    "reason": str(exc),
-                }
-            )
+        entity_rebuild = self.entity_state_fallback_service.rebuild_session_state(
+            session_id=request.session_id,
+            story_id=story_id,
+            world_id=world_id,
+            messages=context.messages,
+            source=source,
+            operation_id=getattr(request, "memory_operation_id", None),
+            sequence_start=int(getattr(request, "memory_operation_sequence_start", 1) or 1)
+            + memory_update_count,
+            activation_logs=activation_logs,
+        )
+        if not entity_rebuild.rebuilt:
             return None, []
+        return self.entity_state_fallback_service.to_snapshot_payload(entity_rebuild), entity_rebuild.memory_updates
 
     @staticmethod
     def _normalize_entity_update_result(result: Optional[Dict[str, Any]]) -> Dict[str, Any]:
@@ -645,7 +620,7 @@ class StoryGenerator:
                     }
                 )
 
-        entity_state_snapshot, entity_state_updates = self._rebuild_entity_state_after_generation(
+        entity_state_snapshot, entity_state_updates = self._fallback_entity_state_after_generation(
             request=request,
             world_id=world_id,
             context=context,
@@ -702,7 +677,7 @@ class StoryGenerator:
                     }
                 )
 
-        entity_state_snapshot, entity_state_updates = self._rebuild_entity_state_after_generation(
+        entity_state_snapshot, entity_state_updates = self._fallback_entity_state_after_generation(
             request=request,
             world_id=world_id,
             context=context,
@@ -883,6 +858,7 @@ class StoryGenerator:
         generation_time = time.time() - start_time
         formatted_contexts = self._format_retrieved_contexts(retrieved_contexts, retrieved_history)
 
+        runtime_snapshot = updated_runtime_state.model_dump(mode="json") if updated_runtime_state else None
         return StoryGenerationResponse(
             session_id=request.session_id,
             user_input=request.user_input,
@@ -891,10 +867,19 @@ class StoryGenerator:
             updated_context=context,
             activation_logs=activation_logs,
             memory_updates=memory_updates,
-            summary_memory_snapshot=updated_summary,
-            runtime_state_snapshot=(
-                updated_runtime_state.model_dump(mode="json") if updated_runtime_state else None
+            story_memory=build_story_memory_payload(
+                session_id=request.session_id,
+                story_id=request.story_id,
+                world_id=world_id,
+                summary_memory_snapshot=updated_summary,
+                runtime_state_snapshot=runtime_snapshot,
+                entity_state_snapshot=entity_update_result["entity_state_snapshot"],
+                entity_state_updates=entity_update_result["entity_state_updates"],
+                world_update=entity_update_result["world_update"],
+                memory_updates=memory_updates,
             ),
+            summary_memory_snapshot=updated_summary,
+            runtime_state_snapshot=runtime_snapshot,
             entity_state_snapshot=entity_update_result["entity_state_snapshot"],
             entity_state_updates=entity_update_result["entity_state_updates"],
             world_update=entity_update_result["world_update"],
@@ -1077,6 +1062,7 @@ class StoryGenerator:
         generation_time = time.time() - start_time
         formatted_contexts = self._format_retrieved_contexts(retrieved_contexts, retrieved_history)
 
+        runtime_snapshot = updated_runtime_state.model_dump(mode="json") if updated_runtime_state else None
         return StoryGenerationResponse(
             session_id=request.session_id,
             user_input=request.user_input,
@@ -1085,10 +1071,19 @@ class StoryGenerator:
             updated_context=context,
             activation_logs=activation_logs,
             memory_updates=memory_updates,
-            summary_memory_snapshot=updated_summary,
-            runtime_state_snapshot=(
-                updated_runtime_state.model_dump(mode="json") if updated_runtime_state else None
+            story_memory=build_story_memory_payload(
+                session_id=request.session_id,
+                story_id=request.story_id,
+                world_id=world_id,
+                summary_memory_snapshot=updated_summary,
+                runtime_state_snapshot=runtime_snapshot,
+                entity_state_snapshot=entity_update_result["entity_state_snapshot"],
+                entity_state_updates=entity_update_result["entity_state_updates"],
+                world_update=entity_update_result["world_update"],
+                memory_updates=memory_updates,
             ),
+            summary_memory_snapshot=updated_summary,
+            runtime_state_snapshot=runtime_snapshot,
             entity_state_snapshot=entity_update_result["entity_state_snapshot"],
             entity_state_updates=entity_update_result["entity_state_updates"],
             world_update=entity_update_result["world_update"],
@@ -1325,6 +1320,7 @@ class StoryGenerator:
             "total_tokens": total_tok,
         }
 
+        runtime_snapshot = updated_runtime_state.model_dump(mode="json") if updated_runtime_state else None
         done_payload = {
             "done": True,
             "session_id": request.session_id,
@@ -1338,10 +1334,19 @@ class StoryGenerator:
             ],
             "activation_logs": self._last_activation_logs,
             "memory_updates": memory_updates,
-            "summary_memory_snapshot": updated_summary,
-            "runtime_state_snapshot": (
-                updated_runtime_state.model_dump(mode="json") if updated_runtime_state else None
+            "story_memory": build_story_memory_payload(
+                session_id=request.session_id,
+                story_id=request.story_id,
+                world_id=world_id,
+                summary_memory_snapshot=updated_summary,
+                runtime_state_snapshot=runtime_snapshot,
+                entity_state_snapshot=entity_update_result["entity_state_snapshot"],
+                entity_state_updates=entity_update_result["entity_state_updates"],
+                world_update=entity_update_result["world_update"],
+                memory_updates=memory_updates,
             ),
+            "summary_memory_snapshot": updated_summary,
+            "runtime_state_snapshot": runtime_snapshot,
             "entity_state_snapshot": entity_update_result["entity_state_snapshot"],
             "entity_state_updates": entity_update_result["entity_state_updates"],
             "world_update": entity_update_result["world_update"],

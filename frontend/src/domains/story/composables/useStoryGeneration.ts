@@ -380,15 +380,7 @@ export function useStoryGeneration(args: UseStoryGenerationArgs) {
           } else {
             lastMemoryUpdates.value = []
           }
-          const previousSummaryRecord = args.storySessionStore.summaryMap[sessionId]
-          const previousSummary = previousSummaryRecord
-            ? {
-                summary_text: previousSummaryRecord.summary_text,
-                key_facts: previousSummaryRecord.key_facts,
-                last_turn: previousSummaryRecord.last_turn,
-                session_id: sessionId,
-              }
-            : lastSummary.value
+          const previousSummary = args.storySessionStore.getSummarySnapshot(sessionId) ?? lastSummary.value
           if (event.summary_memory_snapshot) {
             lastSummaryDiff.value = buildSummaryDiff(previousSummary, event.summary_memory_snapshot)
             lastSummary.value = event.summary_memory_snapshot
@@ -435,6 +427,14 @@ export function useStoryGeneration(args: UseStoryGenerationArgs) {
             )
           } else {
             lastWorldUpdate.value = null
+          }
+          if (event.story_memory) {
+            args.storySessionStore.upsertStoryMemorySession(
+              sessionId,
+              args.currentStory.value?.title ?? '',
+              args.selectedWorldId.value,
+              event.story_memory,
+            )
           }
           if (event.creation_mode === 'scripted') {
             args.followScriptDesign.value = true
@@ -546,7 +546,7 @@ export function useStoryGeneration(args: UseStoryGenerationArgs) {
       }
 
       const previousSummary = hydrateSummarySnapshotFromStore(
-        args.storySessionStore.summaryMap[args.v2SessionId.value],
+        args.storySessionStore.getSummarySnapshot(args.v2SessionId.value),
         args.v2SessionId.value,
       ) ?? lastSummary.value
 
@@ -619,7 +619,7 @@ export function useStoryGeneration(args: UseStoryGenerationArgs) {
       })
 
       const previousSummary = hydrateSummarySnapshotFromStore(
-        args.storySessionStore.summaryMap[args.v2SessionId.value],
+        args.storySessionStore.getSummarySnapshot(args.v2SessionId.value),
         args.v2SessionId.value,
       ) ?? lastSummary.value
 
@@ -675,6 +675,14 @@ export function useStoryGeneration(args: UseStoryGenerationArgs) {
         )
       } else {
         lastWorldUpdate.value = null
+      }
+      if (response.story_memory) {
+        args.storySessionStore.upsertStoryMemorySession(
+          args.v2SessionId.value,
+          args.currentStory.value?.title ?? '',
+          args.selectedWorldId.value,
+          response.story_memory,
+        )
       }
       if (response.creation_mode === 'scripted') {
         args.followScriptDesign.value = true

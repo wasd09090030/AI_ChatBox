@@ -103,7 +103,7 @@ frontend/
 - Pinia 状态中心，负责本地长生命周期状态。
 - 重点文件：
   - `config.ts`：Provider、模型、API Key 状态与全局配置。
-  - `storySession.ts`：故事会话相关快照，包含摘要记忆、实体状态、字段级 `entity patch`、`world_update`、记忆事件、分支树等。
+  - `storySession.ts`：故事会话相关快照，包含统一 `storyMemorySessionMap` 聚合记录，并兼容摘要记忆、实体状态、字段级 `entity patch`、`world_update`、记忆事件、分支树等旧结构。
   - `storyDraftState.ts`：按故事与路由隔离的输入草稿状态。
   - `storyWorkspace.ts`：故事工作区相关状态。
   - `memoryUpdateDashboard.ts`：记忆可视化页面状态。
@@ -128,6 +128,9 @@ frontend/
 - `frontend/src/domains/story/entityPatchPresentation.ts`
   - 统一格式化 `entity_state_updates` / `world_update` 的展示文案
   - 供故事页侧栏与 dashboard 共享，避免重复实现 patch 展示逻辑
+- `frontend/src/domains/story/storyMemoryPayload.ts`
+  - 统一从 `story_memory` 提取摘要、实体快照、实体 patch、`world_update` 与时间线
+  - 供故事页与 dashboard 共享，减少页面层重复解包逻辑
 
 #### `frontend/src/services/`
 
@@ -159,10 +162,14 @@ frontend/
   - 发送 `X-User-ID`
   - 解析 SSE 事件
   - 定义 TypeScript 侧契约
+- `frontend/src/domains/memory/api/memoryUpdatesApi.ts`
+  - 负责查询服务端记忆 journal 与统一故事记忆快照
+  - 包含 `/api/v2/story/session/{session_id}/story-memory` 对应前端调用
 - `schemas.ts` 用 Zod 校验后端返回。
-- `storySession.ts` 把摘要记忆、实体状态、`entity patch` 时间线、`world_update` 与分支树等会话级数据持久化到前端状态中。
-- `StoryMemorySidebar.vue` 会展示当前 session 的实体快照、结构化 `world update` 与字段级 patch 时间线。
-- `DashboardStoryMemoryView.vue` 会聚合展示服务端 journal、本地实体快照、`world update` 摘要与 patch 时间线。
+- `storySession.ts` 把统一故事记忆记录、摘要记忆、实体状态、`entity patch` 时间线、`world_update` 与分支树等会话级数据持久化到前端状态中。
+- `storySession.ts` 的旧摘要/实体/world/timeline getter 已逐步改为优先读取统一 `storyMemorySessionMap`，旧 map 主要保留为兼容桥接与回填来源。
+- `StoryMemorySidebar.vue` 产品层统一展示“故事记忆”，底层仍兼容实体快照、结构化 `world update` 与字段级 patch 时间线。
+- `DashboardStoryMemoryView.vue` 会聚合展示服务端 journal，并优先通过统一 `story_memory` 详情接口读取摘要、实体快照、`world_update` 与 patch 时间线。
 
 ### 3.5 前端高频改动落点
 
@@ -210,6 +217,7 @@ story_rag_service/
 │   ├── service_context.py     # ServiceContainer，集中装配共享服务
 │   └── v2/                    # 当前主 API 版本
 ├── application/               # 应用服务层，组织跨服务业务流程
+│   ├── story_memory/          # 故事记忆聚合契约与 story_memory payload builder
 ├── graph/story_v2/            # LangGraph 图编排
 ├── services/                  # 核心领域服务与基础设施服务
 ├── repositories/              # SQLite 仓储层
@@ -234,6 +242,12 @@ story_rag_service/
   - `v2/__init__.py`
     - 汇总 v2 路由
     - 当前包含 `story`、`world_story`、`script_design`、`lorebook`、`roleplay`、`analytics`、`memory`、`provider`
+  - `v2/memory_routes.py`
+    - 提供记忆更新时间线查询
+    - 提供统一故事记忆快照接口 `/story/session/{session_id}/story-memory`
+  - `v2/story/session_routes.py` 与 `v2/world_story_routes.py` 中保留的 `entity-state` 相关接口
+    - 当前定位为 compatibility bridge
+    - 优先通过事件回放 / fallback 服务返回当前快照，不再代表主写路径
 
 #### `story_rag_service/api/v2/story/`
 
@@ -291,6 +305,9 @@ story_rag_service/
   - `entity_state_event_replay_service.py`
     - 基于 `entity_state_events` 回放当前实体快照
     - 供 rollback / rebuild / repair fallback 优先使用
+  - `entity_state_fallback_service.py`
+    - 封装旧 `entity_state_manager` 的 session rebuild 能力
+    - 在主生成链路中只作为 fallback / repair 使用，避免继续由 `story_generator.py` 直接持有旧 rebuild 逻辑
   - `story_generation/`
     - `llm_factory.py`：构造模型调用能力
     - `prompt_builder.py`：Prompt 组装
@@ -326,6 +343,8 @@ story_rag_service/
 - 重点目录：
   - `application/memory/`
     - 记忆更新事件、模型、provider 与 orchestrator
+  - `application/story_memory/`
+    - 统一“故事记忆”响应聚合契约、payload builder 与读模型服务 `StoryMemoryService`
   - `application/story_generation/`
     - 世界配置、检索、历史窗口等生成辅助编排
   - `world_application.py`
@@ -363,6 +382,13 @@ story_rag_service/
   - `smoke_story_control.py`
   - `smoke_story_stream_contract.py`
   - `smoke_summary_memory.py`
+  - `smoke_dual_route_patch_plan_20260409.py`
+  - `smoke_story_memory_plan_20260410.py`
+  - `smoke_all_api_functional_attempt_20260410.py`
+- `smoke_all_api_functional_attempt_20260410.py`
+  - 基于 OpenAPI 遍历接口
+  - 会先准备共享业务夹具，并对破坏性 `DELETE` 探测使用临时资源，避免后续接口因为夹具被提前删除而出现假 `404`
+  - 会补齐 `segment_id`、runtime 绑定与若干业务枚举/配置类接口的有效样例，尽量把可避免的 `WARN` 压到最低
 
 #### `story_rag_service/data/`
 
@@ -450,6 +476,7 @@ story_rag_service/
   - `frontend/src/views/DashboardStoryMemoryView.vue`
   - `frontend/src/domains/memory/*`
 - 后端编排与输出：
+  - `story_rag_service/application/story_memory/*`
   - `story_rag_service/application/memory/*`
   - `story_rag_service/services/summary_memory_manager.py`
   - `story_rag_service/services/entity_state_manager.py`
@@ -538,6 +565,8 @@ python scripts/smoke_v2_only.py
 python scripts/smoke_persistence_streaming.py
 python scripts/smoke_story_control.py
 python scripts/smoke_story_stream_contract.py
+python scripts/smoke_dual_route_patch_plan_20260409.py
+python scripts/smoke_story_memory_plan_20260410.py
 ```
 
 ## 10. 一句话总结

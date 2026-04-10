@@ -21,6 +21,7 @@ class EntityPatchUpdateService:
         *,
         lorebook_manager,
         entity_state_manager: EntityStateManager,
+        entity_state_fallback_service=None,
         entity_state_event_repository,
         entity_patch_extractor,
         entity_patch_validator,
@@ -28,6 +29,7 @@ class EntityPatchUpdateService:
     ):
         self.lorebook_manager = lorebook_manager
         self.entity_state_manager = entity_state_manager
+        self.entity_state_fallback_service = entity_state_fallback_service
         self.entity_state_event_repository = entity_state_event_repository
         self.entity_patch_extractor = entity_patch_extractor
         self.entity_patch_validator = entity_patch_validator
@@ -315,22 +317,35 @@ class EntityPatchUpdateService:
                 "used_fallback_rebuild": True,
             }
 
-        rebuild_result = self.entity_state_manager.rebuild_session_state(
-            session_id=request.session_id,
-            story_id=story_id,
-            world_id=world_id,
-            messages=request.context.messages if request.context else [],
-            persist=True,
-            source=source,
-            operation_id=operation_id,
-            sequence_start=sequence_start,
+        rebuild_result = (
+            self.entity_state_fallback_service.rebuild_session_state(
+                session_id=request.session_id,
+                story_id=story_id,
+                world_id=world_id,
+                messages=request.context.messages if request.context else [],
+                source=source,
+                operation_id=operation_id,
+                sequence_start=sequence_start,
+                activation_logs=activation_logs,
+            )
+            if self.entity_state_fallback_service is not None
+            else self.entity_state_manager.rebuild_session_state(
+                session_id=request.session_id,
+                story_id=story_id,
+                world_id=world_id,
+                messages=request.context.messages if request.context else [],
+                persist=True,
+                source=source,
+                operation_id=operation_id,
+                sequence_start=sequence_start,
+            )
         )
         snapshot = EntityStateCollection(
             story_id=story_id,
             session_id=request.session_id,
             items=rebuild_result.items,
             total=len(rebuild_result.items),
-        ).model_dump(mode="json")
+        ).model_dump(mode="json") if rebuild_result.rebuilt else None
         return {
             "entity_state_snapshot": snapshot,
             "entity_state_updates": [],
