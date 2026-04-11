@@ -1,21 +1,24 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
-import { computed, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import {
   AlertTriangle,
+  ArrowLeftRight,
   Brain,
   CalendarRange,
-  History,
-  Layers3,
+  ChevronLeft,
+  ChevronRight,
+  Filter,
   MapPinned,
   Package,
   RefreshCw,
   Search,
   Sparkles,
-  TimerReset,
+  UserRound,
   Users,
 } from 'lucide-vue-next'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import {
@@ -25,28 +28,33 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   useMemoryUpdatesQuery,
   useSessionMemoryTimelineQuery,
   useSessionStoryMemoryQuery,
 } from '@/domains/memory/queries/useMemoryUpdateQueries'
+import { useWorldsQuery } from '@/domains/lorebook/queries/useLorebookQueries'
 import type { MemoryUpdateTimelineItem } from '@/domains/memory/api/memoryUpdatesApi'
 import {
   deriveSummaryLifecycleState,
   formatMemoryPayloadFields,
+  getMemoryActionLabel,
+  getMemoryLayerLabel,
   getMemorySourceLabel,
+  getMemoryStatusLabel,
   getSummaryLifecycleDescriptor,
   groupMemoryEventsByOperation,
   type SummaryLifecycleState,
 } from '@/domains/memory/memoryUpdatePresentation'
 import {
   extractWorldUpdateHighlights,
+  formatEntityPatchValue,
+  getEntityPatchChangeSummary,
   getEntityPatchCommittedAt,
-  getEntityPatchDetail,
+  getEntityPatchEntityLabel,
   getEntityPatchEvidenceText,
   getEntityPatchEventId,
-  getEntityPatchHeadline,
+  getEntityPatchFieldLabel,
   getEntityPatchSourceTurn,
 } from '@/domains/story/entityPatchPresentation'
 import {
@@ -61,6 +69,7 @@ import { useStorySessionStore } from '@/stores/storySession'
 
 const storySessionStore = useStorySessionStore()
 const dashboardStore = useMemoryUpdateDashboardStore()
+
 const {
   searchTerm,
   selectedSource,
@@ -70,31 +79,30 @@ const {
   selectedSessionId,
   detailPage,
   detailPageSize,
-  detailTab,
   listSnapshot,
   queryFilters,
 } = storeToRefs(dashboardStore)
 
 const sourceOptions = [
   { value: 'all', label: '全部来源' },
-  { value: 'generate', label: 'generate' },
-  { value: 'rollback', label: 'rollback' },
-  { value: 'regenerate', label: 'regenerate' },
-  { value: 'story_adjustment_commit', label: 'story_adjustment_commit' },
+  { value: 'generate', label: '正常生成' },
+  { value: 'rollback', label: '回滚修复' },
+  { value: 'regenerate', label: '重生成修复' },
+  { value: 'story_adjustment_commit', label: '正文调整提交' },
 ] as const
 
 const layerOptions = [
   { value: 'all', label: '全部层级' },
-  { value: 'episodic', label: 'episodic' },
-  { value: 'semantic', label: 'semantic' },
-  { value: 'entity_state', label: 'entity_state' },
+  { value: 'episodic', label: '剧情记录' },
+  { value: 'semantic', label: '摘要语义' },
+  { value: 'entity_state', label: '实体状态' },
 ] as const
 
 const statusOptions = [
   { value: 'all', label: '全部状态' },
-  { value: 'committed', label: 'committed' },
-  { value: 'failed', label: 'failed' },
-  { value: 'stale', label: 'stale' },
+  { value: 'committed', label: '正常' },
+  { value: 'failed', label: '失败' },
+  { value: 'stale', label: '已过期' },
 ] as const
 
 const timeRangeOptions = [
@@ -104,11 +112,21 @@ const timeRangeOptions = [
   { value: '7d', label: '最近 7 天' },
 ] as const
 
+const pageSizeOptions = [
+  { value: '20', label: '20 条/页' },
+  { value: '50', label: '50 条/页' },
+  { value: '100', label: '100 条/页' },
+] as const
+
+const expandedTextState = ref<Record<string, boolean>>({})
+
 const summaries = computed(() => storySessionStore.getAllSummaries())
 const summaryMap = computed(() => new Map(summaries.value.map((record) => [record.sessionId, record])))
 const storyMemorySessionMap = computed(() => new Map(
   storySessionStore.getAllStoryMemorySessions().map((record) => [record.sessionId, record]),
 ))
+const { data: worlds } = useWorldsQuery()
+const worldNameMap = computed(() => new Map((worlds.value ?? []).map((world) => [world.id, world.name])))
 
 const {
   data: listResponse,
@@ -142,6 +160,89 @@ function resolveSessionCardState(
   return storySessionStore.getRuntimeSummaryState(sessionId)
 }
 
+function buildEventHeadline(event: Pick<MemoryUpdateTimelineItem, 'memory_layer' | 'action'>) {
+  return `${getMemoryLayerLabel(event.memory_layer)}：${getMemoryActionLabel(event.action)}`
+}
+
+function compactText(value: string, maxLength = 88) {
+  const normalized = value.trim()
+  return normalized.length > maxLength ? `${normalized.slice(0, maxLength - 1)}…` : normalized
+}
+
+function isTextTruncated(value: string, maxLength = 88) {
+  return value.trim().length > maxLength
+}
+
+function isTextExpanded(key: string) {
+  return Boolean(expandedTextState.value[key])
+}
+
+function toggleTextExpansion(key: string) {
+  expandedTextState.value = {
+    ...expandedTextState.value,
+    [key]: !expandedTextState.value[key],
+  }
+}
+
+function getExpandableText(key: string, value: string, maxLength = 88) {
+  const normalized = value.trim()
+  if (!normalized) return ''
+  if (isTextExpanded(key) || !isTextTruncated(normalized, maxLength)) return normalized
+  return compactText(normalized, maxLength)
+}
+
+function resolveWorldDisplay(worldId?: string | null) {
+  const normalizedWorldId = (worldId ?? '').trim()
+  if (!normalizedWorldId) return '未绑定世界'
+  const worldName = worldNameMap.value.get(normalizedWorldId)
+  if (!worldName) return normalizedWorldId
+  return `${worldName} · ${normalizedWorldId}`
+}
+
+function formatTimestamp(value?: string | null) {
+  if (!value) return '未知时间'
+  try {
+    return new Date(value).toLocaleString('zh-CN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+  } catch {
+    return value
+  }
+}
+
+function statusBadgeClass(status?: string | null) {
+  if (status === 'failed') return 'border-rose-200 bg-rose-50 text-rose-700'
+  if (status === 'stale') return 'border-amber-200 bg-amber-50 text-amber-700'
+  return 'border-emerald-200 bg-emerald-50 text-emerald-700'
+}
+
+function layerBadgeClass(layer: string) {
+  if (layer === 'semantic') return 'border-violet-200 bg-violet-50 text-violet-700'
+  if (layer === 'episodic') return 'border-sky-200 bg-sky-50 text-sky-700'
+  if (layer === 'entity_state') return 'border-orange-200 bg-orange-50 text-orange-700'
+  return 'border-stone-200 bg-stone-50 text-stone-700'
+}
+
+function previewPayloadFields(payload?: Record<string, unknown> | null, limit = 2) {
+  return formatMemoryPayloadFields(payload)
+    .slice(0, limit)
+}
+
+function summarizeOperation(events: MemoryUpdateTimelineItem[]) {
+  const segments = [
+    { layer: 'semantic', count: events.filter((event) => event.memory_layer === 'semantic').length },
+    { layer: 'entity_state', count: events.filter((event) => event.memory_layer === 'entity_state').length },
+    { layer: 'episodic', count: events.filter((event) => event.memory_layer === 'episodic').length },
+  ].filter((item) => item.count > 0)
+
+  if (!segments.length) return '本批次没有可识别的结构化变动。'
+  return segments.map((item) => `${getMemoryLayerLabel(item.layer)} ${item.count} 条`).join('，')
+}
+
 const sessionCards = computed(() => {
   const grouped = new Map<string, MemoryUpdateTimelineItem[]>()
   for (const item of effectiveListResponse.value?.items ?? []) {
@@ -161,27 +262,26 @@ const sessionCards = computed(() => {
       const latestEvent = [...effectiveEvents].sort((a, b) => b.committed_at.localeCompare(a.committed_at))[0] ?? null
       const latestWorldId = [...events].sort((a, b) => b.committed_at.localeCompare(a.committed_at))[0]?.world_id ?? ''
       const summaryState = resolveSessionCardState(effectiveEvents, sessionId, summary)
+      const summaryDescriptor = getSummaryLifecycleDescriptor(summaryState)
       return {
         sessionId,
         summary,
-        storyMemorySession,
-        entitySnapshot,
-        summaryState,
-        summaryDescriptor: getSummaryLifecycleDescriptor(summaryState),
+        summaryDescriptor,
         storyTitle: storyMemorySession?.storyTitle ?? summary?.storyTitle ?? sessionId,
         worldId: storyMemory?.world_id ?? latestWorldId ?? summary?.worldId ?? '',
         latestEvent,
+        latestEventHeadline: latestEvent ? buildEventHeadline(latestEvent) : '暂无变化',
+        latestReason: latestEvent?.reason?.trim() || latestEvent?.title || '最近一次变动没有额外说明。',
         eventCount: effectiveEvents.length,
         semanticCount: effectiveEvents.filter((item) => item.memory_layer === 'semantic').length,
-        episodicCount: effectiveEvents.filter((item) => item.memory_layer === 'episodic').length,
-        entityCount: getStoryMemoryEntityUpdates(storyMemory, 500).length
-          || effectiveEvents.filter((item) => item.memory_layer === 'entity_state').length,
         trackedEntities: entitySnapshot?.total ?? 0,
         hasFailed: storyMemory?.operation?.status === 'failed' || effectiveEvents.some((item) => item.status === 'failed'),
       }
     })
     .sort((a, b) => (b.latestEvent?.committed_at ?? '').localeCompare(a.latestEvent?.committed_at ?? ''))
 })
+
+const failedSessionCount = computed(() => sessionCards.value.filter((item) => item.hasFailed).length)
 
 watch(sessionCards, (items) => {
   if (!items.length) {
@@ -199,6 +299,12 @@ watch(listResponse, (value) => {
 
 watch(selectedSessionId, () => {
   dashboardStore.resetDetailState()
+})
+
+watch(detailPageSize, (value, oldValue) => {
+  if (value !== oldValue) {
+    dashboardStore.setDetailPage(1)
+  }
 })
 
 const {
@@ -226,11 +332,7 @@ const {
   data: storyMemoryResponse,
   isFetching: storyMemoryFetching,
   refetch: refetchStoryMemory,
-} = useSessionStoryMemoryQuery(
-  selectedSessionId,
-  detailPage,
-  detailPageSize,
-)
+} = useSessionStoryMemoryQuery(selectedSessionId, detailPage, detailPageSize)
 
 const effectiveStoryMemoryResponse = computed(() => (
   storyMemoryResponse.value ?? dashboardStore.getStoryMemorySnapshot(selectedSessionId.value)
@@ -278,6 +380,12 @@ const selectedSummarySnapshot = computed(() => {
   }
 })
 
+const selectedTimelineEvents = computed(() => {
+  const timelineFromMemory = getStoryMemoryTimelineEvents(selectedStoryMemory.value, detailPageSize.value)
+  if (timelineFromMemory.length) return timelineFromMemory
+  return effectiveTimelineResponse.value?.items ?? []
+})
+
 const detailSummaryDescriptor = computed(() => {
   const state = effectiveTimelineResponse.value?.summary_state.state
     ?? deriveSummaryLifecycleState(selectedTimelineEvents.value, selectedSummarySnapshot.value)
@@ -287,38 +395,36 @@ const detailSummaryDescriptor = computed(() => {
   return getSummaryLifecycleDescriptor(state, { reason })
 })
 
-const selectedTimelineEvents = computed(() => {
-  const timelineFromMemory = getStoryMemoryTimelineEvents(selectedStoryMemory.value, detailPageSize.value)
-  if (timelineFromMemory.length) return timelineFromMemory
-  return effectiveTimelineResponse.value?.items ?? []
-})
-
 const operationGroups = computed(() => groupMemoryEventsByOperation(selectedTimelineEvents.value))
 const semanticEvents = computed(() => selectedTimelineEvents.value.filter((event) => event.memory_layer === 'semantic'))
-const entityEvents = computed(() => selectedTimelineEvents.value.filter((event) => event.memory_layer === 'entity_state'))
 const failedEvents = computed(() => selectedTimelineEvents.value.filter((event) => event.status === 'failed'))
 const latestTimelineEvent = computed(() => {
   const items = selectedTimelineEvents.value
   return [...items].sort((a, b) => b.committed_at.localeCompare(a.committed_at))[0] ?? null
 })
+
 const selectedEntitySnapshot = computed(() => {
   const storyMemorySnapshot = getStoryMemoryEntitySnapshot(selectedStoryMemory.value)
   if (storyMemorySnapshot) return storyMemorySnapshot
   return selectedSessionId.value ? storySessionStore.getEntityStateSnapshot(selectedSessionId.value) : null
 })
+
 const selectedEntityPatchUpdates = computed(() => {
   const storyMemoryUpdates = getStoryMemoryEntityUpdates(selectedStoryMemory.value, 50)
   if (storyMemoryUpdates.length) return storyMemoryUpdates
   return selectedSessionId.value ? storySessionStore.getSessionEntityStateUpdates(selectedSessionId.value, 50) : []
 })
+
 const selectedWorldUpdate = computed(() => {
   const storyMemoryWorldUpdate = getStoryMemoryWorldUpdate(selectedStoryMemory.value)
   if (storyMemoryWorldUpdate) return storyMemoryWorldUpdate
   return selectedSessionId.value ? storySessionStore.getSessionWorldUpdate(selectedSessionId.value)?.payload ?? null : null
 })
+
 const selectedEntityNameMap = computed(() => new Map(
   (selectedEntitySnapshot.value?.items ?? []).map((item) => [item.entity_id, item.display_name]),
 ))
+
 const selectedEntityWarnings = computed(() => {
   const items = selectedEntitySnapshot.value?.items ?? []
   if (!items.length) return ['当前会话还没有缓存到实体状态快照。']
@@ -326,11 +432,11 @@ const selectedEntityWarnings = computed(() => {
   const warnings: string[] = []
   const missingLocation = items.filter((item) => !item.current_location)
   if (missingLocation.length) {
-    warnings.push(`缺少明确地点：${missingLocation.slice(0, 4).map((item) => item.display_name).join('、')}`)
+    warnings.push(`仍有角色缺少明确位置：${missingLocation.slice(0, 4).map((item) => item.display_name).join('、')}`)
   }
   const missingEvidence = items.filter((item) => !item.evidence.length)
   if (missingEvidence.length) {
-    warnings.push(`缺少文本证据：${missingEvidence.slice(0, 4).map((item) => item.display_name).join('、')}`)
+    warnings.push(`仍有角色缺少证据：${missingEvidence.slice(0, 4).map((item) => item.display_name).join('、')}`)
   }
   const unresolvedCompanions = items
     .flatMap((item) => item.companions.map((companionId) => ({ owner: item.display_name, companionId })))
@@ -340,46 +446,100 @@ const selectedEntityWarnings = computed(() => {
   }
   return warnings.slice(0, 3)
 })
+
 const selectedEntityLocationCount = computed(() => new Set(
   (selectedEntitySnapshot.value?.items ?? []).map((item) => item.current_location).filter(Boolean),
 ).size)
-const selectedWorldUpdateHighlights = computed(() => extractWorldUpdateHighlights(selectedWorldUpdate.value))
+const selectedWorldUpdateHighlights = computed(() => extractWorldUpdateHighlights(selectedWorldUpdate.value).slice(0, 4))
 
-function formatTimestamp(value?: string | null) {
-  if (!value) return '未知时间'
-  try {
-    return new Date(value).toLocaleString('zh-CN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-    })
-  } catch {
-    return value
+const recentEntityChangeGroups = computed(() => {
+  const grouped = new Map<string, {
+    id: string
+    entityLabel: string
+    committedAt: string
+    sourceTurn: number | null
+    changes: Array<{
+      id: string
+      fieldLabel: string
+      summary: string
+      beforeText: string
+      afterText: string
+    }>
+    evidence: string[]
+  }>()
+
+  for (const patch of selectedEntityPatchUpdates.value.slice(0, 18)) {
+    const entityLabel = getEntityPatchEntityLabel(patch)
+    const group = grouped.get(entityLabel) ?? {
+      id: entityLabel,
+      entityLabel,
+      committedAt: getEntityPatchCommittedAt(patch),
+      sourceTurn: getEntityPatchSourceTurn(patch),
+      changes: [],
+      evidence: [],
+    }
+    group.committedAt = group.committedAt > getEntityPatchCommittedAt(patch)
+      ? group.committedAt
+      : getEntityPatchCommittedAt(patch)
+    group.sourceTurn = getEntityPatchSourceTurn(patch) ?? group.sourceTurn
+    const beforeRaw = patch.before ?? (patch.op === 'remove' ? patch.value : null)
+    const afterRaw = patch.after ?? (patch.op !== 'remove' ? patch.value : null)
+    if (!group.changes.some((item) => item.id === getEntityPatchEventId(patch))) {
+      group.changes.push({
+        id: getEntityPatchEventId(patch),
+        fieldLabel: getEntityPatchFieldLabel(patch),
+        summary: getEntityPatchChangeSummary(patch),
+        beforeText: formatEntityPatchValue(beforeRaw),
+        afterText: formatEntityPatchValue(afterRaw),
+      })
+    }
+    const evidence = getEntityPatchEvidenceText(patch)
+    if (evidence && !group.evidence.includes(evidence)) {
+      group.evidence.push(evidence)
+    }
+    grouped.set(entityLabel, group)
+  }
+
+  return Array.from(grouped.values())
+    .sort((a, b) => b.committedAt.localeCompare(a.committedAt))
+    .slice(0, 6)
+})
+
+const latestSemanticEvent = computed(() => (
+  effectiveTimelineResponse.value?.summary_state.last_semantic_event
+  ?? semanticEvents.value[0]
+  ?? null
+))
+
+const detailTotal = computed(() => (
+  effectiveStoryMemoryResponse.value?.timeline_total
+  ?? effectiveTimelineResponse.value?.total
+  ?? selectedTimelineEvents.value.length
+))
+const detailPageCount = computed(() => Math.max(1, Math.ceil(detailTotal.value / detailPageSize.value)))
+const historyRangeLabel = computed(() => {
+  if (!detailTotal.value) return '暂无历史记录'
+  const start = (detailPage.value - 1) * detailPageSize.value + 1
+  const end = Math.min(detailTotal.value, detailPage.value * detailPageSize.value)
+  return `第 ${start}-${end} 条，共 ${detailTotal.value} 条`
+})
+
+watch(detailPageCount, (count) => {
+  if (detailPage.value > count) {
+    dashboardStore.setDetailPage(count)
+  }
+}, { immediate: true })
+
+function goToPreviousPage() {
+  if (detailPage.value > 1) {
+    dashboardStore.setDetailPage(detailPage.value - 1)
   }
 }
 
-function statusBadgeClass(status?: string | null) {
-  if (status === 'failed') return 'bg-rose-50 text-rose-700 border-rose-200'
-  if (status === 'stale') return 'bg-amber-50 text-amber-700 border-amber-200'
-  return 'bg-emerald-50 text-emerald-700 border-emerald-200'
-}
-
-function layerBadgeClass(layer: string) {
-  if (layer === 'semantic') return 'bg-violet-50 text-violet-700 border-violet-200'
-  if (layer === 'episodic') return 'bg-sky-50 text-sky-700 border-sky-200'
-  if (layer === 'entity_state') return 'bg-orange-50 text-orange-700 border-orange-200'
-  return 'bg-stone-50 text-stone-700 border-stone-200'
-}
-
-function summaryStateLabel(state?: string | null) {
-  return getSummaryLifecycleDescriptor((state as SummaryLifecycleState | null) ?? 'absent').label
-}
-
-function stringifyPayload(payload?: Record<string, unknown> | null) {
-  if (!payload) return ''
-  return JSON.stringify(payload, null, 2)
+function goToNextPage() {
+  if (detailPage.value < detailPageCount.value) {
+    dashboardStore.setDetailPage(detailPage.value + 1)
+  }
 }
 
 function resolveEntityCompanionLabel(companionId: string) {
@@ -388,712 +548,777 @@ function resolveEntityCompanionLabel(companionId: string) {
 </script>
 
 <template>
-  <div class="flex-1 overflow-auto bg-[radial-gradient(circle_at_top_left,_rgba(14,165,233,0.09),_transparent_28%),radial-gradient(circle_at_top_right,_rgba(249,115,22,0.08),_transparent_24%),linear-gradient(180deg,_rgba(248,250,252,0.98),_rgba(255,255,255,1))]">
-    <div class="mx-auto flex w-full max-w-7xl flex-col gap-6 px-6 py-6">
-      <section class="overflow-hidden rounded-[28px] border border-border/70 bg-background/95 shadow-sm shadow-black/5">
-        <div class="grid gap-6 px-6 py-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]">
-          <div class="space-y-4">
-            <div class="inline-flex items-center gap-2 rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-medium text-sky-700">
-              <Sparkles class="h-3.5 w-3.5" />
-              管理区 · 故事记忆审计台
-            </div>
-            <div>
-              <h1 class="text-2xl font-semibold tracking-tight text-foreground">故事记忆总览</h1>
-              <p class="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">
-                从服务端 journal 直接回看生成、回滚、重生成和正文调整后的摘要更新、历史修复与语义重建链路。
+  <div class="flex-1 overflow-auto bg-background">
+    <div class="mx-auto w-full max-w-[1500px] px-4 py-4 sm:px-6 sm:py-6">
+      <section class="rounded-[32px] border border-border bg-background p-4 shadow-sm sm:p-6">
+        <div class="grid gap-6 xl:grid-cols-[360px_minmax(0,1fr)]">
+          <aside class="space-y-5">
+            <section class="rounded-[28px] border border-border bg-background p-6">
+              <div class="inline-flex items-center gap-2 rounded-full border border-stone-300/80 bg-white/85 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.24em] text-stone-700">
+                <Sparkles class="h-3.5 w-3.5" />
+                Story Memory Ledger
+              </div>
+              <h1 class="hero-title mt-5 text-3xl text-stone-950">故事记忆总览</h1>
+              <p class="mt-3 text-sm leading-6 text-stone-700">
+                先看当前状态，再看本轮变化，最后翻历史。默认隐藏复杂标识，只保留真正有判断价值的信息。
               </p>
-            </div>
-            <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-              <div class="rounded-2xl border border-border/70 bg-muted/20 px-4 py-3">
-                <p class="text-xs uppercase tracking-wide text-muted-foreground">本地摘要快照</p>
-                <p class="mt-2 text-2xl font-semibold text-foreground">{{ summaries.length }}</p>
-              </div>
-              <div class="rounded-2xl border border-border/70 bg-muted/20 px-4 py-3">
-                <p class="text-xs uppercase tracking-wide text-muted-foreground">命中事件数</p>
-                <p class="mt-2 text-2xl font-semibold text-foreground">{{ effectiveListResponse?.total ?? 0 }}</p>
-              </div>
-              <div class="rounded-2xl border border-border/70 bg-muted/20 px-4 py-3">
-                <p class="text-xs uppercase tracking-wide text-muted-foreground">会话数</p>
-                <p class="mt-2 text-2xl font-semibold text-foreground">{{ sessionCards.length }}</p>
-              </div>
-              <div class="rounded-2xl border border-border/70 bg-muted/20 px-4 py-3">
-                <p class="text-xs uppercase tracking-wide text-muted-foreground">失败事件</p>
-                <p class="mt-2 text-2xl font-semibold text-foreground">{{ failedEvents.length }}</p>
-              </div>
-            </div>
-          </div>
 
-          <div class="rounded-[24px] border border-sky-200/70 bg-[linear-gradient(180deg,rgba(240,249,255,0.9),rgba(255,255,255,0.92))] p-5">
-            <div class="flex items-start justify-between gap-3">
-              <div>
-                <p class="text-sm font-semibold text-sky-900">当前选中会话</p>
-                <p class="mt-1 text-xs leading-5 text-sky-800/80">
-                  这里聚合展示语义状态、最近一次事件和失败信号，方便快速判定当前链路是否健康。
-                </p>
-              </div>
-              <Badge
-                v-if="selectedSessionCard"
-                class="border text-[10px]"
-                :class="selectedSessionCard.summaryDescriptor.badgeTone"
-              >
-                {{ selectedSessionCard.summaryDescriptor.label }}
-              </Badge>
-            </div>
-
-            <div v-if="selectedSessionCard" class="mt-4 space-y-3">
-              <div class="rounded-2xl border border-white/70 bg-white/75 px-4 py-3">
-                <p class="text-sm font-semibold text-foreground">{{ selectedSessionCard.storyTitle }}</p>
-                <p class="mt-1 text-[11px] font-mono text-muted-foreground">{{ selectedSessionCard.sessionId }}</p>
-                <p v-if="selectedSessionCard.worldId" class="mt-1 text-[11px] text-muted-foreground">世界：{{ selectedSessionCard.worldId }}</p>
-              </div>
-              <div class="grid gap-3 sm:grid-cols-3">
-                <div class="rounded-2xl border border-white/70 bg-white/75 px-3 py-3">
-                  <p class="text-[11px] uppercase tracking-wide text-muted-foreground">最近事件</p>
-                  <p class="mt-2 text-sm font-medium text-foreground">{{ selectedSessionCard.latestEvent?.title ?? '暂无' }}</p>
+              <div class="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+                <div class="memory-stat rounded-[22px] border border-stone-200/80 p-4">
+                  <p class="text-[11px] uppercase tracking-[0.22em] text-stone-500">当前命中会话</p>
+                  <p class="mt-2 text-2xl font-semibold text-stone-950">{{ sessionCards.length }}</p>
                 </div>
-                <div class="rounded-2xl border border-white/70 bg-white/75 px-3 py-3">
-                  <p class="text-[11px] uppercase tracking-wide text-muted-foreground">事件计数</p>
-                  <p class="mt-2 text-sm font-medium text-foreground">{{ selectedSessionCard.eventCount }} 条</p>
+                <div class="memory-stat rounded-[22px] border border-stone-200/80 p-4">
+                  <p class="text-[11px] uppercase tracking-[0.22em] text-stone-500">命中变动条数</p>
+                  <p class="mt-2 text-2xl font-semibold text-stone-950">{{ effectiveListResponse?.total ?? 0 }}</p>
                 </div>
-                <div class="rounded-2xl border border-white/70 bg-white/75 px-3 py-3">
-                  <p class="text-[11px] uppercase tracking-wide text-muted-foreground">最近时间</p>
-                  <p class="mt-2 text-sm font-medium text-foreground">{{ formatTimestamp(selectedSessionCard.latestEvent?.committed_at) }}</p>
+                <div class="memory-stat rounded-[22px] border border-stone-200/80 p-4">
+                  <p class="text-[11px] uppercase tracking-[0.22em] text-stone-500">本地摘要快照</p>
+                  <p class="mt-2 text-2xl font-semibold text-stone-950">{{ summaries.length }}</p>
+                </div>
+                <div class="memory-stat rounded-[22px] border border-stone-200/80 p-4">
+                  <p class="text-[11px] uppercase tracking-[0.22em] text-stone-500">异常会话</p>
+                  <p class="mt-2 text-2xl font-semibold text-stone-950">{{ failedSessionCount }}</p>
                 </div>
               </div>
-              <div class="grid gap-3 sm:grid-cols-3">
-                <div class="rounded-2xl border border-white/70 bg-white/75 px-3 py-3">
-                  <p class="text-[11px] uppercase tracking-wide text-muted-foreground">实体快照</p>
-                  <p class="mt-2 text-sm font-medium text-foreground">{{ selectedSessionCard.trackedEntities }} 人</p>
-                </div>
-                <div class="rounded-2xl border border-white/70 bg-white/75 px-3 py-3">
-                  <p class="text-[11px] uppercase tracking-wide text-muted-foreground">实体事件</p>
-                  <p class="mt-2 text-sm font-medium text-foreground">{{ selectedSessionCard.entityCount }} 条</p>
-                </div>
-                <div class="rounded-2xl border border-white/70 bg-white/75 px-3 py-3">
-                  <p class="text-[11px] uppercase tracking-wide text-muted-foreground">地点数</p>
-                  <p class="mt-2 text-sm font-medium text-foreground">{{ selectedEntityLocationCount }}</p>
-                </div>
-              </div>
-            </div>
+            </section>
 
-            <div v-else class="mt-4 rounded-2xl border border-dashed border-sky-200 bg-white/70 px-4 py-6 text-sm text-sky-900/80">
-              当前筛选条件下没有可选会话。
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="grid gap-6 xl:grid-cols-[minmax(340px,0.92fr)_minmax(0,1.5fr)]">
-        <Card class="border-border/70 bg-background/90 shadow-sm shadow-black/5">
-          <CardHeader class="gap-4">
-            <div class="flex items-start justify-between gap-3">
-              <div>
-                <CardTitle class="flex items-center gap-2">
-                  <Search class="h-4 w-4 text-sky-600" />
-                  全局筛选
-                </CardTitle>
-                <CardDescription>按来源、层级、状态和时间范围定位会话，再进入右侧审计详情。</CardDescription>
-              </div>
-              <button
-                class="inline-flex items-center gap-2 rounded-md border border-border px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-muted"
-                @click="() => { refetchList(); refetchTimeline(); refetchStoryMemory() }"
-              >
-                <RefreshCw class="h-3.5 w-3.5" :class="{ 'animate-spin': listFetching || timelineFetching || storyMemoryFetching }" />
-                刷新
-              </button>
-            </div>
-
-            <div class="grid gap-3">
-              <div class="relative">
-                <Search class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  v-model="searchTerm"
-                  class="pl-9"
-                  placeholder="按 session、世界 ID、标题或原因搜索"
-                />
-              </div>
-
-              <div class="grid gap-3 sm:grid-cols-2">
-                <Select v-model="selectedSource">
-                  <SelectTrigger class="h-10">
-                    <SelectValue placeholder="选择来源" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem v-for="option in sourceOptions" :key="option.value" :value="option.value">
-                      {{ option.label }}
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <Select v-model="selectedLayer">
-                  <SelectTrigger class="h-10">
-                    <SelectValue placeholder="选择层级" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem v-for="option in layerOptions" :key="option.value" :value="option.value">
-                      {{ option.label }}
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <Select v-model="selectedStatus">
-                  <SelectTrigger class="h-10">
-                    <SelectValue placeholder="选择状态" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem v-for="option in statusOptions" :key="option.value" :value="option.value">
-                      {{ option.label }}
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <Select v-model="selectedTimeRange">
-                  <SelectTrigger class="h-10">
-                    <SelectValue placeholder="选择时间范围" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem v-for="option in timeRangeOptions" :key="option.value" :value="option.value">
-                      {{ option.label }}
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </CardHeader>
-
-          <CardContent>
-            <div v-if="listLoading && !effectiveListResponse" class="rounded-2xl border border-dashed border-border/70 bg-muted/10 px-4 py-10 text-center text-sm text-muted-foreground">
-              正在加载服务端记忆事件…
-            </div>
-
-            <div v-else-if="listError" class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-5 text-sm text-rose-900">
-              <p class="font-medium">全局事件查询失败</p>
-              <p class="mt-1 text-rose-800/80">{{ listErrorMessage }}</p>
-              <button class="mt-3 rounded-md border border-rose-200 bg-white px-3 py-1.5 text-xs text-rose-700" @click="refetchList()">
-                重试
-              </button>
-            </div>
-
-            <div v-else-if="!sessionCards.length" class="rounded-2xl border border-dashed border-border/70 bg-muted/10 px-4 py-10 text-center text-sm text-muted-foreground">
-              尚未产生任何记忆变动事件，或当前筛选条件下没有命中结果。
-            </div>
-
-            <div v-else class="space-y-3">
-              <button
-                v-for="item in sessionCards"
-                :key="item.sessionId"
-                class="w-full rounded-[22px] border px-4 py-4 text-left transition-colors"
-                :class="selectedSessionId === item.sessionId ? 'border-sky-300 bg-sky-50/70 shadow-sm' : 'border-border/70 bg-muted/10 hover:bg-muted/20'"
-                @click="dashboardStore.setSelectedSessionId(item.sessionId)"
-              >
+            <Card class="rounded-[28px] border-stone-200/80 bg-white/90 shadow-none">
+              <CardHeader class="gap-4">
                 <div class="flex items-start justify-between gap-3">
-                  <div class="min-w-0">
-                    <p class="truncate text-sm font-semibold text-foreground">{{ item.storyTitle }}</p>
-                    <p class="mt-1 truncate text-[11px] font-mono text-muted-foreground">{{ item.sessionId }}</p>
-                    <p v-if="item.worldId" class="mt-1 text-[11px] text-muted-foreground">世界：{{ item.worldId }}</p>
+                  <div>
+                    <CardTitle class="flex items-center gap-2 text-stone-950">
+                      <Filter class="h-4 w-4 text-stone-600" />
+                      筛选会话
+                    </CardTitle>
+                    <CardDescription>先定位会话，再到右侧查看当前状态、本轮变化和历史翻页。</CardDescription>
                   </div>
-                  <div class="flex shrink-0 flex-wrap justify-end gap-1.5">
-                    <Badge class="border text-[10px]" :class="item.summaryDescriptor.badgeTone">
-                      {{ item.summaryDescriptor.label }}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    class="rounded-full border-stone-300 bg-white/90 text-stone-700"
+                    @click="() => { refetchList(); refetchTimeline(); refetchStoryMemory() }"
+                  >
+                    <RefreshCw class="h-3.5 w-3.5" :class="{ 'animate-spin': listFetching || timelineFetching || storyMemoryFetching }" />
+                    刷新
+                  </Button>
+                </div>
+              </CardHeader>
+
+              <CardContent class="space-y-4">
+                <div class="relative">
+                  <Search class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
+                  <Input
+                    v-model="searchTerm"
+                    class="h-11 rounded-2xl border-stone-200 bg-stone-50/60 pl-9"
+                    placeholder="按标题、session、世界或原因搜索"
+                  />
+                </div>
+
+                <div class="grid gap-3 sm:grid-cols-2">
+                  <Select v-model="selectedSource">
+                    <SelectTrigger class="h-11 rounded-2xl border-stone-200 bg-stone-50/60">
+                      <SelectValue placeholder="来源" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem v-for="option in sourceOptions" :key="option.value" :value="option.value">
+                        {{ option.label }}
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  <Select v-model="selectedLayer">
+                    <SelectTrigger class="h-11 rounded-2xl border-stone-200 bg-stone-50/60">
+                      <SelectValue placeholder="层级" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem v-for="option in layerOptions" :key="option.value" :value="option.value">
+                        {{ option.label }}
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  <Select v-model="selectedStatus">
+                    <SelectTrigger class="h-11 rounded-2xl border-stone-200 bg-stone-50/60">
+                      <SelectValue placeholder="状态" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem v-for="option in statusOptions" :key="option.value" :value="option.value">
+                        {{ option.label }}
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  <Select v-model="selectedTimeRange">
+                    <SelectTrigger class="h-11 rounded-2xl border-stone-200 bg-stone-50/60">
+                      <SelectValue placeholder="时间范围" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem v-for="option in timeRangeOptions" :key="option.value" :value="option.value">
+                        {{ option.label }}
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div v-if="listLoading && !effectiveListResponse" class="rounded-[22px] border border-dashed border-stone-300 bg-stone-50/70 px-4 py-10 text-center text-sm text-stone-500">
+                  正在加载服务端记忆数据…
+                </div>
+
+                <div v-else-if="listError" class="rounded-[22px] border border-rose-200 bg-rose-50 px-4 py-5 text-sm text-rose-900">
+                  <p class="font-medium">会话列表加载失败</p>
+                  <p class="mt-1 text-rose-800/80">{{ listErrorMessage }}</p>
+                  <Button variant="outline" size="sm" class="mt-3 rounded-full border-rose-200 bg-white text-rose-700" @click="refetchList()">
+                    重试
+                  </Button>
+                </div>
+
+                <div v-else-if="!sessionCards.length" class="rounded-[22px] border border-dashed border-stone-300 bg-stone-50/70 px-4 py-10 text-center text-sm text-stone-500">
+                  当前筛选条件下没有命中会话。
+                </div>
+
+                <div v-else class="space-y-3">
+                  <div
+                    v-for="item in sessionCards"
+                    :key="item.sessionId"
+                    role="button"
+                    tabindex="0"
+                    class="w-full rounded-[24px] border p-4 text-left transition-all"
+                    :class="selectedSessionId === item.sessionId
+                      ? 'border-stone-900 bg-stone-950 text-stone-50 shadow-[0_20px_40px_rgba(41,37,36,0.16)]'
+                      : 'border-stone-200 bg-stone-50/80 text-stone-900 hover:border-stone-300 hover:bg-white'"
+                    @click="dashboardStore.setSelectedSessionId(item.sessionId)"
+                    @keydown.enter.prevent="dashboardStore.setSelectedSessionId(item.sessionId)"
+                    @keydown.space.prevent="dashboardStore.setSelectedSessionId(item.sessionId)"
+                  >
+                    <div class="flex items-start justify-between gap-3">
+                      <div class="min-w-0">
+                        <p class="truncate text-sm font-semibold">{{ item.storyTitle }}</p>
+                        <p v-if="item.worldId" class="mt-1 text-xs opacity-70">世界：{{ resolveWorldDisplay(item.worldId) }}</p>
+                        <p class="mt-3 text-xs opacity-80">最近变化：{{ item.latestEventHeadline }}</p>
+                        <p class="mt-1 text-xs leading-5 opacity-70">
+                          {{ getExpandableText(`session-reason-${item.sessionId}`, item.latestReason, 68) }}
+                        </p>
+                        <button
+                          v-if="isTextTruncated(item.latestReason, 68)"
+                          type="button"
+                          class="mt-1 text-[11px] font-medium opacity-80 underline-offset-4 hover:underline"
+                          @click.stop="toggleTextExpansion(`session-reason-${item.sessionId}`)"
+                        >
+                          {{ isTextExpanded(`session-reason-${item.sessionId}`) ? '收起' : '展开' }}
+                        </button>
+                      </div>
+
+                      <div class="flex shrink-0 flex-col items-end gap-2">
+                        <Badge class="border text-[10px]" :class="item.summaryDescriptor.badgeTone">
+                          {{ item.summaryDescriptor.label }}
+                        </Badge>
+                        <Badge v-if="item.hasFailed" class="border text-[10px]" :class="statusBadgeClass('failed')">
+                          需要处理
+                        </Badge>
+                      </div>
+                    </div>
+
+                    <div class="mt-4 grid grid-cols-3 gap-2 text-[11px]">
+                      <div class="rounded-2xl border border-current/10 px-3 py-2">
+                        <p class="opacity-60">变动</p>
+                        <p class="mt-1 font-semibold">{{ item.eventCount }}</p>
+                      </div>
+                      <div class="rounded-2xl border border-current/10 px-3 py-2">
+                        <p class="opacity-60">摘要</p>
+                        <p class="mt-1 font-semibold">{{ item.semanticCount }}</p>
+                      </div>
+                      <div class="rounded-2xl border border-current/10 px-3 py-2">
+                        <p class="opacity-60">角色</p>
+                        <p class="mt-1 font-semibold">{{ item.trackedEntities }}</p>
+                      </div>
+                    </div>
+
+                    <p class="mt-3 text-[11px] opacity-60">{{ formatTimestamp(item.latestEvent?.committed_at) }}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </aside>
+
+          <main class="space-y-5">
+            <section
+              v-if="selectedSessionCard"
+              class="rounded-[30px] border border-border bg-background p-6 shadow-sm"
+            >
+              <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                <div class="max-w-3xl">
+                  <div class="flex flex-wrap items-center gap-2">
+                    <Badge class="border text-[10px]" :class="selectedSessionCard.summaryDescriptor.badgeTone">
+                      {{ selectedSessionCard.summaryDescriptor.label }}
                     </Badge>
-                    <Badge variant="secondary" class="text-[10px]">{{ item.eventCount }} 条</Badge>
-                    <Badge class="border text-[10px]" :class="layerBadgeClass('semantic')">S {{ item.semanticCount }}</Badge>
-                    <Badge class="border text-[10px]" :class="layerBadgeClass('episodic')">E {{ item.episodicCount }}</Badge>
-                    <Badge class="border text-[10px]" :class="layerBadgeClass('entity_state')">T {{ item.entityCount }}</Badge>
-                    <Badge v-if="item.hasFailed" class="border text-[10px]" :class="statusBadgeClass('failed')">failed</Badge>
+                    <Badge class="border text-[10px]" :class="statusBadgeClass(selectedStoryMemory?.operation?.status ?? latestTimelineEvent?.status)">
+                      {{ getMemoryStatusLabel(selectedStoryMemory?.operation?.status ?? latestTimelineEvent?.status) }}
+                    </Badge>
+                    <Badge
+                      v-if="selectedStoryMemory?.operation?.source || latestTimelineEvent?.source"
+                      variant="secondary"
+                      class="text-[10px]"
+                    >
+                      {{ getMemorySourceLabel(selectedStoryMemory?.operation?.source ?? latestTimelineEvent?.source ?? '') }}
+                    </Badge>
                   </div>
-                </div>
-                <p class="mt-3 text-xs text-muted-foreground">{{ item.latestEvent?.title ?? '暂无事件' }}</p>
-                <p class="mt-1 text-[11px] text-muted-foreground">{{ formatTimestamp(item.latestEvent?.committed_at) }}</p>
-                <p class="mt-2 text-[11px] text-muted-foreground">当前实体快照：{{ item.trackedEntities }} 人</p>
-              </button>
-            </div>
-          </CardContent>
-        </Card>
 
-        <Card class="border-border/70 bg-background/90 shadow-sm shadow-black/5">
-          <CardHeader class="gap-4">
-            <div class="flex items-start justify-between gap-3">
-              <div>
-                <CardTitle class="flex items-center gap-2">
-                  <History class="h-4 w-4 text-sky-600" />
-                  会话审计详情
-                </CardTitle>
-                <CardDescription>按操作批次查看事件链路，同时提供独立的语义摘要视图。</CardDescription>
-              </div>
-              <Badge v-if="selectedSessionId" variant="outline" class="text-[10px] font-mono">{{ selectedSessionId }}</Badge>
-            </div>
-          </CardHeader>
+                  <h2 class="hero-title mt-4 text-3xl text-stone-950">{{ selectedSessionCard.storyTitle }}</h2>
+                  <p class="mt-2 text-sm leading-6 text-stone-700">
+                    {{ detailSummaryDescriptor.description }}
+                  </p>
 
-          <CardContent>
-            <div v-if="!selectedSessionId" class="rounded-2xl border border-dashed border-border/70 bg-muted/10 px-4 py-12 text-center text-sm text-muted-foreground">
-              请选择左侧会话查看详情。
-            </div>
-
-            <div v-else-if="timelineLoading && !effectiveTimelineResponse" class="rounded-2xl border border-dashed border-border/70 bg-muted/10 px-4 py-12 text-center text-sm text-muted-foreground">
-              正在加载会话时间线…
-            </div>
-
-            <div v-else-if="timelineError" class="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-5 text-sm text-rose-900">
-              <p class="font-medium">会话时间线加载失败</p>
-              <p class="mt-1 text-rose-800/80">{{ timelineErrorMessage }}</p>
-              <button class="mt-3 rounded-md border border-rose-200 bg-white px-3 py-1.5 text-xs text-rose-700" @click="refetchTimeline()">
-                重试
-              </button>
-            </div>
-
-            <div v-else-if="effectiveTimelineResponse" class="space-y-4">
-              <div class="grid gap-3 lg:grid-cols-3">
-                <div class="rounded-[22px] border px-4 py-4" :class="detailSummaryDescriptor.tone">
-                  <div class="flex items-start justify-between gap-3">
-                    <div>
-                      <p class="text-sm font-semibold">{{ detailSummaryDescriptor.label }}</p>
-                      <p class="mt-2 text-xs leading-5">{{ detailSummaryDescriptor.description }}</p>
-                    </div>
-                    <Brain class="h-4 w-4 shrink-0" />
+                  <div class="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-xs text-stone-500">
+                    <span>会话：{{ selectedSessionCard.sessionId }}</span>
+                    <span v-if="selectedSessionCard.worldId">世界：{{ resolveWorldDisplay(selectedSessionCard.worldId) }}</span>
+                    <span>最近更新时间：{{ formatTimestamp(latestTimelineEvent?.committed_at) }}</span>
                   </div>
                 </div>
 
-                <div class="rounded-[22px] border border-border/70 bg-muted/10 px-4 py-4">
-                  <div class="flex items-center gap-2">
-                    <Layers3 class="h-4 w-4 text-sky-600" />
-                    <p class="text-sm font-semibold text-foreground">事件密度</p>
+                <div class="grid w-full gap-3 sm:grid-cols-2 xl:w-[420px]">
+                  <div class="rounded-[22px] border border-white/80 bg-white/82 px-4 py-4">
+                    <p class="text-[11px] uppercase tracking-[0.22em] text-stone-500">摘要状态</p>
+                    <p class="mt-2 text-sm font-semibold text-stone-950">{{ detailSummaryDescriptor.label }}</p>
                   </div>
-                  <div class="mt-3 grid grid-cols-4 gap-2 text-xs">
-                    <div class="rounded-xl border border-border/60 bg-background/80 px-3 py-2">
-                      <p class="text-muted-foreground">总数</p>
-                      <p class="mt-1 text-sm font-semibold text-foreground">{{ effectiveStoryMemoryResponse?.timeline_total ?? effectiveTimelineResponse.total }}</p>
-                    </div>
-                    <div class="rounded-xl border border-border/60 bg-background/80 px-3 py-2">
-                      <p class="text-muted-foreground">Semantic</p>
-                      <p class="mt-1 text-sm font-semibold text-foreground">{{ semanticEvents.length }}</p>
-                    </div>
-                    <div class="rounded-xl border border-border/60 bg-background/80 px-3 py-2">
-                      <p class="text-muted-foreground">Entity</p>
-                      <p class="mt-1 text-sm font-semibold text-foreground">{{ entityEvents.length }}</p>
-                    </div>
-                    <div class="rounded-xl border border-border/60 bg-background/80 px-3 py-2">
-                      <p class="text-muted-foreground">Patch</p>
-                      <p class="mt-1 text-sm font-semibold text-foreground">{{ selectedEntityPatchUpdates.length }}</p>
-                    </div>
-                    <div class="rounded-xl border border-border/60 bg-background/80 px-3 py-2">
-                      <p class="text-muted-foreground">失败</p>
-                      <p class="mt-1 text-sm font-semibold text-foreground">{{ failedEvents.length }}</p>
-                    </div>
+                  <div class="rounded-[22px] border border-white/80 bg-white/82 px-4 py-4">
+                    <p class="text-[11px] uppercase tracking-[0.22em] text-stone-500">当前角色数</p>
+                    <p class="mt-2 text-sm font-semibold text-stone-950">{{ selectedEntitySnapshot?.total ?? 0 }} 人</p>
                   </div>
-                </div>
-
-                <div class="rounded-[22px] border border-border/70 bg-muted/10 px-4 py-4">
-                  <div class="flex items-center gap-2">
-                    <CalendarRange class="h-4 w-4 text-sky-600" />
-                    <p class="text-sm font-semibold text-foreground">最近活动</p>
+                  <div class="rounded-[22px] border border-white/80 bg-white/82 px-4 py-4">
+                    <p class="text-[11px] uppercase tracking-[0.22em] text-stone-500">历史总条数</p>
+                    <p class="mt-2 text-sm font-semibold text-stone-950">{{ detailTotal }}</p>
                   </div>
-                  <p class="mt-3 text-sm font-medium text-foreground">{{ latestTimelineEvent?.title ?? '暂无事件' }}</p>
-                  <p class="mt-1 text-xs text-muted-foreground">{{ formatTimestamp(latestTimelineEvent?.committed_at) }}</p>
-                  <p class="mt-2 text-[11px] text-muted-foreground">{{ latestTimelineEvent ? getMemorySourceLabel(latestTimelineEvent.source) : '暂无来源' }}</p>
+                  <div class="rounded-[22px] border border-white/80 bg-white/82 px-4 py-4">
+                    <p class="text-[11px] uppercase tracking-[0.22em] text-stone-500">已覆盖地点</p>
+                    <p class="mt-2 text-sm font-semibold text-stone-950">{{ selectedEntityLocationCount }}</p>
+                  </div>
                 </div>
               </div>
 
-              <div
-                v-if="failedEvents.length"
-                class="rounded-[22px] border border-rose-200 bg-rose-50 px-4 py-4 text-sm text-rose-900"
-              >
+              <div v-if="failedEvents.length" class="mt-5 rounded-[24px] border border-rose-200 bg-rose-50/90 px-4 py-4 text-sm text-rose-900">
                 <div class="flex items-center gap-2">
                   <AlertTriangle class="h-4 w-4" />
-                  <p class="font-semibold">当前会话存在失败事件</p>
+                  <p class="font-semibold">当前会话仍有失败事件</p>
                 </div>
-                <p class="mt-2 text-rose-800/80">
+                <p class="mt-2 leading-6 text-rose-800/90">
                   {{ failedEvents.map((event) => event.title).join('；') }}
                 </p>
               </div>
+            </section>
 
-              <Tabs v-model="detailTab" class="space-y-4">
-                <TabsList class="grid w-full grid-cols-3">
-                  <TabsTrigger value="timeline">操作批次</TabsTrigger>
-                  <TabsTrigger value="semantic">语义视图</TabsTrigger>
-                  <TabsTrigger value="entity">实体视图</TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="timeline" class="space-y-4">
-                  <div v-if="!operationGroups.length" class="rounded-2xl border border-dashed border-border/70 bg-muted/10 px-4 py-10 text-center text-sm text-muted-foreground">
-                    该 session 暂无结构化记忆事件。
-                  </div>
-
-                  <div v-else class="space-y-4">
-                    <article
-                      v-for="group in operationGroups"
-                      :key="group.id"
-                      class="rounded-[24px] border border-border/70 bg-muted/10 p-4"
-                    >
-                      <div class="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-                        <div>
-                          <div class="flex flex-wrap items-center gap-2">
-                            <Badge variant="secondary" class="text-[10px]">{{ group.label }}</Badge>
-                            <Badge class="border text-[10px]" :class="statusBadgeClass(group.status)">{{ group.status }}</Badge>
-                            <Badge
-                              v-if="group.semanticState !== 'absent'"
-                              class="border text-[10px]"
-                              :class="getSummaryLifecycleDescriptor(group.semanticState).badgeTone"
-                            >
-                              {{ getSummaryLifecycleDescriptor(group.semanticState).label }}
-                            </Badge>
-                          </div>
-                          <p class="mt-3 text-sm font-semibold text-foreground">
-                            {{ group.events[0]?.title ?? group.label }}
-                          </p>
-                          <p class="mt-1 text-xs text-muted-foreground">
-                            {{ formatTimestamp(group.startedAt) }}
-                            <span v-if="group.startedAt !== group.endedAt"> → {{ formatTimestamp(group.endedAt) }}</span>
-                          </p>
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-2 text-xs lg:min-w-[180px]">
-                          <div class="rounded-xl border border-border/60 bg-background/80 px-3 py-2">
-                            <p class="text-muted-foreground">事件数</p>
-                            <p class="mt-1 font-semibold text-foreground">{{ group.events.length }}</p>
-                          </div>
-                          <div class="rounded-xl border border-border/60 bg-background/80 px-3 py-2">
-                            <p class="text-muted-foreground">来源</p>
-                            <p class="mt-1 font-semibold text-foreground">{{ group.source }}</p>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div class="mt-4 space-y-3">
-                        <article
-                          v-for="event in group.events"
-                          :key="event.event_id"
-                          class="rounded-2xl border border-border/70 bg-background/90 p-3"
-                        >
-                          <div class="flex flex-wrap items-center gap-2">
-                            <Badge class="border text-[10px]" :class="layerBadgeClass(event.memory_layer)">{{ event.memory_layer }}</Badge>
-                            <Badge variant="outline" class="text-[10px] font-mono">{{ event.action }}</Badge>
-                            <Badge v-if="event.display_kind" variant="secondary" class="text-[10px] font-mono">
-                              {{ event.display_kind }}
-                            </Badge>
-                            <Badge class="border text-[10px]" :class="statusBadgeClass(event.status)">{{ event.status }}</Badge>
-                          </div>
-                          <p class="mt-2 text-sm font-medium text-foreground">{{ event.title }}</p>
-                          <p v-if="event.reason" class="mt-1 text-xs leading-5 text-muted-foreground">{{ event.reason }}</p>
-                          <p class="mt-2 text-[11px] text-muted-foreground">
-                            {{ getMemorySourceLabel(event.source) }}
-                            <span v-if="event.source_turn"> · Turn {{ event.source_turn }}</span>
-                            <span v-if="event.memory_key"> · {{ event.memory_key }}</span>
-                            <span> · {{ formatTimestamp(event.committed_at) }}</span>
-                          </p>
-
-                          <div v-if="event.before || event.after" class="mt-3 grid gap-3 lg:grid-cols-2">
-                            <div v-if="event.before" class="rounded-xl border border-border/70 bg-muted/20 p-3">
-                              <p class="mb-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Before</p>
-                              <div class="space-y-1">
-                                <p
-                                  v-for="field in formatMemoryPayloadFields(event.before)"
-                                  :key="`before-${event.event_id}-${field.label}`"
-                                  class="text-[11px] leading-5 text-foreground"
-                                >
-                                  <span class="font-medium text-muted-foreground">{{ field.label }}：</span>{{ field.value }}
-                                </p>
-                              </div>
-                              <details class="mt-3">
-                                <summary class="cursor-pointer text-[10px] font-medium uppercase tracking-wide text-muted-foreground">原始 JSON</summary>
-                                <pre class="mt-2 overflow-x-auto whitespace-pre-wrap text-[11px] leading-5 text-muted-foreground">{{ stringifyPayload(event.before) }}</pre>
-                              </details>
-                            </div>
-                            <div v-if="event.after" class="rounded-xl border border-border/70 bg-muted/20 p-3">
-                              <p class="mb-2 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">After</p>
-                              <div class="space-y-1">
-                                <p
-                                  v-for="field in formatMemoryPayloadFields(event.after)"
-                                  :key="`after-${event.event_id}-${field.label}`"
-                                  class="text-[11px] leading-5 text-foreground"
-                                >
-                                  <span class="font-medium text-muted-foreground">{{ field.label }}：</span>{{ field.value }}
-                                </p>
-                              </div>
-                              <details class="mt-3">
-                                <summary class="cursor-pointer text-[10px] font-medium uppercase tracking-wide text-muted-foreground">原始 JSON</summary>
-                                <pre class="mt-2 overflow-x-auto whitespace-pre-wrap text-[11px] leading-5 text-muted-foreground">{{ stringifyPayload(event.after) }}</pre>
-                              </details>
-                            </div>
-                          </div>
-                        </article>
-                      </div>
-                    </article>
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="semantic" class="space-y-4">
-                  <div class="grid gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(280px,0.85fr)]">
-                    <div class="rounded-[24px] border border-violet-200/70 bg-violet-50/50 p-4">
-                      <div class="flex items-center justify-between gap-3">
-                        <div>
-                          <p class="text-sm font-semibold text-violet-900">当前摘要状态</p>
-                          <p class="mt-1 text-xs leading-5 text-violet-900/75">
-                            {{ summaryStateLabel(effectiveTimelineResponse.summary_state.state) }}
-                          </p>
-                        </div>
-                        <Badge class="border text-[10px]" :class="detailSummaryDescriptor.badgeTone">
-                          {{ effectiveTimelineResponse.summary_state.state }}
-                        </Badge>
-                      </div>
-
-                      <div v-if="effectiveTimelineResponse.summary_state.current_summary" class="mt-4 space-y-3">
-                        <div class="rounded-2xl border border-violet-200/70 bg-white/80 px-4 py-3">
-                          <p class="text-sm leading-6 text-foreground">{{ effectiveTimelineResponse.summary_state.current_summary.summary_text }}</p>
-                        </div>
-                        <div v-if="effectiveTimelineResponse.summary_state.current_summary.key_facts?.length" class="flex flex-wrap gap-1.5">
-                          <Badge
-                            v-for="fact in effectiveTimelineResponse.summary_state.current_summary.key_facts.slice(0, 10)"
-                            :key="fact"
-                            variant="secondary"
-                            class="text-[10px] font-normal"
-                          >
-                            {{ fact }}
-                          </Badge>
-                        </div>
-                      </div>
-
-                      <p v-else class="mt-4 text-sm text-violet-900/75">
-                        当前没有可用摘要，可能尚未生成，或最近一次操作已将其 reset。
-                      </p>
-                    </div>
-
-                    <div class="rounded-[24px] border border-border/70 bg-muted/10 p-4">
-                      <div class="flex items-center gap-2">
-                        <TimerReset class="h-4 w-4 text-sky-600" />
-                        <p class="text-sm font-semibold text-foreground">最近语义事件</p>
-                      </div>
-                      <div v-if="effectiveTimelineResponse.summary_state.last_semantic_event" class="mt-4 space-y-2">
-                        <div class="flex flex-wrap items-center gap-2">
-                          <Badge class="border text-[10px]" :class="layerBadgeClass('semantic')">semantic</Badge>
-                          <Badge variant="outline" class="text-[10px] font-mono">
-                            {{ effectiveTimelineResponse.summary_state.last_semantic_event.action }}
-                          </Badge>
-                          <Badge
-                            v-if="effectiveTimelineResponse.summary_state.last_semantic_event.display_kind"
-                            variant="secondary"
-                            class="text-[10px] font-mono"
-                          >
-                            {{ effectiveTimelineResponse.summary_state.last_semantic_event.display_kind }}
-                          </Badge>
-                        </div>
-                        <p class="text-sm font-medium text-foreground">{{ effectiveTimelineResponse.summary_state.last_semantic_event.title }}</p>
-                        <p v-if="effectiveTimelineResponse.summary_state.last_semantic_event.reason" class="text-xs leading-5 text-muted-foreground">
-                          {{ effectiveTimelineResponse.summary_state.last_semantic_event.reason }}
-                        </p>
-                        <p class="text-[11px] text-muted-foreground">
-                          {{ formatTimestamp(effectiveTimelineResponse.summary_state.last_semantic_event.committed_at) }}
-                        </p>
-                      </div>
-                      <p v-else class="mt-4 text-sm text-muted-foreground">当前 session 还没有语义层事件。</p>
-                    </div>
-                  </div>
-
-                  <div v-if="!semanticEvents.length" class="rounded-2xl border border-dashed border-border/70 bg-muted/10 px-4 py-10 text-center text-sm text-muted-foreground">
-                    当前 session 还没有 semantic 事件。
-                  </div>
-
-                  <div v-else class="space-y-3">
-                    <article
-                      v-for="event in semanticEvents"
-                      :key="event.event_id"
-                      class="rounded-[22px] border border-border/70 bg-muted/10 p-4"
-                    >
-                      <div class="flex flex-wrap items-center gap-2">
-                        <Badge class="border text-[10px]" :class="layerBadgeClass('semantic')">semantic</Badge>
-                        <Badge variant="outline" class="text-[10px] font-mono">{{ event.action }}</Badge>
-                        <Badge v-if="event.display_kind" variant="secondary" class="text-[10px] font-mono">
-                          {{ event.display_kind }}
-                        </Badge>
-                        <Badge class="border text-[10px]" :class="statusBadgeClass(event.status)">{{ event.status }}</Badge>
-                      </div>
-                      <p class="mt-3 text-sm font-semibold text-foreground">{{ event.title }}</p>
-                      <p v-if="event.reason" class="mt-1 text-xs leading-5 text-muted-foreground">{{ event.reason }}</p>
-                      <p class="mt-2 text-[11px] text-muted-foreground">
-                        {{ getMemorySourceLabel(event.source) }}
-                        <span v-if="event.memory_key"> · {{ event.memory_key }}</span>
-                        <span> · {{ formatTimestamp(event.committed_at) }}</span>
-                      </p>
-                    </article>
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="entity" class="space-y-4">
-                  <div class="grid gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(280px,0.85fr)]">
-                    <div class="rounded-[24px] border border-orange-200/70 bg-[linear-gradient(180deg,rgba(255,247,237,0.92),rgba(255,255,255,0.95))] p-4">
-                      <div class="flex items-center justify-between gap-3">
-                        <div>
-                          <p class="text-sm font-semibold text-orange-950">当前实体快照</p>
-                          <p class="mt-1 text-xs leading-5 text-orange-900/75">
-                            按角色查看地点、状态标签、携带物与最近证据，作为当前故事事实层的前端快照。
-                          </p>
-                        </div>
-                        <Badge class="border border-orange-200 bg-white/85 text-[10px] text-orange-700">
-                          {{ selectedEntitySnapshot?.total ?? 0 }} 人
-                        </Badge>
-                      </div>
-
-                      <div v-if="selectedEntitySnapshot?.items?.length" class="mt-4 space-y-3">
-                        <article
-                          v-for="entity in selectedEntitySnapshot.items"
-                          :key="entity.entity_id"
-                          class="rounded-[20px] border border-orange-200/60 bg-white/80 p-4"
-                        >
-                          <div class="flex items-start justify-between gap-3">
-                            <div class="min-w-0">
-                              <p class="truncate text-sm font-semibold text-foreground">{{ entity.display_name }}</p>
-                              <p class="mt-1 text-[11px] uppercase tracking-wide text-muted-foreground">
-                                {{ entity.current_location || '位置待确认' }}
-                              </p>
-                            </div>
-                            <Badge variant="outline" class="bg-white/85 text-[10px] font-mono">
-                              {{ formatTimestamp(entity.updated_at) }}
-                            </Badge>
-                          </div>
-
-                          <div class="mt-3 space-y-3">
-                            <p class="rounded-xl border border-orange-100 bg-orange-50/60 px-3 py-2 text-[11px] leading-5 text-foreground">
-                              {{ entity.state_summary || '当前还没有压缩后的实体摘要。' }}
-                            </p>
-
-                            <div v-if="entity.status_tags.length" class="flex flex-wrap gap-1.5">
-                              <Badge
-                                v-for="tag in entity.status_tags"
-                                :key="`${entity.entity_id}-${tag}`"
-                                class="border border-orange-200 bg-white/85 text-[10px] text-orange-800"
-                              >
-                                {{ tag }}
-                              </Badge>
-                            </div>
-
-                            <div v-if="entity.inventory.length" class="flex items-start gap-2 text-[11px] text-foreground">
-                              <Package class="mt-0.5 h-3.5 w-3.5 shrink-0 text-orange-600" />
-                              <span class="leading-5">{{ entity.inventory.join('、') }}</span>
-                            </div>
-
-                            <div v-if="entity.companions.length" class="flex items-start gap-2 text-[11px] text-foreground">
-                              <Users class="mt-0.5 h-3.5 w-3.5 shrink-0 text-sky-600" />
-                              <span class="leading-5">{{ entity.companions.map((item) => resolveEntityCompanionLabel(item)).join('、') }}</span>
-                            </div>
-
-                            <div v-if="entity.evidence.length" class="rounded-xl border border-border/60 bg-muted/10 px-3 py-2">
-                              <p class="text-[10px] uppercase tracking-wide text-muted-foreground">最近证据</p>
-                              <p class="mt-2 text-[11px] leading-5 text-foreground">{{ entity.evidence[0] }}</p>
-                            </div>
-                          </div>
-                        </article>
-                      </div>
-
-                      <div v-else class="mt-4 rounded-2xl border border-dashed border-orange-200 bg-white/70 px-4 py-10 text-center text-sm text-orange-900/75">
-                        当前 session 还没有已缓存的实体状态快照。
-                      </div>
-                    </div>
-
-                    <div class="space-y-4">
-                      <div class="rounded-[24px] border border-violet-200/70 bg-violet-50/40 p-4">
-                        <div class="flex items-center gap-2">
-                          <Sparkles class="h-4 w-4 text-violet-600" />
-                          <p class="text-sm font-semibold text-foreground">结构化 world update</p>
-                        </div>
-                        <div v-if="selectedWorldUpdateHighlights.length" class="mt-4 space-y-2">
-                          <p
-                            v-for="line in selectedWorldUpdateHighlights"
-                            :key="line"
-                            class="rounded-xl border border-violet-200/70 bg-white/80 px-3 py-2 text-[11px] leading-5 text-foreground"
-                          >
-                            {{ line }}
-                          </p>
-                        </div>
-                        <p v-else class="mt-4 text-sm text-muted-foreground">
-                          当前 session 还没有缓存到结构化 world update。
-                        </p>
-                      </div>
-
-                      <div class="rounded-[24px] border border-border/70 bg-muted/10 p-4">
-                        <div class="flex items-center gap-2">
-                          <MapPinned class="h-4 w-4 text-orange-600" />
-                          <p class="text-sm font-semibold text-foreground">实体追踪提示</p>
-                        </div>
-                        <div class="mt-4 space-y-2">
-                          <p
-                            v-for="warning in selectedEntityWarnings"
-                            :key="warning"
-                            class="rounded-xl border border-border/70 bg-background/80 px-3 py-2 text-[11px] leading-5 text-foreground"
-                          >
-                            {{ warning }}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div class="rounded-[24px] border border-border/70 bg-muted/10 p-4">
-                        <div class="flex items-center gap-2">
-                          <History class="h-4 w-4 text-orange-600" />
-                          <p class="text-sm font-semibold text-foreground">实体事件</p>
-                        </div>
-                        <div v-if="entityEvents.length" class="mt-4 space-y-3">
-                          <article
-                            v-for="event in entityEvents"
-                            :key="event.event_id"
-                            class="rounded-2xl border border-border/70 bg-background/80 p-3"
-                          >
-                            <div class="flex flex-wrap items-center gap-2">
-                              <Badge class="border text-[10px]" :class="layerBadgeClass('entity_state')">entity_state</Badge>
-                              <Badge variant="outline" class="text-[10px] font-mono">{{ event.action }}</Badge>
-                              <Badge class="border text-[10px]" :class="statusBadgeClass(event.status)">{{ event.status }}</Badge>
-                            </div>
-                            <p class="mt-2 text-sm font-medium text-foreground">{{ event.title }}</p>
-                            <p v-if="event.reason" class="mt-1 text-xs leading-5 text-muted-foreground">{{ event.reason }}</p>
-                            <p class="mt-2 text-[11px] text-muted-foreground">
-                              {{ getMemorySourceLabel(event.source) }}
-                              <span v-if="event.memory_key"> · {{ event.memory_key }}</span>
-                              <span> · {{ formatTimestamp(event.committed_at) }}</span>
-                            </p>
-                          </article>
-                        </div>
-                        <p v-else class="mt-4 text-sm text-muted-foreground">当前 session 还没有 entity_state 事件。</p>
-                      </div>
-
-                      <div class="rounded-[24px] border border-emerald-200/70 bg-emerald-50/40 p-4">
-                        <div class="flex items-center gap-2">
-                          <Sparkles class="h-4 w-4 text-emerald-600" />
-                          <p class="text-sm font-semibold text-foreground">字段级 patch 时间线</p>
-                        </div>
-                        <div v-if="selectedEntityPatchUpdates.length" class="mt-4 space-y-3">
-                          <article
-                            v-for="patch in selectedEntityPatchUpdates"
-                            :key="getEntityPatchEventId(patch)"
-                            class="rounded-2xl border border-emerald-200/70 bg-white/80 p-3"
-                          >
-                            <div class="flex flex-wrap items-center gap-2">
-                              <Badge class="border text-[10px]" :class="layerBadgeClass('entity_state')">entity_patch</Badge>
-                              <Badge variant="outline" class="text-[10px] font-mono">{{ patch.op }}</Badge>
-                              <Badge v-if="patch.sequence !== null" variant="secondary" class="text-[10px] font-mono">
-                                seq {{ patch.sequence }}
-                              </Badge>
-                              <Badge class="border text-[10px]" :class="statusBadgeClass(patch.status)">{{ patch.status }}</Badge>
-                            </div>
-                            <p class="mt-2 text-sm font-medium text-foreground">{{ getEntityPatchHeadline(patch) }}</p>
-                            <p class="mt-1 text-xs leading-5 text-muted-foreground">{{ getEntityPatchDetail(patch) }}</p>
-                            <p class="mt-2 text-[11px] text-muted-foreground">
-                              {{ getMemorySourceLabel(patch.source) }}
-                              <span v-if="getEntityPatchSourceTurn(patch)"> · Turn {{ getEntityPatchSourceTurn(patch) }}</span>
-                              <span> · {{ formatTimestamp(getEntityPatchCommittedAt(patch)) }}</span>
-                            </p>
-                            <p v-if="getEntityPatchEvidenceText(patch)" class="mt-2 text-[11px] leading-5 text-foreground/80">
-                              证据：{{ getEntityPatchEvidenceText(patch) }}
-                            </p>
-                          </article>
-                        </div>
-                        <p v-else class="mt-4 text-sm text-muted-foreground">当前 session 还没有字段级 entity patch 记录。</p>
-                      </div>
-                    </div>
-                  </div>
-                </TabsContent>
-              </Tabs>
+            <div v-else class="rounded-[30px] border border-dashed border-stone-300 bg-white/80 px-6 py-14 text-center text-sm text-stone-500">
+              请选择左侧会话查看故事记忆详情。
             </div>
-          </CardContent>
-        </Card>
+
+            <template v-if="selectedSessionCard">
+              <section class="grid gap-5 2xl:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]">
+                <Card class="rounded-[28px] border-stone-200/80 bg-white/90 shadow-none">
+                  <CardHeader>
+                    <CardTitle class="flex items-center gap-2 text-stone-950">
+                      <ArrowLeftRight class="h-4 w-4 text-stone-600" />
+                      本轮变化
+                    </CardTitle>
+                    <CardDescription>用实体与摘要两条线，把最近变化翻译成自然语言。</CardDescription>
+                  </CardHeader>
+                  <CardContent class="space-y-4">
+                    <div v-if="!recentEntityChangeGroups.length" class="rounded-[22px] border border-dashed border-stone-300 bg-stone-50/70 px-4 py-10 text-center text-sm text-stone-500">
+                      当前还没有可读的实体变化摘要。
+                    </div>
+
+                    <article
+                      v-for="group in recentEntityChangeGroups"
+                      :key="group.id"
+                      class="rounded-[24px] border border-stone-200 bg-stone-50/80 p-4"
+                    >
+                      <div class="flex items-start justify-between gap-3">
+                        <div>
+                          <p class="text-[11px] uppercase tracking-[0.22em] text-stone-500">实体</p>
+                          <p class="mt-1 text-lg font-semibold text-stone-950">{{ group.entityLabel }}</p>
+                        </div>
+                        <Badge variant="secondary" class="text-[10px]">
+                          {{ formatTimestamp(group.committedAt) }}
+                        </Badge>
+                      </div>
+
+                      <div class="mt-4 space-y-2">
+                        <article
+                          v-for="change in group.changes.slice(0, 3)"
+                          :key="change.id"
+                          class="rounded-2xl border border-white/90 bg-white/85 p-3"
+                        >
+                          <p class="text-sm font-medium text-stone-900">变化：{{ change.summary }}</p>
+                          <div class="mt-3 grid gap-3 lg:grid-cols-2">
+                            <div class="rounded-2xl border border-stone-200 bg-stone-50/80 px-3 py-3">
+                              <p class="text-[11px] uppercase tracking-[0.22em] text-stone-500">变更前</p>
+                              <p class="mt-2 text-xs font-medium text-stone-600">{{ change.fieldLabel }}</p>
+                              <p class="mt-2 text-sm leading-6 text-stone-800">
+                                {{ getExpandableText(`group-before-${change.id}`, change.beforeText, 64) }}
+                              </p>
+                              <button
+                                v-if="isTextTruncated(change.beforeText, 64)"
+                                type="button"
+                                class="mt-1 text-[11px] font-medium text-stone-500 underline-offset-4 hover:underline"
+                                @click="toggleTextExpansion(`group-before-${change.id}`)"
+                              >
+                                {{ isTextExpanded(`group-before-${change.id}`) ? '收起' : '展开' }}
+                              </button>
+                            </div>
+                            <div class="rounded-2xl border border-emerald-200 bg-emerald-50/70 px-3 py-3">
+                              <p class="text-[11px] uppercase tracking-[0.22em] text-emerald-700">变更后</p>
+                              <p class="mt-2 text-xs font-medium text-emerald-700">{{ change.fieldLabel }}</p>
+                              <p class="mt-2 text-sm leading-6 text-stone-800">
+                                {{ getExpandableText(`group-after-${change.id}`, change.afterText, 64) }}
+                              </p>
+                              <button
+                                v-if="isTextTruncated(change.afterText, 64)"
+                                type="button"
+                                class="mt-1 text-[11px] font-medium text-emerald-700 underline-offset-4 hover:underline"
+                                @click="toggleTextExpansion(`group-after-${change.id}`)"
+                              >
+                                {{ isTextExpanded(`group-after-${change.id}`) ? '收起' : '展开' }}
+                              </button>
+                            </div>
+                          </div>
+                        </article>
+                        <p v-if="group.changes.length > 3" class="text-xs text-stone-500">
+                          还有 {{ group.changes.length - 3 }} 条变化未展开。
+                        </p>
+                      </div>
+
+                      <p v-if="group.evidence[0]" class="mt-4 text-xs leading-5 text-stone-600">
+                        证据：{{ getExpandableText(`group-evidence-${group.id}`, group.evidence[0], 96) }}
+                      </p>
+                      <button
+                        v-if="group.evidence[0] && isTextTruncated(group.evidence[0], 96)"
+                        type="button"
+                        class="mt-1 text-[11px] font-medium text-stone-500 underline-offset-4 hover:underline"
+                        @click="toggleTextExpansion(`group-evidence-${group.id}`)"
+                      >
+                        {{ isTextExpanded(`group-evidence-${group.id}`) ? '收起' : '展开' }}
+                      </button>
+                      <p v-if="group.sourceTurn" class="mt-2 text-[11px] text-stone-500">
+                        来源轮次：第 {{ group.sourceTurn }} 轮
+                      </p>
+                    </article>
+                  </CardContent>
+                </Card>
+
+                <div class="space-y-5">
+                  <Card class="rounded-[28px] border-violet-200/80 bg-[linear-gradient(180deg,rgba(245,243,255,0.98),rgba(255,255,255,0.92))] shadow-none">
+                    <CardHeader>
+                      <CardTitle class="flex items-center gap-2 text-violet-950">
+                        <Brain class="h-4 w-4 text-violet-700" />
+                        当前摘要
+                      </CardTitle>
+                      <CardDescription>优先展示可继续用于生成的语义摘要。</CardDescription>
+                    </CardHeader>
+                    <CardContent class="space-y-4">
+                      <div v-if="selectedSummarySnapshot" class="rounded-[22px] border border-white/90 bg-white/85 px-4 py-4 text-sm leading-7 text-stone-800">
+                        {{ selectedSummarySnapshot.summary_text }}
+                      </div>
+                      <div v-else class="rounded-[22px] border border-dashed border-violet-200 bg-white/80 px-4 py-8 text-center text-sm text-violet-900/70">
+                        当前没有可用摘要。
+                      </div>
+
+                      <div v-if="selectedSummarySnapshot?.key_facts?.length" class="flex flex-wrap gap-2">
+                        <Badge
+                          v-for="fact in selectedSummarySnapshot.key_facts.slice(0, 8)"
+                          :key="fact"
+                          class="border border-violet-200 bg-white/90 text-[11px] font-normal text-violet-900"
+                        >
+                          {{ fact }}
+                        </Badge>
+                      </div>
+
+                      <div v-if="latestSemanticEvent" class="rounded-[22px] border border-violet-200/70 bg-white/80 px-4 py-4">
+                        <p class="text-[11px] uppercase tracking-[0.22em] text-violet-700">最近摘要动作</p>
+                        <p class="mt-2 text-sm font-semibold text-stone-950">{{ buildEventHeadline(latestSemanticEvent) }}</p>
+                        <p class="mt-2 text-xs leading-5 text-stone-600">
+                          {{ latestSemanticEvent.reason || latestSemanticEvent.title }}
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card class="rounded-[28px] border-stone-200/80 bg-white/90 shadow-none">
+                    <CardHeader>
+                      <CardTitle class="flex items-center gap-2 text-stone-950">
+                        <MapPinned class="h-4 w-4 text-stone-600" />
+                        提醒与世界变化
+                      </CardTitle>
+                      <CardDescription>这里放当前会话最适合人工快速确认的信息。</CardDescription>
+                    </CardHeader>
+                    <CardContent class="space-y-3">
+                      <div v-if="selectedWorldUpdateHighlights.length" class="space-y-2">
+                        <p
+                          v-for="line in selectedWorldUpdateHighlights"
+                          :key="line"
+                          class="rounded-2xl border border-stone-200 bg-stone-50/70 px-3 py-2 text-sm leading-6 text-stone-800"
+                        >
+                          {{ line }}
+                        </p>
+                      </div>
+                      <div v-else class="rounded-2xl border border-dashed border-stone-300 bg-stone-50/70 px-4 py-6 text-sm text-stone-500">
+                        当前没有结构化 world update。
+                      </div>
+
+                      <div class="space-y-2">
+                        <p
+                          v-for="warning in selectedEntityWarnings"
+                          :key="warning"
+                          class="rounded-2xl border border-stone-200 bg-white px-3 py-2 text-sm leading-6 text-stone-700"
+                        >
+                          {{ warning }}
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </section>
+
+              <Card class="rounded-[28px] border-stone-200/80 bg-white/90 shadow-none">
+                <CardHeader>
+                  <CardTitle class="flex items-center gap-2 text-stone-950">
+                    <Users class="h-4 w-4 text-stone-600" />
+                    当前角色状态
+                  </CardTitle>
+                  <CardDescription>一张卡只表达一个角色当前的关键信息，避免把字段级结构直接抛给人看。</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div v-if="selectedEntitySnapshot?.items?.length" class="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
+                    <article
+                      v-for="entity in selectedEntitySnapshot.items"
+                      :key="entity.entity_id"
+                      class="rounded-[24px] border border-stone-200 bg-stone-50/80 p-4"
+                    >
+                      <div class="flex items-start justify-between gap-3">
+                        <div class="min-w-0">
+                          <p class="truncate text-base font-semibold text-stone-950">{{ entity.display_name }}</p>
+                          <p class="mt-1 text-xs text-stone-500">
+                            {{ entity.current_location || '位置待确认' }}
+                          </p>
+                        </div>
+                        <Badge variant="secondary" class="text-[10px]">
+                          {{ formatTimestamp(entity.updated_at) }}
+                        </Badge>
+                      </div>
+
+                      <p class="mt-4 rounded-2xl border border-white/90 bg-white/85 px-3 py-3 text-sm leading-6 text-stone-800">
+                        {{ entity.state_summary || '当前还没有压缩后的角色摘要。' }}
+                      </p>
+
+                      <div v-if="entity.status_tags.length" class="mt-3 flex flex-wrap gap-2">
+                        <Badge
+                          v-for="tag in entity.status_tags"
+                          :key="`${entity.entity_id}-${tag}`"
+                          class="border border-stone-200 bg-white text-[11px] font-normal text-stone-800"
+                        >
+                          {{ tag }}
+                        </Badge>
+                      </div>
+
+                      <div v-if="entity.inventory.length" class="mt-4 flex items-start gap-2 text-sm text-stone-700">
+                        <Package class="mt-0.5 h-4 w-4 shrink-0 text-stone-500" />
+                        <span class="leading-6">{{ entity.inventory.join('、') }}</span>
+                      </div>
+
+                      <div v-if="entity.companions.length" class="mt-3 flex items-start gap-2 text-sm text-stone-700">
+                        <Users class="mt-0.5 h-4 w-4 shrink-0 text-stone-500" />
+                        <span class="leading-6">{{ entity.companions.map((item) => resolveEntityCompanionLabel(item)).join('、') }}</span>
+                      </div>
+
+                      <div v-if="entity.evidence.length" class="mt-4 rounded-2xl border border-stone-200 bg-white/90 px-3 py-3">
+                        <p class="text-[11px] uppercase tracking-[0.22em] text-stone-500">最近证据</p>
+                        <p class="mt-2 text-sm leading-6 text-stone-700">
+                          {{ getExpandableText(`entity-evidence-${entity.entity_id}`, entity.evidence[0] ?? '', 120) }}
+                        </p>
+                        <button
+                          v-if="entity.evidence[0] && isTextTruncated(entity.evidence[0], 120)"
+                          type="button"
+                          class="mt-1 text-[11px] font-medium text-stone-500 underline-offset-4 hover:underline"
+                          @click="toggleTextExpansion(`entity-evidence-${entity.entity_id}`)"
+                        >
+                          {{ isTextExpanded(`entity-evidence-${entity.entity_id}`) ? '收起' : '展开' }}
+                        </button>
+                      </div>
+                    </article>
+                  </div>
+
+                  <div v-else class="rounded-[22px] border border-dashed border-stone-300 bg-stone-50/70 px-4 py-10 text-center text-sm text-stone-500">
+                    当前会话还没有实体状态快照。
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card class="rounded-[28px] border-stone-200/80 bg-white/90 shadow-none">
+                <CardHeader class="gap-4">
+                  <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                    <div>
+                      <CardTitle class="flex items-center gap-2 text-stone-950">
+                        <CalendarRange class="h-4 w-4 text-stone-600" />
+                        历史记录
+                      </CardTitle>
+                      <CardDescription>按页回看记忆事件，重点展示“发生了什么”和“现在留下了什么”。</CardDescription>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-2">
+                      <Select
+                        :model-value="String(detailPageSize)"
+                        @update:model-value="(value) => dashboardStore.setDetailPageSize(Number(value))"
+                      >
+                        <SelectTrigger class="h-9 w-[110px] rounded-full border-stone-200 bg-stone-50/70 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem v-for="option in pageSizeOptions" :key="option.value" :value="option.value">
+                            {{ option.label }}
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        class="rounded-full border-stone-200 bg-white"
+                        :disabled="detailPage <= 1"
+                        @click="goToPreviousPage"
+                      >
+                        <ChevronLeft class="h-4 w-4" />
+                        上一页
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        class="rounded-full border-stone-200 bg-white"
+                        :disabled="detailPage >= detailPageCount"
+                        @click="goToNextPage"
+                      >
+                        下一页
+                        <ChevronRight class="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div class="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-stone-500">
+                    <span>{{ historyRangeLabel }}</span>
+                    <span>当前第 {{ detailPage }} / {{ detailPageCount }} 页</span>
+                    <span v-if="timelineFetching || storyMemoryFetching">正在刷新当前页…</span>
+                  </div>
+                </CardHeader>
+
+                <CardContent class="space-y-4">
+                  <div v-if="timelineLoading && !effectiveTimelineResponse" class="rounded-[22px] border border-dashed border-stone-300 bg-stone-50/70 px-4 py-10 text-center text-sm text-stone-500">
+                    正在加载历史记录…
+                  </div>
+
+                  <div v-else-if="timelineError" class="rounded-[22px] border border-rose-200 bg-rose-50 px-4 py-5 text-sm text-rose-900">
+                    <p class="font-medium">历史记录加载失败</p>
+                    <p class="mt-1 text-rose-800/80">{{ timelineErrorMessage }}</p>
+                    <Button variant="outline" size="sm" class="mt-3 rounded-full border-rose-200 bg-white text-rose-700" @click="refetchTimeline()">
+                      重试
+                    </Button>
+                  </div>
+
+                  <div v-else-if="!operationGroups.length" class="rounded-[22px] border border-dashed border-stone-300 bg-stone-50/70 px-4 py-10 text-center text-sm text-stone-500">
+                    当前页没有历史记录。
+                  </div>
+
+                  <article
+                    v-for="group in operationGroups"
+                    :key="group.id"
+                    class="rounded-[26px] border border-stone-200 bg-stone-50/80 p-4"
+                  >
+                    <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                      <div>
+                        <div class="flex flex-wrap items-center gap-2">
+                          <Badge variant="secondary" class="text-[10px]">{{ group.label }}</Badge>
+                          <Badge class="border text-[10px]" :class="statusBadgeClass(group.status)">
+                            {{ getMemoryStatusLabel(group.status) }}
+                          </Badge>
+                          <Badge
+                            v-if="group.semanticState !== 'absent'"
+                            class="border text-[10px]"
+                            :class="getSummaryLifecycleDescriptor(group.semanticState).badgeTone"
+                          >
+                            {{ getSummaryLifecycleDescriptor(group.semanticState).label }}
+                          </Badge>
+                        </div>
+
+                        <p class="mt-3 text-base font-semibold text-stone-950">{{ summarizeOperation(group.events) }}</p>
+                        <p class="mt-2 text-sm leading-6 text-stone-600">
+                          {{ formatTimestamp(group.startedAt) }}
+                          <span v-if="group.startedAt !== group.endedAt"> 至 {{ formatTimestamp(group.endedAt) }}</span>
+                        </p>
+                      </div>
+
+                      <div class="rounded-[22px] border border-white/90 bg-white/85 px-4 py-3 text-sm text-stone-700">
+                        本批次共 {{ group.events.length }} 条事件
+                      </div>
+                    </div>
+
+                    <div class="mt-4 space-y-3">
+                      <article
+                        v-for="event in group.events"
+                        :key="event.event_id"
+                        class="rounded-[22px] border border-white/90 bg-white/92 p-4"
+                      >
+                        <div class="flex flex-wrap items-center gap-2">
+                          <Badge class="border text-[10px]" :class="layerBadgeClass(event.memory_layer)">
+                            {{ getMemoryLayerLabel(event.memory_layer) }}
+                          </Badge>
+                          <Badge class="border text-[10px]" :class="statusBadgeClass(event.status)">
+                            {{ getMemoryStatusLabel(event.status) }}
+                          </Badge>
+                          <Badge v-if="event.display_kind" variant="secondary" class="text-[10px]">
+                            {{ event.display_kind }}
+                          </Badge>
+                        </div>
+
+                        <p class="mt-3 text-sm font-semibold text-stone-950">{{ buildEventHeadline(event) }}</p>
+                        <p class="mt-1 text-sm leading-6 text-stone-700">{{ event.reason || event.title }}</p>
+
+                        <div class="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-[11px] text-stone-500">
+                          <span>{{ getMemorySourceLabel(event.source) }}</span>
+                          <span v-if="event.source_turn">第 {{ event.source_turn }} 轮</span>
+                          <span>{{ formatTimestamp(event.committed_at) }}</span>
+                        </div>
+
+                        <div v-if="previewPayloadFields(event.after).length || previewPayloadFields(event.before).length" class="mt-4 grid gap-3 lg:grid-cols-2">
+                          <div v-if="previewPayloadFields(event.before).length" class="rounded-2xl border border-stone-200 bg-stone-50/80 px-3 py-3">
+                            <p class="text-[11px] uppercase tracking-[0.22em] text-stone-500">变更前</p>
+                            <p
+                              v-for="field in previewPayloadFields(event.before)"
+                              :key="`before-${event.event_id}-${field.label}`"
+                              class="mt-2 text-sm leading-6 text-stone-700"
+                            >
+                              <span class="font-medium text-stone-500">{{ field.label }}：</span>{{ getExpandableText(`timeline-before-${event.event_id}-${field.label}`, field.value, field.label === '摘要' ? 140 : 72) }}
+                            </p>
+                            <button
+                              v-for="field in previewPayloadFields(event.before).filter((item) => isTextTruncated(item.value, item.label === '摘要' ? 140 : 72))"
+                              :key="`before-toggle-${event.event_id}-${field.label}`"
+                              type="button"
+                              class="block text-[11px] font-medium text-stone-500 underline-offset-4 hover:underline"
+                              @click="toggleTextExpansion(`timeline-before-${event.event_id}-${field.label}`)"
+                            >
+                              {{ isTextExpanded(`timeline-before-${event.event_id}-${field.label}`) ? `收起${field.label}` : `展开${field.label}` }}
+                            </button>
+                          </div>
+                          <div v-if="previewPayloadFields(event.after).length" class="rounded-2xl border border-stone-200 bg-stone-50/80 px-3 py-3">
+                            <p class="text-[11px] uppercase tracking-[0.22em] text-stone-500">变更后</p>
+                            <p
+                              v-for="field in previewPayloadFields(event.after)"
+                              :key="`after-${event.event_id}-${field.label}`"
+                              class="mt-2 text-sm leading-6 text-stone-700"
+                            >
+                              <span class="font-medium text-stone-500">{{ field.label }}：</span>{{ getExpandableText(`timeline-after-${event.event_id}-${field.label}`, field.value, field.label === '摘要' ? 140 : 72) }}
+                            </p>
+                            <button
+                              v-for="field in previewPayloadFields(event.after).filter((item) => isTextTruncated(item.value, item.label === '摘要' ? 140 : 72))"
+                              :key="`after-toggle-${event.event_id}-${field.label}`"
+                              type="button"
+                              class="block text-[11px] font-medium text-stone-500 underline-offset-4 hover:underline"
+                              @click="toggleTextExpansion(`timeline-after-${event.event_id}-${field.label}`)"
+                            >
+                              {{ isTextExpanded(`timeline-after-${event.event_id}-${field.label}`) ? `收起${field.label}` : `展开${field.label}` }}
+                            </button>
+                          </div>
+                        </div>
+                      </article>
+                    </div>
+                  </article>
+                </CardContent>
+              </Card>
+
+              <Card v-if="selectedEntityPatchUpdates.length" class="rounded-[28px] border-stone-200/80 bg-white/90 shadow-none">
+                <CardHeader>
+                  <CardTitle class="flex items-center gap-2 text-stone-950">
+                    <UserRound class="h-4 w-4 text-stone-600" />
+                    最近字段级变化
+                  </CardTitle>
+                  <CardDescription>保留字段级 patch 视角，但只显示易读名称，不再把复杂 id 当主标识。</CardDescription>
+                </CardHeader>
+                <CardContent class="grid gap-3 lg:grid-cols-2">
+                  <article
+                    v-for="patch in selectedEntityPatchUpdates.slice(0, 12)"
+                    :key="getEntityPatchEventId(patch)"
+                    class="rounded-[22px] border border-stone-200 bg-stone-50/80 p-4"
+                  >
+                    <div class="flex items-start justify-between gap-3">
+                      <div>
+                        <p class="text-[11px] uppercase tracking-[0.22em] text-stone-500">实体</p>
+                        <p class="mt-1 text-sm font-semibold text-stone-950">{{ getEntityPatchEntityLabel(patch) }}</p>
+                      </div>
+                      <Badge class="border text-[10px]" :class="statusBadgeClass(patch.status)">
+                        {{ getMemoryStatusLabel(patch.status) }}
+                      </Badge>
+                    </div>
+
+                    <p class="mt-4 text-sm leading-6 text-stone-800">
+                      变化：{{ getEntityPatchChangeSummary(patch) }}
+                    </p>
+                    <p class="mt-2 text-xs text-stone-500">
+                      字段：{{ getEntityPatchFieldLabel(patch) }} · {{ formatTimestamp(getEntityPatchCommittedAt(patch)) }}
+                    </p>
+                    <div class="mt-3 grid gap-3 sm:grid-cols-2">
+                      <div class="rounded-2xl border border-stone-200 bg-white/85 px-3 py-3">
+                        <p class="text-[11px] uppercase tracking-[0.22em] text-stone-500">变更前</p>
+                        <p class="mt-2 text-sm leading-6 text-stone-800">
+                          {{ getExpandableText(`patch-before-${getEntityPatchEventId(patch)}`, formatEntityPatchValue(patch.before ?? (patch.op === 'remove' ? patch.value : null)), 72) }}
+                        </p>
+                        <button
+                          v-if="isTextTruncated(formatEntityPatchValue(patch.before ?? (patch.op === 'remove' ? patch.value : null)), 72)"
+                          type="button"
+                          class="mt-1 text-[11px] font-medium text-stone-500 underline-offset-4 hover:underline"
+                          @click="toggleTextExpansion(`patch-before-${getEntityPatchEventId(patch)}`)"
+                        >
+                          {{ isTextExpanded(`patch-before-${getEntityPatchEventId(patch)}`) ? '收起' : '展开' }}
+                        </button>
+                      </div>
+                      <div class="rounded-2xl border border-emerald-200 bg-emerald-50/70 px-3 py-3">
+                        <p class="text-[11px] uppercase tracking-[0.22em] text-emerald-700">变更后</p>
+                        <p class="mt-2 text-sm leading-6 text-stone-800">
+                          {{ getExpandableText(`patch-after-${getEntityPatchEventId(patch)}`, formatEntityPatchValue(patch.after ?? (patch.op !== 'remove' ? patch.value : null)), 72) }}
+                        </p>
+                        <button
+                          v-if="isTextTruncated(formatEntityPatchValue(patch.after ?? (patch.op !== 'remove' ? patch.value : null)), 72)"
+                          type="button"
+                          class="mt-1 text-[11px] font-medium text-emerald-700 underline-offset-4 hover:underline"
+                          @click="toggleTextExpansion(`patch-after-${getEntityPatchEventId(patch)}`)"
+                        >
+                          {{ isTextExpanded(`patch-after-${getEntityPatchEventId(patch)}`) ? '收起' : '展开' }}
+                        </button>
+                      </div>
+                    </div>
+                    <p v-if="getEntityPatchEvidenceText(patch)" class="mt-2 text-xs leading-5 text-stone-600">
+                      证据：{{ getExpandableText(`patch-evidence-${getEntityPatchEventId(patch)}`, getEntityPatchEvidenceText(patch) ?? '', 96) }}
+                    </p>
+                    <button
+                      v-if="getEntityPatchEvidenceText(patch) && isTextTruncated(getEntityPatchEvidenceText(patch) ?? '', 96)"
+                      type="button"
+                      class="mt-1 text-[11px] font-medium text-stone-500 underline-offset-4 hover:underline"
+                      @click="toggleTextExpansion(`patch-evidence-${getEntityPatchEventId(patch)}`)"
+                    >
+                      {{ isTextExpanded(`patch-evidence-${getEntityPatchEventId(patch)}`) ? '收起' : '展开' }}
+                    </button>
+                  </article>
+                </CardContent>
+              </Card>
+            </template>
+          </main>
+        </div>
       </section>
     </div>
   </div>
 </template>
+
+<style scoped>
+.memory-stat {
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.hero-title {
+  font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", "STSong", serif;
+  letter-spacing: -0.02em;
+}
+</style>

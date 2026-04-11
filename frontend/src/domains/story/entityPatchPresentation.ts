@@ -3,6 +3,15 @@ import type { StoryEntityUpdateRecord, StoryWorldUpdateRecord } from '@/stores/s
 
 type EntityLikeUpdate = EntityStateUpdate | StoryEntityUpdateRecord
 
+const ENTITY_FIELD_LABELS: Record<string, string> = {
+  current_location: '位置',
+  inventory: '携带物',
+  status_tags: '状态标签',
+  companions: '同行角色',
+  state_summary: '状态摘要',
+  short_goal: '当前目标',
+}
+
 function isApiEntityUpdate(update: EntityLikeUpdate): update is EntityStateUpdate {
   return 'entity_name' in update || 'field_name' in update
 }
@@ -21,6 +30,10 @@ function resolveFieldName(update: EntityLikeUpdate): string {
   return update.fieldName
 }
 
+function compactText(value: string, maxLength: number): string {
+  return value.length > maxLength ? `${value.slice(0, maxLength - 1)}…` : value
+}
+
 export function formatEntityPatchValue(value: unknown): string {
   if (value == null) return '空'
   if (Array.isArray(value)) {
@@ -36,6 +49,32 @@ export function formatEntityPatchValue(value: unknown): string {
   return String(value)
 }
 
+export function getEntityPatchEntityLabel(update: EntityLikeUpdate): string {
+  return resolveEntityName(update)
+}
+
+export function getEntityPatchFieldLabel(update: EntityLikeUpdate): string {
+  const fieldName = resolveFieldName(update)
+  return ENTITY_FIELD_LABELS[fieldName] ?? fieldName
+}
+
+export function getEntityPatchOperationLabel(op: string): string {
+  switch (op) {
+    case 'set':
+    case 'replace':
+      return '更新'
+    case 'add':
+    case 'append':
+      return '新增'
+    case 'remove':
+      return '移除'
+    case 'rebuild':
+      return '重建'
+    default:
+      return op
+  }
+}
+
 export function getEntityPatchHeadline(update: EntityLikeUpdate): string {
   return `${resolveEntityName(update)} · ${resolveFieldName(update)} · ${update.op}`
 }
@@ -48,6 +87,28 @@ export function getEntityPatchDetail(update: EntityLikeUpdate): string {
     return `${formatEntityPatchValue(before)} → ${formatEntityPatchValue(after)}`
   }
   return formatEntityPatchValue(value)
+}
+
+export function getEntityPatchChangeSummary(update: EntityLikeUpdate, maxLength = 80): string {
+  const fieldLabel = getEntityPatchFieldLabel(update)
+  const before = 'before' in update ? update.before : null
+  const after = 'after' in update ? update.after : null
+  const value = 'value' in update ? update.value : null
+
+  if (update.op === 'remove') {
+    const removedValue = before ?? value ?? after
+    return `${fieldLabel}：移除 ${compactText(formatEntityPatchValue(removedValue), maxLength)}`
+  }
+
+  if (before != null || after != null) {
+    return `${fieldLabel}：${compactText(formatEntityPatchValue(before), maxLength)} -> ${compactText(formatEntityPatchValue(after), maxLength)}`
+  }
+
+  if (value != null) {
+    return `${fieldLabel}：${compactText(formatEntityPatchValue(value), maxLength)}`
+  }
+
+  return `${fieldLabel}：${getEntityPatchOperationLabel(update.op)}`
 }
 
 export function getEntityPatchEventId(update: EntityLikeUpdate): string {

@@ -84,7 +84,7 @@ frontend/
   - `StoryAdjustmentView.vue`：故事文本调整页面。
   - `DashboardLorebookView.vue`：Lorebook 管理台。
   - `DashboardScriptDesignView.vue`：剧本设计管理页。
-  - `DashboardStoryMemoryView.vue`：记忆变动可视化页。
+  - `DashboardStoryMemoryView.vue`：故事记忆阅读台，按“当前状态 / 本轮变化 / 历史翻页”组织会话信息，并补充世界名映射、前后对比卡与省略文本展开。
   - `views/console/*`：模型管理、模型选择、分析看板。
 
 #### `frontend/src/components/`
@@ -169,7 +169,7 @@ frontend/
 - `storySession.ts` 把统一故事记忆记录、摘要记忆、实体状态、`entity patch` 时间线、`world_update` 与分支树等会话级数据持久化到前端状态中。
 - `storySession.ts` 的旧摘要/实体/world/timeline getter 已逐步改为优先读取统一 `storyMemorySessionMap`，旧 map 主要保留为兼容桥接与回填来源。
 - `StoryMemorySidebar.vue` 产品层统一展示“故事记忆”，底层仍兼容实体快照、结构化 `world update` 与字段级 patch 时间线。
-- `DashboardStoryMemoryView.vue` 会聚合展示服务端 journal，并优先通过统一 `story_memory` 详情接口读取摘要、实体快照、`world_update` 与 patch 时间线。
+- `DashboardStoryMemoryView.vue` 会聚合展示服务端 journal，并优先通过统一 `story_memory` 详情接口读取摘要、实体快照、`world_update` 与 patch 时间线；页面默认隐藏复杂标识，优先输出可读中文摘要，补充世界名显示，并为历史事件提供分页浏览与省略文本展开。
 
 ### 3.5 前端高频改动落点
 

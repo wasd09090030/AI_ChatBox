@@ -28,6 +28,26 @@ export interface MemoryOperationGroup<TEvent extends MemoryUpdateEvent = MemoryU
 
 const OPERATION_WINDOW_MS = 5000
 
+const MEMORY_LAYER_LABELS: Record<string, string> = {
+  episodic: '剧情记录',
+  semantic: '摘要记忆',
+  entity_state: '实体状态',
+  profile: '角色画像',
+  procedural: '流程记忆',
+  system: '系统记录',
+}
+
+const MEMORY_ACTION_LABELS: Record<string, string> = {
+  created: '已创建',
+  merged: '已合并',
+  updated: '已更新',
+  reset: '已重置',
+  reindexed: '已重建索引',
+  superseded: '已被替换',
+  marked_stale: '已标记过期',
+  rebuilt: '已重建',
+}
+
 function sortEventsAsc<TEvent extends Pick<MemoryUpdateEvent, 'committed_at'>>(events: TEvent[]): TEvent[] {
   return [...events].sort((a, b) => a.committed_at.localeCompare(b.committed_at))
 }
@@ -142,6 +162,26 @@ export function getMemorySourceLabel(source: string): string {
       return '正文调整提交'
     default:
       return source || '未知来源'
+  }
+}
+
+export function getMemoryLayerLabel(layer: string): string {
+  return MEMORY_LAYER_LABELS[layer] ?? (layer || '未知层级')
+}
+
+export function getMemoryActionLabel(action: string): string {
+  return MEMORY_ACTION_LABELS[action] ?? (action || '未知动作')
+}
+
+export function getMemoryStatusLabel(status?: string | null): string {
+  switch (status) {
+    case 'failed':
+      return '失败'
+    case 'stale':
+      return '已过期'
+    case 'committed':
+    default:
+      return '正常'
   }
 }
 
