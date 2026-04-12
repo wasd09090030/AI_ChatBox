@@ -15,11 +15,11 @@ class StorySessionRepository:
     """为 story_sessions 与 story_session_messages 提供读写辅助。"""
 
     def __init__(self, db_path: str):
-        """功能：初始化对象依赖并设置默认运行状态。"""
+        """初始化会话仓储并绑定 SQLite 数据库路径。"""
         self._db_path = db_path
 
     def _connect(self) -> sqlite3.Connection:
-        """功能：处理 connect。"""
+        """创建 SQLite 连接并启用 Row 访问模式。"""
         conn = sqlite3.connect(self._db_path)
         conn.row_factory = sqlite3.Row
         return conn

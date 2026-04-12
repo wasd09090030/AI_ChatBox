@@ -13,7 +13,7 @@ from application.story_generation import (
     retrieve_rag_context,
 )
 
-# 变量作用：控制 import * 时可导出的公共符号。
+# 控制 import * 时可导出的公共符号。
 __all__ = [
     # 仅暴露稳定兼容 API；内部实现细节由子模块维护。
     "build_retrieval_query",

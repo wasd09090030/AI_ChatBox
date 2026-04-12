@@ -19,10 +19,10 @@ from models.story import Message, StoryContext
 from repositories.story_session_repository import StorySessionRepository
 from services.database import Database
 
-# 变量作用：模块日志记录器，用于输出运行诊断信息。
+# 模块日志器，用于记录会话缓存与持久化流程中的诊断信息。
 logger = logging.getLogger(__name__)
 
-# 变量作用：变量 _LRU_MAXSIZE，用于保存 lru maxsize 相关模块级状态。
+# 会话 LRU 缓存上限，超过后淘汰最久未访问项。
 _LRU_MAXSIZE = 50
 
 
@@ -30,7 +30,7 @@ class SessionManager:
     """管理故事会话生命周期，提供持久化与缓存协同。"""
 
     def __init__(self, db_path: Optional[str] = None):
-        """功能：初始化对象依赖并设置默认运行状态。"""
+        """初始化 SQLite 依赖、会话仓储与内存缓存。"""
         self.db_path = db_path or settings.database_path
         Database(self.db_path)
         self._cache: OrderedDict[str, StoryContext] = OrderedDict()

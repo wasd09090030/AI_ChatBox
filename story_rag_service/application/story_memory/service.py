@@ -1,4 +1,7 @@
-"""文件说明：后端应用层用例编排。"""
+"""故事记忆读模型服务。
+
+聚合摘要、运行时、实体状态与记忆时间线，返回统一 story_memory 快照。
+"""
 
 from __future__ import annotations
 
@@ -20,7 +23,7 @@ class StoryMemoryService:
         story_runtime_manager=None,
         entity_state_event_replay_service=None,
     ):
-        """功能：初始化对象依赖并设置默认运行状态。"""
+        """注入 story_memory 聚合所需依赖。"""
         self.session_manager = session_manager
         self.summary_memory_manager = summary_memory_manager
         self.story_runtime_manager = story_runtime_manager
@@ -35,7 +38,7 @@ class StoryMemoryService:
         timeline_page: int = 1,
         timeline_page_size: int = 50,
     ) -> Dict[str, Any]:
-        """功能：获取故事记忆快照。"""
+        """组装并返回故事记忆快照（含时间线分页）。"""
         resolved_story_id = self._resolve_story_id(session_id=session_id, explicit_story_id=story_id)
         session_metadata = self._load_session_metadata(session_id)
         summary_snapshot = self._load_summary_snapshot(session_id)
@@ -78,7 +81,7 @@ class StoryMemoryService:
         session_id: str,
         explicit_story_id: Optional[str],
     ) -> Optional[str]:
-        """功能：解析并返回故事ID。"""
+        """解析故事 ID（优先显式值，回退 session 推导）。"""
         if explicit_story_id:
             return str(explicit_story_id)
         if self.story_runtime_manager:
@@ -86,19 +89,19 @@ class StoryMemoryService:
         return None
 
     def _load_session_metadata(self, session_id: str) -> Optional[Dict[str, Any]]:
-        """功能：加载会话 metadata。"""
+        """读取会话元数据（如 world_id）。"""
         if not self.session_manager:
             return None
         return self.session_manager.get_session_metadata(session_id)
 
     def _load_summary_snapshot(self, session_id: str) -> Optional[Dict[str, Any]]:
-        """功能：加载摘要快照。"""
+        """读取摘要记忆快照。"""
         if not self.summary_memory_manager:
             return None
         return self.summary_memory_manager.get_summary(session_id)
 
     def _load_runtime_snapshot(self, story_id: Optional[str]) -> Dict[str, Any]:
-        """功能：加载运行时快照。"""
+        """读取剧本运行时快照并转为 JSON 结构。"""
         if not story_id or not self.story_runtime_manager:
             return {}
         runtime_state = self.story_runtime_manager.get_runtime_state(story_id)
@@ -112,7 +115,7 @@ class StoryMemoryService:
         story_id: Optional[str],
         session_id: str,
     ) -> Optional[Dict[str, Any]]:
-        """功能：加载实体快照。"""
+        """通过事件回放读取实体状态快照。"""
         if not story_id or not self.entity_state_event_replay_service:
             return None
         replay_result = self.entity_state_event_replay_service.replay_story_state(

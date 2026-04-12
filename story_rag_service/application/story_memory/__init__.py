@@ -11,7 +11,7 @@ from .models import (
 )
 from .service import StoryMemoryService
 
-# 变量作用：控制 import * 时可导出的公共符号。
+# 控制 import * 时可导出的公共符号。
 __all__ = [
     "build_story_memory_payload",
     "StoryMemoryEntityView",

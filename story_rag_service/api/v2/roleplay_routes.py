@@ -9,7 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from api.service_context import ServiceContainer, get_services
 from models.roleplay import PersonaProfile, PersonaProfileCreate, PersonaProfileUpdate, StoryState, StoryStateUpdate
 
-# 变量作用：FastAPI 路由注册器，用于挂载本模块接口。
+# FastAPI 路由注册器，用于挂载本模块接口。
 router = APIRouter()
 
 @router.get("/roleplay/personas", response_model=List[PersonaProfile])

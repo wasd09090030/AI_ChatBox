@@ -12,7 +12,7 @@ from services.roleplay_profiles.db import RoleplaySQLiteStore
 
 
 def row_to_persona(row: sqlite3.Row) -> PersonaProfile:
-    """功能：处理 row to 人格卡。"""
+    """将 persona_profiles 行记录映射为 PersonaProfile。"""
     return PersonaProfile(
         id=row["id"],
         name=row["name"],
@@ -26,7 +26,7 @@ def row_to_persona(row: sqlite3.Row) -> PersonaProfile:
 
 
 def row_to_story_state(row: sqlite3.Row) -> StoryState:
-    """功能：处理 row to 故事状态。"""
+    """将 story_states 行记录映射为 StoryState。"""
     return StoryState(
         session_id=row["session_id"],
         chapter=row["chapter"],

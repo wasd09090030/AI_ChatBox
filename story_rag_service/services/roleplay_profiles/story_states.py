@@ -14,19 +14,19 @@ from services.roleplay_profiles.mappers import row_to_story_state
 
 
 class StoryStateStore:
-    """作用：定义 StoryStateStore 类型，承载本模块核心状态与行为。"""
+    """剧情状态仓储服务（story_states 表）。"""
     def __init__(self, db: RoleplaySQLiteStore):
-        """功能：初始化对象依赖并设置默认运行状态。"""
+        """注入底层 SQLite 存储对象。"""
         self._db = db
 
     def get(self, session_id: str) -> Optional[StoryState]:
-        """功能：获取目标对象。"""
+        """按会话 ID 查询剧情状态。"""
         with self._db.connect() as conn:
             row = conn.execute("SELECT * FROM story_states WHERE session_id = ?", (session_id,)).fetchone()
         return row_to_story_state(row) if row else None
 
     def upsert(self, session_id: str, data: StoryStateUpdate) -> StoryState:
-        """功能：新增或更新目标对象。"""
+        """新增或更新会话剧情状态并返回最新快照。"""
         existing = self.get(session_id)
         payload = data.model_dump(exclude_unset=True)
 

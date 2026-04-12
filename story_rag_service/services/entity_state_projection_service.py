@@ -64,7 +64,7 @@ class EntityStateProjectionService:
         return sorted(state_map.values(), key=lambda item: item.display_name)
 
     def _apply_patch(self, snapshot: EntityStateSnapshot, patch: EntityStatePatch) -> None:
-        """功能：应用 patch。"""
+        """将单条 patch 变更写入实体快照并更新元信息。"""
         self._mutate_field(snapshot, patch.field_name, patch.op, patch.value)
         snapshot.last_source_turn = patch.source_turn
         snapshot.updated_at = datetime.now()
@@ -74,7 +74,7 @@ class EntityStateProjectionService:
             snapshot.display_name = patch.entity_name
 
     def _apply_event(self, snapshot: EntityStateSnapshot, event: EntityStateEventRecord) -> None:
-        """功能：应用事件。"""
+        """将事件记录回放到快照，重建字段与时间线状态。"""
         self._mutate_field(snapshot, event.field_name, event.op, event.value)
         snapshot.last_source_turn = event.source_turn
         snapshot.updated_at = self._normalize_datetime(event.committed_at)
@@ -84,7 +84,7 @@ class EntityStateProjectionService:
             snapshot.display_name = event.entity_name
 
     def _mutate_field(self, snapshot: EntityStateSnapshot, field_name: str, op: str, value: Any) -> None:
-        """功能：处理 mutate field。"""
+        """按操作语义更新字段，兼容列表字段与标量字段。"""
         if field_name in self._LIST_FIELDS:
             current = list(getattr(snapshot, field_name) or [])
             normalized_values = self._normalize_list_values(value)
@@ -109,7 +109,7 @@ class EntityStateProjectionService:
 
     @staticmethod
     def _normalize_scalar_value(value: Any) -> Any:
-        """功能：标准化 scalar value。"""
+        """将标量值归一化为空值或去空白字符串。"""
         if value is None:
             return None
         if isinstance(value, str):
@@ -119,7 +119,7 @@ class EntityStateProjectionService:
 
     @staticmethod
     def _normalize_list_values(value: Any) -> List[str]:
-        """功能：标准化 list values。"""
+        """将输入统一为去重后的字符串列表。"""
         if value is None:
             return []
         if isinstance(value, list):
@@ -135,7 +135,7 @@ class EntityStateProjectionService:
 
     @staticmethod
     def _append_unique(items: List[str], value: str, *, limit: int | None = None) -> None:
-        """功能：处理 append unique。"""
+        """仅在不存在时追加元素，并按上限裁剪最旧内容。"""
         text = str(value or "").strip()
         if not text:
             return
@@ -146,7 +146,7 @@ class EntityStateProjectionService:
 
     @staticmethod
     def _normalize_datetime(value: Any) -> datetime:
-        """功能：标准化 datetime。"""
+        """将多种时间表示转换为 datetime，失败时回退当前时间。"""
         if isinstance(value, datetime):
             return value
         text = str(value or "").strip()

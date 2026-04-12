@@ -1,5 +1,6 @@
-"""
-Story repository abstractions and implementations.
+"""故事仓储接口与实现。
+
+提供 JSON 与 SQLite 两种后端，统一管理故事对象的持久化与查询。
 """
 
 import json
@@ -11,41 +12,41 @@ from models.stored_story import StoredStory
 
 
 class StoryRepository:
-    """作用：定义 StoryRepository 服务对象，用于封装对应领域流程。"""
+    """故事仓储抽象接口。"""
     def save(self, story: StoredStory) -> StoredStory:
-        """功能：保存目标对象。"""
+        """新增或更新故事记录，并返回最新对象。"""
         raise NotImplementedError
 
     def get(self, story_id: str) -> Optional[StoredStory]:
-        """功能：获取目标对象。"""
+        """按故事 ID 查询单条记录。"""
         raise NotImplementedError
 
     def list_all(self, world_id: Optional[str] = None) -> List[StoredStory]:
-        """功能：查询并返回 all列表。"""
+        """查询故事列表，可按 world_id 过滤。"""
         raise NotImplementedError
 
     def delete(self, story_id: str) -> bool:
-        """功能：删除目标对象。"""
+        """按 ID 删除故事，返回是否删除成功。"""
         raise NotImplementedError
 
     def delete_by_world(self, world_id: str) -> int:
-        """功能：删除 by 世界观。"""
+        """删除指定世界观下的全部故事，返回删除数量。"""
         raise NotImplementedError
 
     def count(self) -> int:
-        """功能：处理 count。"""
+        """返回故事总数。"""
         raise NotImplementedError
 
 
 class JsonStoryRepository(StoryRepository):
-    """作用：定义 JsonStoryRepository 服务对象，用于封装对应领域流程。"""
+    """基于 JSON 文件的故事仓储实现。"""
     def __init__(self, storage_path: str = "./data/stories.json"):
-        """功能：初始化对象依赖并设置默认运行状态。"""
+        """初始化 JSON 存储路径并确保父目录存在。"""
         self.storage_path = Path(storage_path)
         self.storage_path.parent.mkdir(parents=True, exist_ok=True)
 
     def _load_all(self) -> List[StoredStory]:
-        """功能：加载 all。"""
+        """从 JSON 文件加载全部故事记录。"""
         if not self.storage_path.exists():
             return []
         with open(self.storage_path, "r", encoding="utf-8") as file:
@@ -53,24 +54,24 @@ class JsonStoryRepository(StoryRepository):
         return [StoredStory(**item) for item in data]
 
     def _save_all(self, stories: List[StoredStory]) -> None:
-        """功能：保存 all。"""
+        """将全部故事记录覆写保存到 JSON 文件。"""
         with open(self.storage_path, "w", encoding="utf-8") as file:
             json.dump([story.model_dump(mode="json") for story in stories], file, ensure_ascii=False, indent=2)
 
     def save(self, story: StoredStory) -> StoredStory:
-        """功能：保存目标对象。"""
+        """以 ID 为键保存故事（存在则更新，不存在则新增）。"""
         stories = {item.id: item for item in self._load_all()}
         stories[story.id] = story
         self._save_all(list(stories.values()))
         return story
 
     def get(self, story_id: str) -> Optional[StoredStory]:
-        """功能：获取目标对象。"""
+        """按 ID 从 JSON 记录中查询故事。"""
         stories = {item.id: item for item in self._load_all()}
         return stories.get(story_id)
 
     def list_all(self, world_id: Optional[str] = None) -> List[StoredStory]:
-        """功能：查询并返回 all列表。"""
+        """返回故事列表，并按更新时间倒序排列。"""
         stories = self._load_all()
         if world_id:
             stories = [story for story in stories if story.world_id == world_id]
@@ -78,7 +79,7 @@ class JsonStoryRepository(StoryRepository):
         return stories
 
     def delete(self, story_id: str) -> bool:
-        """功能：删除目标对象。"""
+        """按 ID 删除 JSON 中的故事记录。"""
         stories = self._load_all()
         original_count = len(stories)
         stories = [story for story in stories if story.id != story_id]
@@ -88,7 +89,7 @@ class JsonStoryRepository(StoryRepository):
         return True
 
     def delete_by_world(self, world_id: str) -> int:
-        """功能：删除 by 世界观。"""
+        """删除指定 world_id 下的 JSON 故事记录。"""
         stories = self._load_all()
         retained = [story for story in stories if story.world_id != world_id]
         deleted_count = len(stories) - len(retained)
@@ -97,24 +98,24 @@ class JsonStoryRepository(StoryRepository):
         return deleted_count
 
     def count(self) -> int:
-        """功能：处理 count。"""
+        """统计 JSON 存储中的故事数量。"""
         return len(self._load_all())
 
 
 class SqliteStoryRepository(StoryRepository):
-    """作用：定义 SqliteStoryRepository 服务对象，用于封装对应领域流程。"""
+    """基于 SQLite 的故事仓储实现。"""
     def __init__(self, db_path: str = "./data/chatbox.db"):
-        """功能：初始化对象依赖并设置默认运行状态。"""
+        """初始化数据库路径并确保 stories 表和索引可用。"""
         self.db_path = db_path
         Path(db_path).parent.mkdir(parents=True, exist_ok=True)
         self._init_table()
 
     def _connect(self):
-        """功能：处理 connect。"""
+        """创建 SQLite 连接。"""
         return sqlite3.connect(self.db_path)
 
     def _init_table(self):
-        """功能：处理 init table。"""
+        """初始化 stories 表与查询索引。"""
         with self._connect() as conn:
             cursor = conn.cursor()
             cursor.execute(
@@ -132,7 +133,7 @@ class SqliteStoryRepository(StoryRepository):
             conn.commit()
 
     def save(self, story: StoredStory) -> StoredStory:
-        """功能：保存目标对象。"""
+        """写入或更新 stories 表中的故事记录。"""
         payload = json.dumps(story.model_dump(mode="json"), ensure_ascii=False)
         with self._connect() as conn:
             cursor = conn.cursor()
@@ -151,7 +152,7 @@ class SqliteStoryRepository(StoryRepository):
         return story
 
     def get(self, story_id: str) -> Optional[StoredStory]:
-        """功能：获取目标对象。"""
+        """按 ID 查询 stories 表中的单条故事。"""
         with self._connect() as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT payload FROM stories WHERE id = ?", (story_id,))
@@ -161,7 +162,7 @@ class SqliteStoryRepository(StoryRepository):
         return StoredStory(**json.loads(row[0]))
 
     def list_all(self, world_id: Optional[str] = None) -> List[StoredStory]:
-        """功能：查询并返回 all列表。"""
+        """查询故事列表，并按更新时间倒序返回。"""
         with self._connect() as conn:
             cursor = conn.cursor()
             if world_id:
@@ -175,7 +176,7 @@ class SqliteStoryRepository(StoryRepository):
         return [StoredStory(**json.loads(row[0])) for row in rows]
 
     def delete(self, story_id: str) -> bool:
-        """功能：删除目标对象。"""
+        """按 ID 删除 stories 表记录并返回结果。"""
         with self._connect() as conn:
             cursor = conn.cursor()
             cursor.execute("DELETE FROM stories WHERE id = ?", (story_id,))
@@ -184,7 +185,7 @@ class SqliteStoryRepository(StoryRepository):
         return deleted
 
     def delete_by_world(self, world_id: str) -> int:
-        """功能：删除 by 世界观。"""
+        """删除指定 world_id 下的 stories 记录并返回数量。"""
         with self._connect() as conn:
             cursor = conn.cursor()
             cursor.execute("DELETE FROM stories WHERE world_id = ?", (world_id,))
@@ -193,7 +194,7 @@ class SqliteStoryRepository(StoryRepository):
         return int(deleted)
 
     def count(self) -> int:
-        """功能：处理 count。"""
+        """统计 stories 表中的记录总数。"""
         with self._connect() as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT COUNT(1) FROM stories")

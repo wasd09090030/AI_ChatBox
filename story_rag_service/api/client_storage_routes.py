@@ -15,10 +15,10 @@ from pydantic import BaseModel
 
 from config import settings
 
-# 变量作用：模块日志记录器，用于输出运行诊断信息。
+# 模块日志器，用于记录客户端存储接口的异常与诊断信息。
 logger = logging.getLogger(__name__)
 
-# 变量作用：FastAPI 路由注册器，用于挂载本模块接口。
+# 客户端存储路由，统一前缀并归类到 client-storage 标签。
 router = APIRouter(prefix="/client-storage", tags=["client-storage"])
 
 # ---------------------------------------------------------------------------
@@ -26,12 +26,12 @@ router = APIRouter(prefix="/client-storage", tags=["client-storage"])
 # ---------------------------------------------------------------------------
 
 def _db_path() -> str:
-    """功能：处理数据库路径。"""
+    """返回客户端存储所使用的 SQLite 数据库路径。"""
     return settings.database_path
 
 
 def _ensure_table(conn: sqlite3.Connection) -> None:
-    """功能：确保 table。"""
+    """确保 client_storage 表存在，首次访问时自动创建。"""
     conn.execute(
         """
         CREATE TABLE IF NOT EXISTS client_storage (
@@ -57,7 +57,7 @@ def _connect() -> sqlite3.Connection:
 # ---------------------------------------------------------------------------
 
 class StorageSetRequest(BaseModel):
-    """作用：定义 StorageSetRequest 数据结构，用于约束字段语义与序列化格式。"""
+    """写入/覆盖存储值时使用的请求体。"""
     value: str
 
 

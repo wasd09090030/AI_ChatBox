@@ -1,5 +1,6 @@
-"""
-SQLite repository for current entity state snapshots.
+"""实体状态快照仓储（SQLite 实现）。
+
+维护每个故事当前时刻的实体状态投影结果，支持按故事/会话查询与覆盖写入。
 """
 
 from __future__ import annotations
@@ -13,21 +14,21 @@ from models.entity_state import EntityStateSnapshot
 
 
 class SqliteEntityStateRepository:
-    """作用：定义 SqliteEntityStateRepository 服务对象，用于封装对应领域流程。"""
+    """基于 SQLite 的实体状态快照仓储。"""
     def __init__(self, db_path: str):
-        """功能：初始化对象依赖并设置默认运行状态。"""
+        """初始化数据库路径并确保快照表结构可用。"""
         self.db_path = db_path
         Path(db_path).parent.mkdir(parents=True, exist_ok=True)
         self._init_table()
 
     def _connect(self) -> sqlite3.Connection:
-        """功能：处理 connect。"""
+        """创建 SQLite 连接并启用 Row 访问模式。"""
         conn = sqlite3.connect(self.db_path)
         conn.row_factory = sqlite3.Row
         return conn
 
     def _init_table(self) -> None:
-        """功能：处理 init table。"""
+        """初始化快照表与常用查询索引。"""
         with self._connect() as conn:
             cursor = conn.cursor()
             cursor.execute(
@@ -64,7 +65,7 @@ class SqliteEntityStateRepository:
         session_id: str,
         states: List[EntityStateSnapshot],
     ) -> List[EntityStateSnapshot]:
-        """功能：处理 replace 故事 states。"""
+        """用新快照全量替换指定故事的实体状态。"""
         with self._connect() as conn:
             cursor = conn.cursor()
             cursor.execute(
@@ -103,7 +104,7 @@ class SqliteEntityStateRepository:
         *,
         entity_type: Optional[str] = None,
     ) -> List[EntityStateSnapshot]:
-        """功能：查询并返回 by 故事ID列表。"""
+        """按故事 ID 查询实体状态快照，可按实体类型过滤。"""
         with self._connect() as conn:
             cursor = conn.cursor()
             if entity_type:
@@ -135,7 +136,7 @@ class SqliteEntityStateRepository:
         *,
         entity_type: Optional[str] = None,
     ) -> List[EntityStateSnapshot]:
-        """功能：查询并返回 by 会话 ID列表。"""
+        """按会话 ID 查询实体状态快照，可按实体类型过滤。"""
         with self._connect() as conn:
             cursor = conn.cursor()
             if entity_type:
@@ -162,7 +163,7 @@ class SqliteEntityStateRepository:
         return [EntityStateSnapshot(**json.loads(row["payload"])) for row in rows]
 
     def delete_by_story_id(self, story_id: str) -> int:
-        """功能：删除 by 故事ID。"""
+        """删除指定故事下的所有实体状态快照并返回数量。"""
         with self._connect() as conn:
             cursor = conn.cursor()
             cursor.execute(

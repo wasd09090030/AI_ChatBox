@@ -1,4 +1,8 @@
-"""文件说明：后端应用层用例编排。"""
+"""记忆编排器。
+
+将 RAG 检索结果、角色画像、摘要记忆、剧本约束与实体状态快照
+组装为统一的 MemoryBundle，供生成主流程直接消费。
+"""
 
 from __future__ import annotations
 
@@ -13,7 +17,7 @@ from .providers import build_dialogue_controls, load_profile_snapshot, load_scri
 
 
 class MemoryOrchestrator:
-    """作用：定义 MemoryOrchestrator 服务对象，用于封装对应领域流程。"""
+    """聚合多来源上下文，构建分层记忆包。"""
     def __init__(
         self,
         *,
@@ -27,7 +31,7 @@ class MemoryOrchestrator:
         entity_state_event_replay_service=None,
         recent_message_count: int = 5,
     ):
-        """功能：初始化对象依赖并设置默认运行状态。"""
+        """注入记忆编排依赖，并设置最近消息窗口大小。"""
         self.lorebook_manager = lorebook_manager
         self.history_manager = history_manager
         self.world_manager = world_manager
@@ -48,7 +52,13 @@ class MemoryOrchestrator:
         assistant_weight: Optional[float] = None,
         log_prefix: str = "",
     ) -> MemoryOrchestratorResult:
-        """功能：构建记忆包。"""
+        """构建 MemoryBundle 并返回附带元信息。
+
+        返回内容包含：
+        1) 可直接注入提示词的分层记忆结构；
+        2) 当前 world_id；
+        3) 本轮激活日志 activation_logs。
+        """
         retrieved_contexts, retrieved_history, world_id, activation_logs = retrieve_rag_context(
             request=request,
             context=context,
@@ -140,7 +150,7 @@ class MemoryOrchestrator:
         }
 
     def _load_profile_snapshot(self, request: StoryGenerationRequest) -> Dict[str, Any]:
-        """功能：加载角色画像快照。"""
+        """加载角色画像快照（persona/character card/story state）。"""
         try:
             return load_profile_snapshot(self.roleplay_manager, request)
         except Exception:
@@ -148,7 +158,7 @@ class MemoryOrchestrator:
 
     @staticmethod
     def _build_dialogue_controls(request: StoryGenerationRequest) -> Dict[str, Any]:
-        """功能：构建对话控制参数。"""
+        """从请求中抽取关键角色对话控制参数。"""
         return build_dialogue_controls(request)
 
     def _load_script_guidance(
@@ -156,7 +166,7 @@ class MemoryOrchestrator:
         request: StoryGenerationRequest,
         activation_logs: List[Dict[str, Any]],
     ) -> Dict[str, Any]:
-        """功能：加载剧本指导信息。"""
+        """加载剧本指导信息，并记录激活日志。"""
         try:
             script_guidance = load_script_guidance(self.script_design_app, request)
         except Exception:
@@ -180,7 +190,7 @@ class MemoryOrchestrator:
         session_id: str,
         activation_logs: List[Dict[str, Any]],
     ) -> Optional[Dict[str, Any]]:
-        """功能：加载摘要记忆。"""
+        """按开关读取摘要记忆，并在命中时记录激活日志。"""
         if not self.summary_memory_manager or not settings.rp_summary_memory_enabled:
             return None
 
@@ -201,7 +211,10 @@ class MemoryOrchestrator:
         session_id: str,
         explicit_story_id: Optional[str],
     ) -> Optional[str]:
-        """功能：解析并返回故事ID。"""
+        """解析故事ID。
+
+        优先使用请求显式传入的 story_id；缺失时回退为 session_id 推导。
+        """
         if explicit_story_id:
             return str(explicit_story_id)
         if self.story_runtime_manager:
@@ -213,7 +226,7 @@ class MemoryOrchestrator:
         story_id: Optional[str],
         activation_logs: List[Dict[str, Any]],
     ) -> Optional[Dict[str, Any]]:
-        """功能：加载运行时快照。"""
+        """加载剧本运行时快照，并将关键信息写入激活日志。"""
         if not story_id or not self.story_runtime_manager:
             return None
         runtime_state = self.story_runtime_manager.get_runtime_state(story_id)
@@ -237,7 +250,7 @@ class MemoryOrchestrator:
         session_id: str,
         activation_logs: List[Dict[str, Any]],
     ) -> Optional[Dict[str, Any]]:
-        """功能：加载实体记忆。"""
+        """回放实体事件流并构建实体记忆快照。"""
         if not story_id or not self.entity_state_event_replay_service:
             return None
         replay_result = self.entity_state_event_replay_service.replay_story_state(

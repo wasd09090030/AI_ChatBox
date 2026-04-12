@@ -1,4 +1,7 @@
-"""SQLite repository for entity state event stream."""
+"""实体状态事件流仓储（SQLite 实现）。
+
+负责事件追加、查询和回放前筛选所需的删除能力。
+"""
 
 from __future__ import annotations
 
@@ -11,14 +14,14 @@ from models.entity_state_event import EntityStateEventRecord
 
 
 def _serialize_payload(value: Any) -> str | None:
-    """功能：序列化载荷。"""
+    """将 Python 对象序列化为 JSON 字符串。"""
     if value is None:
         return None
     return json.dumps(value, ensure_ascii=False)
 
 
 def _deserialize_payload(value: str | None) -> Any:
-    """功能：反序列化载荷。"""
+    """将 JSON 字符串还原为 Python 对象。"""
     if value is None or value == "":
         return None
     return json.loads(value)
@@ -28,19 +31,19 @@ class SqliteEntityStateEventRepository:
     """实体状态事件流仓储。"""
 
     def __init__(self, db_path: str):
-        """功能：初始化对象依赖并设置默认运行状态。"""
+        """初始化数据库路径并确保事件表结构可用。"""
         self.db_path = db_path
         Path(db_path).parent.mkdir(parents=True, exist_ok=True)
         self._init_table()
 
     def _connect(self) -> sqlite3.Connection:
-        """功能：处理 connect。"""
+        """创建 SQLite 连接并启用 Row 访问模式。"""
         conn = sqlite3.connect(self.db_path)
         conn.row_factory = sqlite3.Row
         return conn
 
     def _init_table(self) -> None:
-        """功能：处理 init table。"""
+        """初始化事件表与回放所需索引。"""
         with self._connect() as conn:
             cursor = conn.cursor()
             cursor.execute(
@@ -96,7 +99,7 @@ class SqliteEntityStateEventRepository:
             conn.commit()
 
     def append_events(self, events: Sequence[EntityStateEventRecord]) -> List[EntityStateEventRecord]:
-        """功能：处理 append 事件。"""
+        """批量追加事件记录（按 event_id 幂等覆盖）。"""
         if not events:
             return []
 
@@ -157,7 +160,7 @@ class SqliteEntityStateEventRepository:
         return list(events)
 
     def list_by_story_id(self, story_id: str) -> List[EntityStateEventRecord]:
-        """功能：查询并返回 by 故事ID列表。"""
+        """按 story_id 查询事件流（时间/序号正序）。"""
         return self._list(
             """
             SELECT *
@@ -169,7 +172,7 @@ class SqliteEntityStateEventRepository:
         )
 
     def list_by_session_id(self, session_id: str) -> List[EntityStateEventRecord]:
-        """功能：查询并返回 by 会话 ID列表。"""
+        """按 session_id 查询事件流（时间/序号正序）。"""
         return self._list(
             """
             SELECT *
@@ -181,7 +184,7 @@ class SqliteEntityStateEventRepository:
         )
 
     def list_by_operation_id(self, operation_id: str) -> List[EntityStateEventRecord]:
-        """功能：查询并返回 by 操作 ID列表。"""
+        """按 operation_id 查询同批次事件。"""
         return self._list(
             """
             SELECT *
@@ -193,7 +196,7 @@ class SqliteEntityStateEventRepository:
         )
 
     def delete_by_story_id(self, story_id: str) -> int:
-        """功能：删除 by 故事ID。"""
+        """删除指定故事的全部事件记录。"""
         with self._connect() as conn:
             cursor = conn.cursor()
             cursor.execute("DELETE FROM entity_state_events WHERE story_id = ?", (story_id,))
@@ -202,7 +205,7 @@ class SqliteEntityStateEventRepository:
         return int(deleted)
 
     def delete_by_story_id_after_turn(self, story_id: str, source_turn_gt: int) -> int:
-        """功能：删除 by 故事ID after 轮次。"""
+        """删除指定故事中 source_turn 大于阈值的事件。"""
         with self._connect() as conn:
             cursor = conn.cursor()
             cursor.execute(
@@ -219,7 +222,7 @@ class SqliteEntityStateEventRepository:
         return int(deleted)
 
     def delete_by_session_id_after_turn(self, session_id: str, source_turn_gt: int) -> int:
-        """功能：删除 by 会话 ID after 轮次。"""
+        """删除指定会话中 source_turn 大于阈值的事件。"""
         with self._connect() as conn:
             cursor = conn.cursor()
             cursor.execute(
@@ -236,14 +239,14 @@ class SqliteEntityStateEventRepository:
         return int(deleted)
 
     def _list(self, sql: str, params: tuple[Any, ...]) -> List[EntityStateEventRecord]:
-        """功能：查询并返回目标对象列表。"""
+        """执行查询并映射为事件模型列表。"""
         with self._connect() as conn:
             rows = conn.execute(sql, params).fetchall()
         return [self._row_to_model(row) for row in rows]
 
     @staticmethod
     def _row_to_model(row: sqlite3.Row) -> EntityStateEventRecord:
-        """功能：处理 row to 模型。"""
+        """将数据库行对象转换为 EntityStateEventRecord。"""
         return EntityStateEventRecord(
             event_id=row["event_id"],
             story_id=row["story_id"],

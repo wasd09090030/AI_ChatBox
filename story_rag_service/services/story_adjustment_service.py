@@ -19,12 +19,12 @@ class StoryAdjustmentService:
     """生成润色后的替换文本，不修改会话状态。"""
 
     def __init__(self, story_manager, user_manager=None):
-        """功能：初始化对象依赖并设置默认运行状态。"""
+        """注入故事读取与用户配置能力，供润色流程复用。"""
         self.story_manager = story_manager
         self.user_manager = user_manager
 
     async def polish_selection(self, request, *, user_id: Optional[str] = None) -> dict[str, Any]:
-        """功能：处理 polish selection。"""
+        """按预设风格改写用户选中文本，并保持剧情事实不变。"""
         story = self.story_manager.get_story(request.story_id)
         if story is None:
             raise LookupError(f"Story '{request.story_id}' not found")

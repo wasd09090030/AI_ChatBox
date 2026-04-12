@@ -18,7 +18,7 @@ class EntityPatchApplier:
     """负责把 patch 转为事件并物化到当前快照。"""
 
     def __init__(self, projection_service: EntityStateProjectionService):
-        """功能：初始化对象依赖并设置默认运行状态。"""
+        """注入实体状态投影服务，复用字段级变更应用逻辑。"""
         self.projection_service = projection_service
 
     def apply(
@@ -32,7 +32,7 @@ class EntityPatchApplier:
         operation_id: str | None = None,
         sequence_start: int = 1,
     ) -> EntityPatchApplyResult:
-        """功能：应用目标对象。"""
+        """将 patch 列表应用到快照，并生成可落库的事件序列。"""
         updated_states = self.projection_service.apply_patches(
             story_id=story_id,
             session_id=session_id,

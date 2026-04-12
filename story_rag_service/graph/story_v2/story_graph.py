@@ -21,7 +21,7 @@ from .runtime import (
     run_story_graph,
 )
 
-# 变量作用：控制 import * 时可导出的公共符号。
+# 控制 import * 时可导出的公共符号。
 __all__ = [
     "_extract_clue_candidates",
     "_derive_state_update",

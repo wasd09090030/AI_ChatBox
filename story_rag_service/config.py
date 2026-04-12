@@ -5,9 +5,9 @@ from pydantic import field_validator
 from pathlib import Path
 from typing import Optional
 
-# 变量作用：路径变量 BASE_DIR，用于定位文件系统资源。
+# 路径变量 BASE_DIR，用于定位文件系统资源。
 BASE_DIR = Path(__file__).resolve().parent
-# 变量作用：路径变量 DATA_DIR，用于定位文件系统资源。
+# 路径变量 DATA_DIR，用于定位文件系统资源。
 DATA_DIR = BASE_DIR / "data"
 
 
@@ -103,7 +103,7 @@ class Settings(BaseSettings):
         return str((BASE_DIR / path).resolve())
     
     class Config:
-        """作用：定义配置读取规则与环境变量加载行为。"""
+        """Pydantic Settings 配置：指定环境变量文件与大小写策略。"""
         env_file = str(BASE_DIR / ".env")
         case_sensitive = False
 

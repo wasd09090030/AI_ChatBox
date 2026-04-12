@@ -8,7 +8,7 @@ import sys
 from sqlalchemy import create_engine
 from alembic import context
 
-# 变量作用：变量 config，用于保存配置相关模块级状态。
+# 变量 config，用于保存配置相关模块级状态。
 config = context.config
 
 if config.config_file_name is not None:
@@ -22,7 +22,7 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from config import settings  # noqa: E402
 
-# 变量作用：路径变量 db_path，用于定位文件系统资源。
+# 路径变量 db_path，用于定位文件系统资源。
 db_path = Path(settings.database_path).resolve()
 config.set_main_option("sqlalchemy.url", f"sqlite:///{db_path.as_posix()}")
 

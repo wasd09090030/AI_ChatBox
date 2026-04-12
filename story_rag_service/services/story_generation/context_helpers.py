@@ -14,7 +14,7 @@ from models.roleplay import PersonaProfile
 from models.story import Message, RetrievedContext, StoryGenerationRequest
 import logging
 
-# 变量作用：模块日志记录器，用于输出运行诊断信息。
+# 模块日志器，用于记录画像与剧本上下文加载失败等诊断信息。
 logger = logging.getLogger(__name__)
 
 
@@ -30,7 +30,7 @@ def _build_default_self_persona() -> Dict[str, Any]:
 
 
 def _resolve_context_score(context_item: Dict[str, Any]) -> float:
-    """功能：解析并返回上下文 score。"""
+    """兼容不同字段名，解析命中项相关性分数。"""
     raw_score = context_item.get("relevance_score", context_item.get("score", 0.0))
     try:
         return float(raw_score)

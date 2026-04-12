@@ -15,18 +15,18 @@ class RoleplaySQLiteStore:
     """封装角色扮演资料相关的 SQLite 基础操作。"""
 
     def __init__(self, db_path: Optional[str] = None):
-        """功能：初始化对象依赖并设置默认运行状态。"""
+        """初始化数据库路径并确保角色扮演表结构就绪。"""
         self.db_path = db_path or settings.database_path
         self.init_tables()
 
     def connect(self) -> sqlite3.Connection:
-        """功能：处理 connect。"""
+        """创建 SQLite 连接并启用 Row 访问模式。"""
         conn = sqlite3.connect(self.db_path)
         conn.row_factory = sqlite3.Row
         return conn
 
     def init_tables(self) -> None:
-        """功能：处理 init tables。"""
+        """初始化角色卡、人设与剧情状态三张核心表。"""
         with self.connect() as conn:
             cursor = conn.cursor()
             cursor.execute(
@@ -77,7 +77,7 @@ class RoleplaySQLiteStore:
 
     @staticmethod
     def parse_json(value: Optional[str], fallback: Any) -> Any:
-        """功能：解析 JSON。"""
+        """安全解析 JSON 字段，异常时回退到默认值。"""
         if value is None:
             return fallback
         try:

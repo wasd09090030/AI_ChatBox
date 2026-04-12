@@ -9,22 +9,22 @@ import uuid
 from pydantic import BaseModel, Field, model_validator
 
 
-# 变量作用：变量 ScriptDesignStatus，用于保存 scriptdesignstatus 相关模块级状态。
+# 剧本设计状态枚举，用于标识草稿/启用/归档。
 ScriptDesignStatus = Literal["draft", "active", "archived"]
-# 变量作用：变量 EventNodeStatus，用于保存 eventnodestatus 相关模块级状态。
+# 事件节点执行状态枚举。
 EventNodeStatus = Literal["pending", "active", "completed", "skipped"]
-# 变量作用：变量 EventNodeType，用于保存 eventnodetype 相关模块级状态。
+# 事件节点类型枚举。
 EventNodeType = Literal["reveal", "conflict", "transition", "climax", "recovery", "setup", "custom"]
-# 变量作用：变量 ForeshadowStatus，用于保存 foreshadowstatus 相关模块级状态。
+# 伏笔状态枚举。
 ForeshadowStatus = Literal["planted", "hinted", "paid_off", "abandoned"]
-# 变量作用：变量 ForeshadowCategory，用于保存 foreshadowcategory 相关模块级状态。
+# 伏笔类别枚举。
 ForeshadowCategory = Literal["object", "identity", "prophecy", "relationship", "mystery", "rule", "custom"]
-# 变量作用：变量 ImportanceLevel，用于保存 importancelevel 相关模块级状态。
+# 重要性等级枚举。
 ImportanceLevel = Literal["low", "medium", "high"]
 
 
 class ScriptGenerationPolicy(BaseModel):
-    """作用：定义 ScriptGenerationPolicy 类型，承载本模块核心状态与行为。"""
+    """剧本生成策略开关与偏好。"""
     enforce_stage_order: bool = False
     enforce_pending_event: bool = False
     enforce_foreshadow_tracking: bool = False
@@ -34,7 +34,7 @@ class ScriptGenerationPolicy(BaseModel):
 
 
 class ScriptStage(BaseModel):
-    """作用：定义 ScriptStage 类型，承载本模块核心状态与行为。"""
+    """剧本阶段节点定义。"""
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     title: str = Field(..., min_length=1)
     order: int = Field(default=0, ge=0)
@@ -49,7 +49,7 @@ class ScriptStage(BaseModel):
 
 
 class ScriptEventNode(BaseModel):
-    """作用：定义 ScriptEventNode 类型，承载本模块核心状态与行为。"""
+    """阶段内事件节点定义。"""
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     stage_id: str
     title: str = Field(..., min_length=1)
@@ -72,7 +72,7 @@ class ScriptEventNode(BaseModel):
 
 
 class ForeshadowRecord(BaseModel):
-    """作用：定义 ForeshadowRecord 数据结构，用于约束字段语义与序列化格式。"""
+    """伏笔记录模型。"""
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     title: str = Field(..., min_length=1)
     content: str = Field(..., min_length=1)
@@ -88,7 +88,7 @@ class ForeshadowRecord(BaseModel):
 
 
 class ScriptDesign(BaseModel):
-    """作用：定义 ScriptDesign 类型，承载本模块核心状态与行为。"""
+    """完整剧本设计聚合根。"""
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     world_id: str
     title: str = Field(..., min_length=1)
@@ -111,7 +111,7 @@ class ScriptDesign(BaseModel):
 
 
 class ScriptDesignCreate(BaseModel):
-    """作用：定义 ScriptDesignCreate 类型，承载本模块核心状态与行为。"""
+    """新建剧本设计请求模型。"""
     world_id: str
     title: str = Field(..., min_length=1)
     summary: Optional[str] = None
@@ -130,7 +130,7 @@ class ScriptDesignCreate(BaseModel):
 
 
 class ScriptDesignUpdate(BaseModel):
-    """作用：定义 ScriptDesignUpdate 类型，承载本模块核心状态与行为。"""
+    """更新剧本设计请求模型（支持局部更新）。"""
     title: Optional[str] = Field(default=None, min_length=1)
     summary: Optional[str] = None
     logline: Optional[str] = None
@@ -149,7 +149,7 @@ class ScriptDesignUpdate(BaseModel):
 
     @model_validator(mode="after")
     def ensure_non_empty_patch(self) -> "ScriptDesignUpdate":
-        """功能：确保 non empty patch。"""
+        """校验更新请求至少包含一个字段。"""
         if not self.model_fields_set:
             raise ValueError("At least one field must be provided for update")
         return self

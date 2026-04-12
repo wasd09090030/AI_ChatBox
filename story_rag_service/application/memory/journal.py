@@ -12,10 +12,10 @@ from config import settings
 from .events import finalize_memory_update_events
 from .models import MemoryUpdateEvent
 
-# 变量作用：模块日志记录器，用于输出运行诊断信息。
+# 模块日志记录器，用于输出运行诊断信息。
 logger = logging.getLogger(__name__)
 
-# 变量作用：变量 _MAX_PAYLOAD_LENGTH，用于保存 max 载荷 length 相关模块级状态。
+# 变量 _MAX_PAYLOAD_LENGTH，用于保存 max 载荷 length 相关模块级状态。
 _MAX_PAYLOAD_LENGTH = 4000
 
 

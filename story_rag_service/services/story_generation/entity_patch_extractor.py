@@ -20,7 +20,7 @@ class EntityPatchExtractor:
         generated_text: str,
         current_states: Iterable[EntityStateSnapshot],
     ) -> str:
-        """功能：构建 prompt。"""
+        """组装实体状态抽取提示词，附带当前实体快照作为对照。"""
         return build_entity_patch_extraction_prompt(
             user_input=user_input,
             generated_text=generated_text,
@@ -35,7 +35,7 @@ class EntityPatchExtractor:
         generated_text: str,
         current_states: Iterable[EntityStateSnapshot],
     ) -> EntityPatchExtractionResult:
-        """功能：处理 extract async。"""
+        """异步调用 LLM 执行抽取，并返回统一的结构化结果。"""
         prompt = self.build_prompt(
             user_input=user_input,
             generated_text=generated_text,
@@ -52,7 +52,7 @@ class EntityPatchExtractor:
         generated_text: str,
         current_states: Iterable[EntityStateSnapshot],
     ) -> EntityPatchExtractionResult:
-        """功能：处理 extract sync。"""
+        """同步调用 LLM 执行抽取，并返回统一的结构化结果。"""
         prompt = self.build_prompt(
             user_input=user_input,
             generated_text=generated_text,
@@ -62,7 +62,7 @@ class EntityPatchExtractor:
         return self._parse_result(getattr(response, "content", response))
 
     def _parse_result(self, raw_content: Any) -> EntityPatchExtractionResult:
-        """功能：解析 result。"""
+        """解析 LLM 输出，容错处理空响应、坏 JSON 与 schema 校验失败。"""
         text = str(raw_content or "").strip()
         if not text:
             return EntityPatchExtractionResult(warnings=["entity_patch extractor returned empty content"])
@@ -83,7 +83,7 @@ class EntityPatchExtractor:
 
     @staticmethod
     def _strip_markdown_fence(text: str) -> str:
-        """功能：处理 strip markdown fence。"""
+        """移除 markdown 代码围栏，便于后续按 JSON 解析。"""
         stripped = text.strip()
         if stripped.startswith("```") and stripped.endswith("```"):
             lines = stripped.splitlines()

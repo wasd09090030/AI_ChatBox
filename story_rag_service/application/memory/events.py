@@ -108,7 +108,7 @@ def build_memory_update_event(
 
 
 def summarize_summary_snapshot(snapshot: Optional[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
-    """功能：处理 summarize 摘要快照。"""
+    """提炼摘要快照关键字段，生成用于日志/事件记录的精简视图。"""
     if not snapshot:
         return None
 

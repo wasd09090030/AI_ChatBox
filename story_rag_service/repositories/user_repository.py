@@ -1,6 +1,4 @@
-"""
-User repository abstractions and SQLite implementation.
-"""
+"""用户仓储抽象与 SQLite 实现。"""
 
 from datetime import datetime
 from typing import Optional
@@ -10,25 +8,25 @@ from services.database import Database
 
 
 class UserRepository:
-    """作用：定义 UserRepository 服务对象，用于封装对应领域流程。"""
+    """用户与用户设置仓储抽象接口。"""
     def get_user(self, user_id: str) -> Optional[User]:
-        """功能：获取用户。"""
+        """查询并返回用户聚合对象。"""
         raise NotImplementedError
 
     def create_user_with_defaults(self, user_id: str) -> None:
-        """功能：创建用户 with defaults。"""
+        """创建用户及默认设置记录。"""
         raise NotImplementedError
 
     def update_settings(self, user_id: str, settings_update: UserSettingsUpdate) -> bool:
-        """功能：更新 settings。"""
+        """更新用户基础设置，返回是否发生字段变更。"""
         raise NotImplementedError
 
     def update_api_key(self, user_id: str, provider_column: str, encrypted_key: Optional[str]) -> None:
-        """功能：更新 API key。"""
+        """更新指定 provider 的加密 API Key。"""
         raise NotImplementedError
 
     def update_base_url(self, user_id: str, base_url_column: str, base_url: Optional[str]) -> None:
-        """功能：更新 base url。"""
+        """更新指定 provider 的 base URL 配置。"""
         raise NotImplementedError
 
     def update_scene_model_preference(
@@ -39,18 +37,18 @@ class UserRepository:
         provider: Optional[str],
         model: Optional[str],
     ) -> None:
-        """功能：更新 scene 模型 preference。"""
+        """更新特定场景的模型偏好（provider + model）。"""
         raise NotImplementedError
 
 
 class SqliteUserRepository(UserRepository):
-    """作用：定义 SqliteUserRepository 服务对象，用于封装对应领域流程。"""
+    """基于 SQLite 的用户仓储实现。"""
     def __init__(self, db: Database):
-        """功能：初始化对象依赖并设置默认运行状态。"""
+        """注入数据库访问对象。"""
         self.db = db
 
     def get_user(self, user_id: str) -> Optional[User]:
-        """功能：获取用户。"""
+        """联表读取用户与设置，组装 User 聚合对象。"""
         with self.db.get_cursor() as cursor:
             cursor.execute(
                 """
@@ -106,13 +104,13 @@ class SqliteUserRepository(UserRepository):
             )
 
     def create_user_with_defaults(self, user_id: str) -> None:
-        """功能：创建用户 with defaults。"""
+        """创建用户主记录与默认设置记录。"""
         with self.db.get_cursor() as cursor:
             cursor.execute("INSERT INTO users (user_id) VALUES (?)", (user_id,))
             cursor.execute("INSERT INTO user_settings (user_id) VALUES (?)", (user_id,))
 
     def update_settings(self, user_id: str, settings_update: UserSettingsUpdate) -> bool:
-        """功能：更新 settings。"""
+        """按补丁字段更新用户设置。"""
         updates = []
         params = []
 
@@ -145,7 +143,7 @@ class SqliteUserRepository(UserRepository):
         return True
 
     def update_api_key(self, user_id: str, provider_column: str, encrypted_key: Optional[str]) -> None:
-        """功能：更新 API key。"""
+        """更新指定 provider 的 API Key 并刷新更新时间。"""
         with self.db.get_cursor() as cursor:
             cursor.execute(
                 f"UPDATE user_settings SET {provider_column} = ?, updated_at = CURRENT_TIMESTAMP WHERE user_id = ?",
@@ -170,7 +168,7 @@ class SqliteUserRepository(UserRepository):
         provider: Optional[str],
         model: Optional[str],
     ) -> None:
-        """功能：更新 scene 模型 preference。"""
+        """更新场景模型偏好并同步用户更新时间。"""
         with self.db.get_cursor() as cursor:
             cursor.execute(
                 f"""

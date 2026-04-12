@@ -7,5 +7,5 @@ to keep each module focused and avoid large route files.
 
 from .story import router
 
-# 变量作用：控制 import * 时可导出的公共符号。
+# 控制 import * 时可导出的公共符号。
 __all__ = ["router"]

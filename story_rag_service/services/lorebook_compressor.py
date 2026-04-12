@@ -15,7 +15,7 @@ from typing import Any, Dict, List, Optional
 from config import settings
 from prompting import render_prompt
 
-# 变量作用：模块日志记录器，用于输出运行诊断信息。
+# 模块日志记录器，用于输出运行诊断信息。
 logger = logging.getLogger(__name__)
 
 COMPRESS_THRESHOLD = 300  # 字符数阈值

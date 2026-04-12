@@ -1,6 +1,4 @@
-"""
-Roleplay domain models.
-"""
+"""角色扮演域模型。"""
 
 from datetime import datetime
 from typing import Any, Dict, List, Optional
@@ -10,7 +8,7 @@ from pydantic import BaseModel, Field
 
 
 class PersonaProfile(BaseModel):
-    """作用：定义 PersonaProfile 类型，承载本模块核心状态与行为。"""
+    """人格卡实体模型。"""
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     name: str = Field(..., min_length=1)
     description: str = ""
@@ -22,7 +20,7 @@ class PersonaProfile(BaseModel):
 
 
 class PersonaProfileCreate(BaseModel):
-    """作用：定义 PersonaProfileCreate 类型，承载本模块核心状态与行为。"""
+    """新建人格卡请求模型。"""
     name: str = Field(..., min_length=1)
     description: str = ""
     title: Optional[str] = None
@@ -31,7 +29,7 @@ class PersonaProfileCreate(BaseModel):
 
 
 class PersonaProfileUpdate(BaseModel):
-    """作用：定义 PersonaProfileUpdate 类型，承载本模块核心状态与行为。"""
+    """更新人格卡请求模型（支持局部更新）。"""
     name: Optional[str] = None
     description: Optional[str] = None
     title: Optional[str] = None
@@ -40,7 +38,7 @@ class PersonaProfileUpdate(BaseModel):
 
 
 class StoryState(BaseModel):
-    """作用：定义 StoryState 数据结构，用于约束字段语义与序列化格式。"""
+    """会话级剧情状态快照。"""
     session_id: str
     chapter: Optional[str] = None
     objective: Optional[str] = None
@@ -52,7 +50,7 @@ class StoryState(BaseModel):
 
 
 class StoryStateUpdate(BaseModel):
-    """作用：定义 StoryStateUpdate 类型，承载本模块核心状态与行为。"""
+    """剧情状态更新请求模型（支持局部更新）。"""
     chapter: Optional[str] = None
     objective: Optional[str] = None
     conflict: Optional[str] = None

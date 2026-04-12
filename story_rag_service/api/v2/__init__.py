@@ -13,7 +13,7 @@ from .script_design_routes import router as script_design_router
 from .story import router as story_router
 from .world_story_routes import router as world_story_router
 
-# 变量作用：FastAPI 路由注册器，用于挂载本模块接口。
+# FastAPI 路由注册器，用于挂载本模块接口。
 router = APIRouter()
 router.include_router(story_router)
 router.include_router(world_story_router)
@@ -24,5 +24,5 @@ router.include_router(analytics_router)
 router.include_router(memory_router)
 router.include_router(provider_router)
 
-# 变量作用：控制 import * 时可导出的公共符号。
+# 控制 import * 时可导出的公共符号。
 __all__ = ["router"]

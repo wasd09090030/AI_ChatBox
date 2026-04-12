@@ -15,25 +15,25 @@ from services.roleplay_profiles.mappers import row_to_persona
 
 
 class PersonaStore:
-    """作用：定义 PersonaStore 类型，承载本模块核心状态与行为。"""
+    """人格卡仓储服务（persona_profiles 表）。"""
     def __init__(self, db: RoleplaySQLiteStore):
-        """功能：初始化对象依赖并设置默认运行状态。"""
+        """注入底层 SQLite 存储对象。"""
         self._db = db
 
     def list(self) -> List[PersonaProfile]:
-        """功能：查询并返回目标对象列表。"""
+        """查询全部人格卡，按更新时间倒序返回。"""
         with self._db.connect() as conn:
             rows = conn.execute("SELECT * FROM persona_profiles ORDER BY updated_at DESC").fetchall()
         return [row_to_persona(row) for row in rows]
 
     def get(self, persona_id: str) -> Optional[PersonaProfile]:
-        """功能：获取目标对象。"""
+        """按 ID 查询单个人格卡。"""
         with self._db.connect() as conn:
             row = conn.execute("SELECT * FROM persona_profiles WHERE id = ?", (persona_id,)).fetchone()
         return row_to_persona(row) if row else None
 
     def create(self, data: PersonaProfileCreate) -> PersonaProfile:
-        """功能：创建目标对象。"""
+        """创建人格卡并返回持久化后的对象。"""
         now = datetime.now().isoformat()
         persona_id = str(uuid.uuid4())
         with self._db.connect() as conn:
@@ -61,7 +61,7 @@ class PersonaStore:
         return created
 
     def update(self, persona_id: str, data: PersonaProfileUpdate) -> Optional[PersonaProfile]:
-        """功能：更新目标对象。"""
+        """按补丁字段更新人格卡；不存在时返回 None。"""
         existing = self.get(persona_id)
         if existing is None:
             return None
@@ -93,7 +93,7 @@ class PersonaStore:
         return self.get(persona_id)
 
     def delete(self, persona_id: str) -> bool:
-        """功能：删除目标对象。"""
+        """按 ID 删除人格卡并返回是否成功。"""
         with self._db.connect() as conn:
             cursor = conn.execute("DELETE FROM persona_profiles WHERE id = ?", (persona_id,))
             conn.commit()

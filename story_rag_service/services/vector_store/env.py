@@ -8,13 +8,13 @@ import logging
 import os
 from typing import Optional
 
-# 变量作用：模块日志记录器，用于输出运行诊断信息。
+# 模块日志记录器，用于输出运行诊断信息。
 logger = logging.getLogger(__name__)
 
 
-# 变量作用：变量 DEFAULT_EMBEDDING_MODEL，用于保存 default embedding 模型相关模块级状态。
+# 变量 DEFAULT_EMBEDDING_MODEL，用于保存 default embedding 模型相关模块级状态。
 DEFAULT_EMBEDDING_MODEL = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
-# 变量作用：路径变量 _DEFAULT_EMBEDDING_CACHE_REPO_DIR，用于定位文件系统资源。
+# 路径变量 _DEFAULT_EMBEDDING_CACHE_REPO_DIR，用于定位文件系统资源。
 _DEFAULT_EMBEDDING_CACHE_REPO_DIR = (
     "models--sentence-transformers--paraphrase-multilingual-MiniLM-L12-v2"
 )

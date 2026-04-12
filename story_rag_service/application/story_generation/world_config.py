@@ -7,7 +7,7 @@ from __future__ import annotations
 import logging
 from typing import Any, Dict, Optional
 
-# 变量作用：模块日志记录器，用于输出运行诊断信息。
+# 模块日志记录器，用于输出运行诊断信息。
 logger = logging.getLogger(__name__)
 
 

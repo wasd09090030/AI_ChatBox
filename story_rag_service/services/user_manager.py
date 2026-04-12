@@ -12,17 +12,17 @@ from models.user import User, UserSettingsUpdate
 from repositories.user_repository import SqliteUserRepository, UserRepository
 from services.database import Database
 
-# 变量作用：模块日志记录器，用于输出运行诊断信息。
+# 模块日志记录器，用于输出运行诊断信息。
 logger = logging.getLogger(__name__)
 
-# 变量作用：变量 SCENE_MODEL_COLUMN_MAP，用于保存 scene 模型 column map 相关模块级状态。
+# 变量 SCENE_MODEL_COLUMN_MAP，用于保存 scene 模型 column map 相关模块级状态。
 SCENE_MODEL_COLUMN_MAP = {
     "story_generation": ("story_generation_provider", "story_generation_model"),
     "input_enhancement": ("input_enhancement_provider", "input_enhancement_model"),
     "story_adjustment": ("story_adjustment_provider", "story_adjustment_model"),
 }
 
-# 变量作用：变量 SUPPORTED_PROVIDERS，用于保存 supported providers 相关模块级状态。
+# 变量 SUPPORTED_PROVIDERS，用于保存 supported providers 相关模块级状态。
 SUPPORTED_PROVIDERS = {
     "openai",
     "anthropic",

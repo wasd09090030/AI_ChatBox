@@ -79,7 +79,7 @@ class StyleTemplate(BaseModel):
     )
     
     class Config:
-        """作用：定义配置读取规则与环境变量加载行为。"""
+        """Pydantic 配置：序列化时输出枚举值字符串。"""
         use_enum_values = True
 
 
@@ -245,7 +245,7 @@ class SceneAtmosphere(BaseModel):
     )
     
     class Config:
-        """作用：定义配置读取规则与环境变量加载行为。"""
+        """Pydantic 配置：序列化时输出枚举值字符串。"""
         use_enum_values = True
 
 

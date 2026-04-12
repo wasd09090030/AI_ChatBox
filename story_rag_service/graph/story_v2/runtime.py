@@ -23,16 +23,19 @@ from .nodes import (
 )
 from .state import StoryGraphState
 
-# 变量作用：模块日志记录器，用于输出运行诊断信息。
+# 模块日志记录器，用于输出运行诊断信息。
 logger = logging.getLogger(__name__)
-# 变量作用：变量 _story_graph，用于保存故事 graph 相关模块级状态。
+# 缓存已编译的 Story Graph 单例，避免重复构图。
 _story_graph = None
-# 变量作用：变量 _async_checkpointer_context，用于保存 async checkpointer 上下文相关模块级状态。
+# 保存异步 checkpointer 上下文，便于关闭阶段显式释放连接。
 _async_checkpointer_context = None
 
 
 def create_story_graph():
-    """兼容保留：提示调用异步创建入口。"""
+    """兼容保留的同步入口。
+
+    当前 checkpointer 初始化依赖异步流程，调用方应改用 `await get_story_graph()`。
+    """
     raise RuntimeError("Use 'await get_story_graph()' for async initialization")
 
 

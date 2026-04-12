@@ -8,18 +8,18 @@ Create Date: 2026-03-02 00:00:00
 from alembic import op
 import sqlalchemy as sa
 
-# 变量作用：变量 revision，用于保存 revision 相关模块级状态。
+# Alembic 当前迁移版本号。
 revision = "20260302_0003"
-# 变量作用：变量 down_revision，用于保存 down revision 相关模块级状态。
+# 前置迁移版本号。
 down_revision = "20260302_0002"
-# 变量作用：变量 branch_labels，用于保存 branch labels 相关模块级状态。
+# 分支标签，默认不使用。
 branch_labels = None
-# 变量作用：变量 depends_on，用于保存 depends on 相关模块级状态。
+# 显式依赖的其他迁移，默认不使用。
 depends_on = None
 
 
 def upgrade() -> None:
-    """功能：处理 upgrade。"""
+    """创建 lorebook_entries 表并补齐常用检索索引。"""
     op.create_table(
         "lorebook_entries",
         sa.Column("id", sa.Text(), primary_key=True, nullable=False),
@@ -54,7 +54,7 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    """功能：处理 downgrade。"""
+    """删除 lorebook_entries 表及其索引。"""
     op.drop_index("idx_lorebook_priority", table_name="lorebook_entries")
     op.drop_index("idx_lorebook_world_enabled", table_name="lorebook_entries")
     op.drop_index("idx_lorebook_world_id", table_name="lorebook_entries")

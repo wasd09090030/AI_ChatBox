@@ -10,7 +10,7 @@ from typing import Any, AsyncGenerator, Dict, List, Optional
 
 import httpx
 
-# 变量作用：模块日志记录器，用于输出运行诊断信息。
+# 模块日志器，用于记录流式请求回退与协议兼容性诊断。
 logger = logging.getLogger(__name__)
 
 
@@ -22,7 +22,7 @@ def _build_openai_compat_payload(
     max_tokens: int,
     include_usage: bool,
 ) -> Dict[str, Any]:
-    """功能：构建 openai compat 载荷。"""
+    """构建 OpenAI 兼容协议的流式请求载荷。"""
     payload: Dict[str, Any] = {
         "model": model,
         "messages": messages,
@@ -36,7 +36,7 @@ def _build_openai_compat_payload(
 
 
 def _should_retry_without_stream_options(status_code: int, body_text: str) -> bool:
-    """功能：处理 should retry without stream options。"""
+    """判断是否需要去掉 stream_options 后重试请求。"""
     if status_code not in {400, 422}:
         return False
     normalized = (body_text or "").lower()

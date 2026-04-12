@@ -23,7 +23,7 @@ from services.vector_store.factory import (
 )
 from services.vector_store.results import apply_score_threshold, build_documents_from_collection_get
 
-# 变量作用：模块日志记录器，用于输出运行诊断信息。
+# 模块日志记录器，用于输出运行诊断信息。
 logger = logging.getLogger(__name__)
 
 

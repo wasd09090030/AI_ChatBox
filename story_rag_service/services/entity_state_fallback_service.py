@@ -1,4 +1,7 @@
-"""旧实体状态重建的 fallback / repair 服务。"""
+"""实体状态回退重建服务。
+
+当 patch 路径不可用或失败时，提供基于旧链路/事件回放的兜底能力。
+"""
 
 from __future__ import annotations
 
@@ -8,7 +11,7 @@ from typing import Any, Dict, List, Optional, Sequence
 from models.entity_state import EntityStateCollection, EntityStateRebuildResponse
 from models.story import Message
 
-# 变量作用：模块日志记录器，用于输出运行诊断信息。
+# 模块日志记录器，用于输出运行诊断信息。
 logger = logging.getLogger(__name__)
 
 
@@ -16,7 +19,7 @@ class EntityStateFallbackService:
     """封装旧实体状态重建逻辑，避免主生成链路直接依赖 manager。"""
 
     def __init__(self, entity_state_manager=None, entity_state_event_replay_service=None):
-        """功能：初始化对象依赖并设置默认运行状态。"""
+        """注入 fallback 所需依赖。"""
         self.entity_state_manager = entity_state_manager
         self.entity_state_event_replay_service = entity_state_event_replay_service
 
@@ -28,7 +31,7 @@ class EntityStateFallbackService:
         entity_type: Optional[str] = None,
         source: str = "entity_state_story_snapshot_bridge",
     ) -> EntityStateCollection:
-        """功能：获取故事快照。"""
+        """获取故事级实体快照（优先事件回放，失败回退 manager）。"""
         replay_items = self._try_replay_story_items(
             story_id=story_id,
             session_id=session_id,
@@ -61,7 +64,7 @@ class EntityStateFallbackService:
         entity_type: Optional[str] = None,
         source: str = "entity_state_session_snapshot_bridge",
     ) -> EntityStateCollection:
-        """功能：获取会话快照。"""
+        """获取会话级实体快照（优先事件回放，失败回退 manager）。"""
         replay_items = self._try_replay_session_items(
             story_id=story_id,
             session_id=session_id,
@@ -98,7 +101,7 @@ class EntityStateFallbackService:
         sequence_start: int = 1,
         activation_logs: Optional[List[Dict[str, Any]]] = None,
     ) -> EntityStateRebuildResponse:
-        """功能：处理 rebuild 会话状态。"""
+        """使用旧链路重建会话实体状态，并记录激活日志。"""
         if self.entity_state_manager is None or not story_id:
             return EntityStateRebuildResponse(
                 story_id=story_id,
@@ -158,7 +161,7 @@ class EntityStateFallbackService:
 
     @staticmethod
     def to_snapshot_payload(response: Optional[EntityStateRebuildResponse]) -> Optional[Dict[str, Any]]:
-        """功能：处理 to 快照载荷。"""
+        """将重建结果转换为前端消费的快照载荷。"""
         if response is None or not response.rebuilt:
             return None
         snapshot = EntityStateCollection(
@@ -180,7 +183,7 @@ class EntityStateFallbackService:
         operation_id: Optional[str] = None,
         sequence_start: int = 1,
     ) -> EntityStateRebuildResponse:
-        """功能：处理 rebuild 故事状态。"""
+        """使用旧链路重建故事级实体状态。"""
         if self.entity_state_manager is None:
             return EntityStateRebuildResponse(
                 story_id=getattr(story, "id", None),
@@ -224,7 +227,7 @@ class EntityStateFallbackService:
         session_id: str,
         source: str,
     ) -> Optional[List[Any]]:
-        """功能：处理 try replay 故事 items。"""
+        """尝试用事件回放获取故事级实体列表。"""
         if self.entity_state_event_replay_service is None:
             return None
         result = self.entity_state_event_replay_service.replay_story_state(
@@ -245,7 +248,7 @@ class EntityStateFallbackService:
         session_id: str,
         source: str,
     ) -> Optional[List[Any]]:
-        """功能：处理 try replay 会话 items。"""
+        """尝试用事件回放获取会话级实体列表。"""
         if self.entity_state_event_replay_service is None or not story_id:
             return None
         result = self.entity_state_event_replay_service.replay_session_state(
@@ -261,7 +264,7 @@ class EntityStateFallbackService:
 
     @staticmethod
     def _filter_items_by_type(items: Sequence[Any], *, entity_type: Optional[str]) -> List[Any]:
-        """功能：处理 filter items by type。"""
+        """按实体类型过滤结果列表。"""
         if not entity_type:
             return list(items)
         return [item for item in items if getattr(item, "entity_type", None) == entity_type]

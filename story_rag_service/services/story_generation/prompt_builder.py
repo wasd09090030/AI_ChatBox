@@ -1,5 +1,7 @@
-"""
-系统提示词构建逻辑（PromptComponent 架构）。
+"""故事系统提示词构建器。
+
+按组件拆分世界观、历史、摘要、角色设定等信息，
+并在 token 预算内裁剪后拼装最终 system prompt。
 """
 
 from __future__ import annotations
@@ -11,10 +13,10 @@ from typing import Any, Dict, List, Optional
 from application.memory import MemoryBundle
 from prompting import render_prompt
 
-# 变量作用：模块日志记录器，用于输出运行诊断信息。
+# 模块日志记录器，用于输出运行诊断信息。
 logger = logging.getLogger(__name__)
 
-# 为 recent history / user input 预留空间，控制 system prompt 上限
+# 为“近期历史 + 用户输入”预留 token，限制 system prompt 体积
 SYSTEM_PROMPT_TOKEN_BUDGET = 3200
 
 
@@ -27,7 +29,10 @@ def _estimate_tokens_fast(text: str) -> int:
 
 
 class PromptComponent:
-    """提示词组件基类。"""
+    """提示词组件抽象基类。
+
+    所有组件都遵循统一的渲染接口，并可独立估算 token 开销。
+    """
 
     name: str = "base"
     priority: int = 100
@@ -35,29 +40,32 @@ class PromptComponent:
     enabled: bool = True
 
     def render(self, **context: Any) -> str:
-        """功能：处理 render。"""
+        """根据归一化上下文渲染组件文本。"""
         raise NotImplementedError
 
     def estimate_tokens(self, text: str) -> int:
-        """功能：处理 estimate Token。"""
+        """估算组件文本 token，用于预算裁剪阶段。"""
         return _estimate_tokens_fast(text)
 
 
 @dataclass
 class RenderedComponent:
-    """作用：定义 RenderedComponent 类型，承载本模块核心状态与行为。"""
+    """组件渲染结果。
+
+    记录组件实例、渲染文本及 token 数，供裁剪逻辑决策使用。
+    """
     component: PromptComponent
     text: str
     tokens: int
 
 
 class WorldContextComponent(PromptComponent):
-    """作用：定义 WorldContextComponent 类型，承载本模块核心状态与行为。"""
+    """注入世界观检索上下文（lorebook 命中）。"""
     name = "WorldContextComponent"
     priority = 50
 
     def render(self, **context: Any) -> str:
-        """功能：处理 render。"""
+        """渲染世界观片段提示词。"""
         return render_prompt(
             "story.world_context",
             retrieved_contexts=list(context.get("retrieved_contexts") or []),
@@ -65,12 +73,12 @@ class WorldContextComponent(PromptComponent):
 
 
 class HistoryContextComponent(PromptComponent):
-    """作用：定义 HistoryContextComponent 类型，承载本模块核心状态与行为。"""
+    """注入历史检索命中，增强上下文连续性。"""
     name = "HistoryContextComponent"
     priority = 10
 
     def render(self, **context: Any) -> str:
-        """功能：处理 render。"""
+        """渲染历史命中提示词。"""
         return render_prompt(
             "story.history_context",
             retrieved_history=list(context.get("retrieved_history") or []),
@@ -78,12 +86,12 @@ class HistoryContextComponent(PromptComponent):
 
 
 class SummaryMemoryComponent(PromptComponent):
-    """作用：定义 SummaryMemoryComponent 类型，承载本模块核心状态与行为。"""
+    """注入摘要记忆（长期语义压缩层）。"""
     name = "SummaryMemoryComponent"
     priority = 40
 
     def render(self, **context: Any) -> str:
-        """功能：处理 render。"""
+        """渲染摘要记忆提示词。"""
         return render_prompt(
             "story.summary_memory",
             summary_memory=context.get("summary_memory") or {},
@@ -91,33 +99,33 @@ class SummaryMemoryComponent(PromptComponent):
 
 
 class StyleComponent(PromptComponent):
-    """作用：定义 StyleComponent 类型，承载本模块核心状态与行为。"""
+    """注入写作风格约束。"""
     name = "StyleComponent"
     priority = 30
 
     def render(self, **context: Any) -> str:
-        """功能：处理 render。"""
+        """渲染风格提示词。"""
         return render_prompt("story.style", world_config=context.get("world_config") or {})
 
 
 class AtmosphereComponent(PromptComponent):
-    """作用：定义 AtmosphereComponent 类型，承载本模块核心状态与行为。"""
+    """注入叙事氛围与基调约束。"""
     name = "AtmosphereComponent"
     priority = 20
 
     def render(self, **context: Any) -> str:
-        """功能：处理 render。"""
+        """渲染氛围提示词。"""
         return render_prompt("story.atmosphere", world_config=context.get("world_config") or {})
 
 
 class RoleplayComponent(PromptComponent):
-    """作用：定义 RoleplayComponent 类型，承载本模块核心状态与行为。"""
+    """注入角色设定（persona/character card/story state）。"""
     name = "RoleplayComponent"
     priority = 80
     required = True
 
     def render(self, **context: Any) -> str:
-        """功能：处理 render。"""
+        """渲染角色扮演约束提示词。"""
         return render_prompt(
             "story.roleplay",
             roleplay_profile=context.get("roleplay_profile") or {},
@@ -125,12 +133,12 @@ class RoleplayComponent(PromptComponent):
 
 
 class DialogueControlComponent(PromptComponent):
-    """作用：定义 DialogueControlComponent 类型，承载本模块核心状态与行为。"""
+    """注入关键角色对话控制指令。"""
     name = "DialogueControlComponent"
     priority = 82
 
     def render(self, **context: Any) -> str:
-        """功能：处理 render。"""
+        """按对话控制参数生成结构化约束文本。"""
         controls = context.get("dialogue_controls") or {}
         principal_character_id = controls.get("principal_character_id")
         dialogue_target = controls.get("dialogue_target")
@@ -167,12 +175,12 @@ class DialogueControlComponent(PromptComponent):
 
 
 class ScriptDesignComponent(PromptComponent):
-    """作用：定义 ScriptDesignComponent 类型，承载本模块核心状态与行为。"""
+    """注入剧本设计约束（阶段、事件、伏笔）。"""
     name = "ScriptDesignComponent"
     priority = 84
 
     def render(self, **context: Any) -> str:
-        """功能：处理 render。"""
+        """在 follow_script_design 开启时渲染剧本约束文本。"""
         script_guidance = context.get("script_guidance") or {}
         if not script_guidance or not script_guidance.get("follow_script_design"):
             return ""
@@ -217,13 +225,13 @@ class ScriptDesignComponent(PromptComponent):
 
 
 class CoreInstructionComponent(PromptComponent):
-    """作用：定义 CoreInstructionComponent 类型，承载本模块核心状态与行为。"""
+    """注入核心写作规则与本轮用户指令。"""
     name = "CoreInstructionComponent"
     priority = 90
     required = True
 
     def render(self, **context: Any) -> str:
-        """功能：处理 render。"""
+        """渲染系统级核心指令块。"""
         return render_prompt(
             "story.core_instruction",
             style=str(context.get("style") or "narrative"),
@@ -272,7 +280,7 @@ def _trim_to_budget(rendered: List[RenderedComponent], budget: int) -> List[Rend
 
 
 def _build_components() -> List[PromptComponent]:
-    """功能：构建 components。"""
+    """返回默认组件集合，最终顺序由 priority 决定。"""
     return [
         HistoryContextComponent(),
         AtmosphereComponent(),
@@ -305,7 +313,10 @@ def _normalize_prompt_context(
     script_guidance: Optional[Dict[str, Any]],
     script_design_context: Optional[Dict[str, Any]],
 ) -> Dict[str, Any]:
-    """功能：标准化 prompt 上下文。"""
+    """归一化提示词上下文。
+
+    优先使用 bundle 中的分层记忆；若 bundle 缺失则回退到兼容参数。
+    """
     if not bundle:
         normalized_dialogue_controls = dialogue_controls
         if normalized_dialogue_controls is None:

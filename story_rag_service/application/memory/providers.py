@@ -8,7 +8,7 @@ from typing import Any, Dict
 from models.roleplay import PersonaProfile
 from models.story import StoryGenerationRequest
 
-# 变量作用：模块日志记录器，用于输出运行诊断信息。
+# 模块日志记录器，用于输出运行诊断信息。
 logger = logging.getLogger(__name__)
 
 

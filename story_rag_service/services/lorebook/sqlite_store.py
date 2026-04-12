@@ -15,7 +15,7 @@ from services.database import Database
 
 
 class LorebookSqliteStore:
-    """作用：定义 LorebookSqliteStore 类型，承载本模块核心状态与行为。"""
+    """提供 lorebook 条目在 SQLite 中的读写与兼容迁移能力。"""
     def __init__(self, db_path: Optional[str] = None):
         """初始化 SQLite 仓储并执行表结构兼容检查。"""
         self.db_path = db_path or settings.database_path

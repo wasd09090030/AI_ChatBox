@@ -1,4 +1,7 @@
-"""文件说明：后端应用层用例编排。"""
+"""记忆编排相关的数据模型定义。
+
+本文件描述 MemoryBundle 的分层结构，以及记忆更新事件的统一数据形态。
+"""
 
 from __future__ import annotations
 
@@ -6,7 +9,7 @@ from typing import Any, Dict, List, Optional, TypedDict
 
 
 class EpisodeRecord(TypedDict, total=False):
-    """作用：定义 EpisodeRecord 数据结构，用于约束字段语义与序列化格式。"""
+    """单条情节记录（episodic 层的最小单元）。"""
     session_id: str
     world_id: Optional[str]
     role: str
@@ -17,7 +20,7 @@ class EpisodeRecord(TypedDict, total=False):
 
 
 class SemanticMemoryRecord(TypedDict, total=False):
-    """作用：定义 SemanticMemoryRecord 数据结构，用于约束字段语义与序列化格式。"""
+    """摘要记忆持久化记录。"""
     session_id: str
     world_id: Optional[str]
     summary_text: str
@@ -28,14 +31,14 @@ class SemanticMemoryRecord(TypedDict, total=False):
 
 
 class ProfileSnapshot(TypedDict, total=False):
-    """作用：定义 ProfileSnapshot 数据结构，用于约束字段语义与序列化格式。"""
+    """角色画像快照（persona/character_card/story_state）。"""
     persona: Optional[Dict[str, Any]]
     character_card: Optional[Dict[str, Any]]
     story_state: Optional[Dict[str, Any]]
 
 
 class ProceduralContext(TypedDict, total=False):
-    """作用：定义 ProceduralContext 类型，承载本模块核心状态与行为。"""
+    """程序性控制上下文（模式、作者注记、焦点指令等）。"""
     authors_note: Optional[str]
     dialogue_controls: Dict[str, Any]
     script_guidance: Dict[str, Any]
@@ -46,13 +49,13 @@ class ProceduralContext(TypedDict, total=False):
 
 
 class MemoryEpisodicLayer(TypedDict, total=False):
-    """作用：定义 MemoryEpisodicLayer 数据结构，用于约束字段语义与序列化格式。"""
+    """MemoryBundle 的情节记忆层。"""
     recent_messages: List[Dict[str, Any]]
     recalled_episodes: List[Dict[str, Any]]
 
 
 class MemorySemanticLayer(TypedDict, total=False):
-    """作用：定义 MemorySemanticLayer 数据结构，用于约束字段语义与序列化格式。"""
+    """MemoryBundle 的语义摘要层。"""
     summary_text: str
     key_facts: List[str]
     entities: Dict[str, Any]
@@ -60,7 +63,7 @@ class MemorySemanticLayer(TypedDict, total=False):
 
 
 class MemoryProfileLayer(TypedDict, total=False):
-    """作用：定义 MemoryProfileLayer 数据结构，用于约束字段语义与序列化格式。"""
+    """MemoryBundle 的角色画像层。"""
     persona: Optional[Dict[str, Any]]
     character_card: Optional[Dict[str, Any]]
     story_state: Optional[Dict[str, Any]]
@@ -68,7 +71,7 @@ class MemoryProfileLayer(TypedDict, total=False):
 
 
 class MemoryProceduralLayer(TypedDict, total=False):
-    """作用：定义 MemoryProceduralLayer 数据结构，用于约束字段语义与序列化格式。"""
+    """MemoryBundle 的程序控制层。"""
     authors_note: Optional[str]
     dialogue_controls: Dict[str, Any]
     script_guidance: Dict[str, Any]
@@ -80,14 +83,14 @@ class MemoryProceduralLayer(TypedDict, total=False):
 
 
 class MemoryWorldLayer(TypedDict, total=False):
-    """作用：定义 MemoryWorldLayer 数据结构，用于约束字段语义与序列化格式。"""
+    """MemoryBundle 的世界观上下文层。"""
     world_id: Optional[str]
     retrieved_lore: List[Dict[str, Any]]
     world_config: Dict[str, Any]
 
 
 class MemoryRuntimeLayer(TypedDict, total=False):
-    """作用：定义 MemoryRuntimeLayer 数据结构，用于约束字段语义与序列化格式。"""
+    """MemoryBundle 的运行时状态层。"""
     story_id: Optional[str]
     runtime_state_id: Optional[str]
     current_stage_id: Optional[str]
@@ -97,7 +100,7 @@ class MemoryRuntimeLayer(TypedDict, total=False):
 
 
 class MemoryEntityLayer(TypedDict, total=False):
-    """作用：定义 MemoryEntityLayer 数据结构，用于约束字段语义与序列化格式。"""
+    """MemoryBundle 的实体状态层。"""
     story_id: Optional[str]
     entity_type: Optional[str]
     tracked_entities: int
@@ -107,13 +110,13 @@ class MemoryEntityLayer(TypedDict, total=False):
 
 
 class MemoryBundleMeta(TypedDict, total=False):
-    """作用：定义 MemoryBundleMeta 数据结构，用于约束字段语义与序列化格式。"""
+    """MemoryBundle 元信息（会话标识与激活日志）。"""
     session_id: str
     activation_logs: List[Dict[str, Any]]
 
 
 class MemoryBundle(TypedDict, total=False):
-    """作用：定义 MemoryBundle 数据结构，用于约束字段语义与序列化格式。"""
+    """故事生成主流程消费的统一分层记忆包。"""
     episodic: MemoryEpisodicLayer
     semantic: MemorySemanticLayer
     profile: MemoryProfileLayer
@@ -125,7 +128,7 @@ class MemoryBundle(TypedDict, total=False):
 
 
 class MemoryUpdateEvent(TypedDict, total=False):
-    """作用：定义 MemoryUpdateEvent 数据结构，用于约束字段语义与序列化格式。"""
+    """单条记忆更新事件的标准结构。"""
     event_id: str
     session_id: str
     operation_id: str
@@ -145,7 +148,7 @@ class MemoryUpdateEvent(TypedDict, total=False):
 
 
 class MemoryOrchestratorResult(TypedDict):
-    """作用：定义 MemoryOrchestratorResult 数据结构，用于约束字段语义与序列化格式。"""
+    """MemoryOrchestrator 构建结果。"""
     bundle: MemoryBundle
     world_id: Optional[str]
     activation_logs: List[Dict[str, Any]]

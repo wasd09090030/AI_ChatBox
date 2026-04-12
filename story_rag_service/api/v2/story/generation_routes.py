@@ -1,8 +1,9 @@
-"""
-Story generation endpoints.
+"""故事生成 v2 路由。
 
-Route handlers in this module only adapt HTTP <-> application calls.
-Metrics and token logic are delegated to helpers for SRP.
+本模块只负责 HTTP 协议适配、请求校验与响应封装：
+1) 非流式生成走 story graph；
+2) 流式生成走 StoryGenerator 的 SSE 管道；
+3) 观测指标与 token 统计由独立 helper 处理。
 """
 
 from __future__ import annotations
@@ -31,11 +32,11 @@ from services.observability import metrics_recorder
 
 from .generation_metrics import build_observability_counters, resolve_token_usage
 
-# 变量作用：模块日志记录器，用于输出运行诊断信息。
+# 模块日志记录器，用于输出运行诊断信息。
 logger = logging.getLogger(__name__)
-# 变量作用：FastAPI 路由注册器，用于挂载本模块接口。
+# FastAPI 路由注册器，用于挂载本模块接口。
 router = APIRouter()
-# 变量作用：正则规则 _CHOICE_LINE_RE，用于文本模式匹配。
+# 匹配 choices 模式输出中的 [A]/[B]/[C] 选项行。
 _CHOICE_LINE_RE = re.compile(r"^\[([ABC])\]\s*(.+)$")
 
 

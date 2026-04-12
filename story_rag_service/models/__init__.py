@@ -12,7 +12,7 @@ from .entity_state_event import (
 )
 from .story import StoryContext, StoryGenerationRequest, StoryGenerationResponse
 
-# 变量作用：控制 import * 时可导出的公共符号。
+# 控制 import * 时可导出的公共符号。
 __all__ = [
     'LorebookEntry',
     'LorebookType',

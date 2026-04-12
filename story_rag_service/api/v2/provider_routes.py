@@ -23,9 +23,9 @@ from .provider_schemas import (
     TestConnectionRequest,
 )
 
-# 变量作用：模块日志记录器，用于输出运行诊断信息。
+# 模块日志记录器，用于输出运行诊断信息。
 logger = logging.getLogger(__name__)
-# 变量作用：FastAPI 路由注册器，用于挂载本模块接口。
+# FastAPI 路由注册器，用于挂载本模块接口。
 router = APIRouter()
 
 

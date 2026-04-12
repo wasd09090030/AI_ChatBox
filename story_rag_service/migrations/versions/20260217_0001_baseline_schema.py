@@ -8,18 +8,18 @@ Create Date: 2026-02-17 19:50:00
 from alembic import op
 import sqlalchemy as sa
 
-# 变量作用：变量 revision，用于保存 revision 相关模块级状态。
+# Alembic 当前迁移版本号。
 revision = "20260217_0001"
-# 变量作用：变量 down_revision，用于保存 down revision 相关模块级状态。
+# 前置迁移版本号；基线迁移无前置。
 down_revision = None
-# 变量作用：变量 branch_labels，用于保存 branch labels 相关模块级状态。
+# 分支标签，默认不使用。
 branch_labels = None
-# 变量作用：变量 depends_on，用于保存 depends on 相关模块级状态。
+# 显式依赖的其他迁移，默认不使用。
 depends_on = None
 
 
 def upgrade() -> None:
-    """功能：处理 upgrade。"""
+    """创建项目基线表结构与常用查询索引。"""
     op.create_table(
         "users",
         sa.Column("user_id", sa.Text(), primary_key=True, nullable=False),
@@ -87,7 +87,7 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    """功能：处理 downgrade。"""
+    """按依赖逆序删除基线表结构与索引。"""
     op.drop_index("idx_stories_updated_at", table_name="stories")
     op.drop_index("idx_stories_world_id", table_name="stories")
     op.drop_table("stories")

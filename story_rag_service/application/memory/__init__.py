@@ -22,7 +22,7 @@ from .journal import persist_memory_update_events
 from .orchestrator import MemoryOrchestrator
 from .update_service import MemoryUpdateService
 
-# 变量作用：控制 import * 时可导出的公共符号。
+# 控制 import * 时可导出的公共符号。
 __all__ = [
     "EpisodeRecord",
     "MemoryBundle",

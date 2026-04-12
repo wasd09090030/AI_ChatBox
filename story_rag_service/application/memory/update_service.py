@@ -16,12 +16,12 @@ from services.story_generation.summary_helpers import (
     maybe_update_summary_memory,
 )
 
-# 变量作用：模块日志记录器，用于输出运行诊断信息。
+# 模块日志记录器，用于输出运行诊断信息。
 logger = logging.getLogger(__name__)
 
 
 class MemoryUpdateService:
-    """作用：定义 MemoryUpdateService 服务对象，用于封装对应领域流程。"""
+    """封装会话消息、情节记忆索引与摘要记忆的更新流程。"""
     def __init__(
         self,
         *,
@@ -29,20 +29,20 @@ class MemoryUpdateService:
         summary_memory_manager=None,
         recent_message_count: int = 5,
     ):
-        """功能：初始化对象依赖并设置默认运行状态。"""
+        """注入记忆相关依赖并配置历史窗口参数。"""
         self.history_manager = history_manager
         self.summary_memory_manager = summary_memory_manager
         self.recent_message_count = recent_message_count
 
     def persist_message(self, session_id: str, role: str, content: str) -> None:
-        """功能：持久化消息。"""
+        """将单条消息写入数据库，异常时仅记录告警不打断主流程。"""
         try:
             persist_message_to_db(settings.database_path, session_id, role, content)
         except Exception as exc:
             logger.warning("Failed to persist message to DB: %s", exc)
 
     def persist_turn(self, *, session_id: str, user_input: str, assistant_output: str) -> None:
-        """功能：持久化轮次。"""
+        """按一问一答写入当前轮次消息。"""
         self.persist_message(session_id, "user", user_input)
         self.persist_message(session_id, "assistant", assistant_output)
 
@@ -54,7 +54,7 @@ class MemoryUpdateService:
         context,
         log_prefix: str = "",
     ) -> int:
-        """功能：更新 episodic index。"""
+        """归档窗口外会话消息并更新情节记忆向量索引。"""
         return archive_messages_outside_window(
             history_manager=self.history_manager,
             context=context,
@@ -72,7 +72,7 @@ class MemoryUpdateService:
         context,
         activation_logs: List[Dict[str, Any]],
     ) -> Optional[Dict[str, Any]]:
-        """功能：按条件执行 update 摘要逻辑。"""
+        """根据配置与触发条件同步更新摘要记忆。"""
         return maybe_update_summary_memory(
             summary_memory_manager=self.summary_memory_manager,
             summary_memory_enabled=settings.rp_summary_memory_enabled,
@@ -91,7 +91,7 @@ class MemoryUpdateService:
         activation_logs: List[Dict[str, Any]],
         llm: Any = None,
     ) -> Optional[Dict[str, Any]]:
-        """功能：异步按条件执行 update 摘要逻辑。"""
+        """根据配置与触发条件异步更新摘要记忆。"""
         return await async_maybe_update_summary_memory(
             summary_memory_manager=self.summary_memory_manager,
             summary_memory_enabled=settings.rp_summary_memory_enabled,
@@ -103,7 +103,7 @@ class MemoryUpdateService:
         )
 
     def get_summary_snapshot(self, session_id: str) -> Optional[Dict[str, Any]]:
-        """功能：获取摘要快照。"""
+        """读取当前会话摘要快照；未启用摘要管理时返回空。"""
         if not self.summary_memory_manager:
             return None
         return self.summary_memory_manager.get_summary(session_id)
@@ -124,7 +124,7 @@ class MemoryUpdateService:
         operation_id: Optional[str] = None,
         sequence_start: int = 1,
     ) -> Dict[str, Any]:
-        """功能：执行 post 生成更新。"""
+        """在生成完成后落库消息、更新记忆并记录更新事件。"""
         current_turn = len(getattr(context, "messages", []) or []) // 2
         memory_updates: List[Dict[str, Any]] = []
         before_summary = self.get_summary_snapshot(session_id)

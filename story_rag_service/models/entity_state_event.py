@@ -11,7 +11,7 @@ from pydantic import BaseModel, Field
 from .entity_state import EntityType, EntityStateSnapshot
 
 
-# 变量作用：变量 EntityPatchField，用于保存 entitypatchfield 相关模块级状态。
+# 变量 EntityPatchField，用于保存 entitypatchfield 相关模块级状态。
 EntityPatchField = Literal[
     "current_location",
     "inventory",
@@ -20,9 +20,9 @@ EntityPatchField = Literal[
     "short_goal",
     "state_summary",
 ]
-# 变量作用：变量 EntityPatchOp，用于保存 entitypatchop 相关模块级状态。
+# 变量 EntityPatchOp，用于保存 entitypatchop 相关模块级状态。
 EntityPatchOp = Literal["set", "add", "remove", "clear", "reset"]
-# 变量作用：变量 EntityPatchStatus，用于保存 entitypatchstatus 相关模块级状态。
+# 变量 EntityPatchStatus，用于保存 entitypatchstatus 相关模块级状态。
 EntityPatchStatus = Literal["committed", "failed", "skipped"]
 
 
