@@ -1,3 +1,7 @@
+/**
+ * 文件说明：前端业务域逻辑与接口封装。
+ */
+
 import type { ProviderMeta, ToneInfo } from '@/components/config/types'
 
 export const TONE_TEMP_OFFSET: Record<string, { offset: number; label: string }> = {
@@ -91,6 +95,7 @@ export const PROVIDERS: ProviderMeta[] = [
   },
 ]
 
+/** 功能：函数 resolveToneInfo，负责 resolveToneInfo 相关处理。 */
 export function resolveToneInfo(tone: string): ToneInfo | null {
   const normalizedTone = tone.toLowerCase()
   if (!normalizedTone) return null

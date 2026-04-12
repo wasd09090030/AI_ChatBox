@@ -6,6 +6,7 @@ from .history_window import archive_messages_outside_window, format_recent_histo
 from .retrieval import build_retrieval_query, retrieve_rag_context
 from .world_config import load_world_config
 
+# 变量作用：控制 import * 时可导出的公共符号。
 __all__ = [
     # 对外稳定 API，供服务编排层统一导入。
     "build_retrieval_query",

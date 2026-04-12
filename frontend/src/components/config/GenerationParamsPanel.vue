@@ -1,4 +1,5 @@
 <script setup lang="ts">
+// 文件说明：前端可复用界面组件。
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -6,6 +7,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Info } from 'lucide-vue-next'
 import type { ToneInfo } from '@/components/config/types'
 
+// 变量作用：变量 props，用于 props 相关配置或状态。
 const props = defineProps<{
   temperature: number
   maxTokens: number
@@ -18,15 +20,18 @@ const props = defineProps<{
   effectiveTemp: number
 }>()
 
+// 变量作用：变量 emit，用于 emit 相关配置或状态。
 const emit = defineEmits<{
   (event: 'temp-input', payload: Event): void
   (event: 'max-tokens-input', payload: Event): void
 }>()
 
+/** 功能：函数 handleTempInput，负责 handleTempInput 相关处理。 */
 function handleTempInput(event: Event) {
   emit('temp-input', event)
 }
 
+/** 功能：函数 handleMaxTokensInput，负责 handleMaxTokensInput 相关处理。 */
 function handleMaxTokensInput(event: Event) {
   emit('max-tokens-input', event)
 }

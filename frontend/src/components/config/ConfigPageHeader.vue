@@ -1,4 +1,5 @@
 <script setup lang="ts">
+// 文件说明：前端可复用界面组件。
 import { Settings } from 'lucide-vue-next'
 </script>
 

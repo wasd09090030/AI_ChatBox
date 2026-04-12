@@ -14,6 +14,7 @@ import {
   usePersistCurrentRoleIdMutation,
 } from '@/domains/role/queries/useRolePersistence'
 
+// 变量作用：变量 useRoleStore，用于 useRoleStore 相关配置或状态。
 export const useRoleStore = defineStore('role', () => {
   // State
   const roles = ref<Role[]>([])

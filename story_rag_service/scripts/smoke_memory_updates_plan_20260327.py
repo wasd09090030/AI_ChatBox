@@ -32,26 +32,35 @@ from typing import Any
 
 import httpx
 
+# 变量作用：变量 BASE_URL，用于保存 base url 相关模块级状态。
 BASE_URL = os.getenv("SMOKE_BASE_URL", "http://127.0.0.1:8012").rstrip("/")
+# 变量作用：变量 USER_ID，用于保存用户 ID 相关模块级状态。
 USER_ID = os.getenv("SMOKE_USER_ID", "user_1773820783085_bk1gzshza")
+# 变量作用：变量 PROVIDER，用于保存模型提供商相关模块级状态。
 PROVIDER = os.getenv("SMOKE_PROVIDER", "deepseek")
+# 变量作用：变量 MODEL，用于保存模型相关模块级状态。
 MODEL = os.getenv("SMOKE_MODEL", "deepseek-chat")
+# 变量作用：路径变量 DB_PATH，用于定位文件系统资源。
 DB_PATH = Path(__file__).resolve().parents[1] / "data" / "chatbox.db"
+# 变量作用：变量 TIMEOUT，用于保存 timeout 相关模块级状态。
 TIMEOUT = 120.0
 
 
 @dataclass
 class Check:
+    """作用：定义 Check 类型，承载本模块核心状态与行为。"""
     name: str
     passed: bool
     detail: dict[str, Any]
 
 
 def _headers() -> dict[str, str]:
+    """功能：处理 headers。"""
     return {"X-User-ID": USER_ID}
 
 
 def _request(client: httpx.Client, method: str, path: str, payload: dict[str, Any] | None = None, with_user: bool = False) -> tuple[int, dict[str, Any]]:
+    """功能：处理请求。"""
     headers = _headers() if with_user else {}
     resp = client.request(method.upper(), f"{BASE_URL}{path}", json=payload, headers=headers)
     try:
@@ -62,6 +71,7 @@ def _request(client: httpx.Client, method: str, path: str, payload: dict[str, An
 
 
 def _summary_row(session_id: str) -> dict[str, Any]:
+    """功能：处理摘要 row。"""
     conn = sqlite3.connect(str(DB_PATH))
     cur = conn.cursor()
     cur.execute(
@@ -77,6 +87,7 @@ def _summary_row(session_id: str) -> dict[str, Any]:
 
 
 def _message_count(session_id: str) -> int:
+    """功能：处理消息 count。"""
     conn = sqlite3.connect(str(DB_PATH))
     cur = conn.cursor()
     cur.execute("SELECT COUNT(*) FROM story_session_messages WHERE session_id=?", (session_id,))
@@ -86,6 +97,7 @@ def _message_count(session_id: str) -> int:
 
 
 def _journal_tail(session_id: str, limit: int = 20) -> list[dict[str, Any]]:
+    """功能：处理日志 tail。"""
     conn = sqlite3.connect(str(DB_PATH))
     cur = conn.cursor()
     cur.execute(
@@ -107,14 +119,17 @@ def _journal_tail(session_id: str, limit: int = 20) -> list[dict[str, Any]]:
 
 
 def _event_actions(events: list[dict[str, Any]] | None) -> list[str]:
+    """功能：处理事件 actions。"""
     return [f"{e.get('memory_layer')}:{e.get('action')}:{e.get('source')}" for e in (events or [])]
 
 
 def _add(checks: list[Check], cond: bool, name: str, detail: dict[str, Any]) -> None:
+    """功能：处理 add。"""
     checks.append(Check(name=name, passed=bool(cond), detail=detail))
 
 
 def _preflight(client: httpx.Client, checks: list[Check]) -> None:
+    """功能：处理 preflight。"""
     status, body = _request(client, "GET", "/api/v2/health")
     _add(checks, status == 200 and body.get("status") == "healthy", "health", {"status": status, "body": body})
 
@@ -128,6 +143,7 @@ def _preflight(client: httpx.Client, checks: list[Check]) -> None:
 
 
 def run_profile_a(client: httpx.Client) -> dict[str, Any]:
+    """功能：执行画像 a。"""
     checks: list[Check] = []
     evidence: dict[str, Any] = {}
 
@@ -268,6 +284,7 @@ def run_profile_a(client: httpx.Client) -> dict[str, Any]:
 
 
 def run_profile_b(client: httpx.Client) -> dict[str, Any]:
+    """功能：执行画像 b。"""
     checks: list[Check] = []
     evidence: dict[str, Any] = {}
 
@@ -435,6 +452,7 @@ def run_profile_b(client: httpx.Client) -> dict[str, Any]:
 
 
 def summarize(result: dict[str, Any]) -> dict[str, Any]:
+    """功能：处理 summarize。"""
     checks = result.get("checks", [])
     failed = [c for c in checks if not c.get("passed")]
     return {
@@ -447,6 +465,7 @@ def summarize(result: dict[str, Any]) -> dict[str, Any]:
 
 
 def main() -> int:
+    """功能：处理 main。"""
     parser = argparse.ArgumentParser(description="Unified smoke runner for Plan_2026-03-27")
     parser.add_argument("--profile", choices=["A", "B", "all"], default="all", help="Which profile to run")
     parser.add_argument("--output", default="", help="Optional file path for JSON output")

@@ -1,5 +1,10 @@
+/**
+ * 文件说明：前端通用服务与请求能力。
+ */
+
 import { z } from 'zod'
 
+// 变量作用：变量 V2ContextItemSchema，用于 V2ContextItemSchema 相关配置或状态。
 export const V2ContextItemSchema = z.object({
   name: z.string(),
   type: z.string(),
@@ -7,6 +12,7 @@ export const V2ContextItemSchema = z.object({
   score: z.number(),
 })
 
+// 变量作用：变量 MemoryUpdateEventSchema，用于 MemoryUpdateEventSchema 相关配置或状态。
 export const MemoryUpdateEventSchema = z.object({
   event_id: z.string(),
   session_id: z.string(),
@@ -26,6 +32,7 @@ export const MemoryUpdateEventSchema = z.object({
   committed_at: z.string(),
 })
 
+// 变量作用：变量 SummaryMemorySnapshotSchema，用于 SummaryMemorySnapshotSchema 相关配置或状态。
 export const SummaryMemorySnapshotSchema = z.object({
   summary_text: z.string(),
   key_facts: z.array(z.string()).optional(),
@@ -33,6 +40,7 @@ export const SummaryMemorySnapshotSchema = z.object({
   session_id: z.string().optional(),
 })
 
+// 变量作用：变量 StoryMemoryOperationSchema，用于 StoryMemoryOperationSchema 相关配置或状态。
 export const StoryMemoryOperationSchema = z.object({
   operation_id: z.string().nullable().optional(),
   source: z.string().nullable().optional(),
@@ -44,6 +52,7 @@ export const StoryMemoryOperationSchema = z.object({
   entity_update_count: z.number().optional(),
 })
 
+// 变量作用：变量 EntityStateSnapshotSchema，用于 EntityStateSnapshotSchema 相关配置或状态。
 export const EntityStateSnapshotSchema = z.object({
   story_id: z.string(),
   session_id: z.string(),
@@ -63,6 +72,7 @@ export const EntityStateSnapshotSchema = z.object({
   metadata: z.record(z.string(), z.unknown()),
 })
 
+// 变量作用：变量 EntityStateCollectionSchema，用于 EntityStateCollectionSchema 相关配置或状态。
 export const EntityStateCollectionSchema = z.object({
   story_id: z.string().nullable().optional(),
   session_id: z.string(),
@@ -71,6 +81,7 @@ export const EntityStateCollectionSchema = z.object({
   total: z.number(),
 })
 
+// 变量作用：变量 EntityStateUpdateSchema，用于 EntityStateUpdateSchema 相关配置或状态。
 export const EntityStateUpdateSchema = z.object({
   event_id: z.string(),
   story_id: z.string(),
@@ -94,6 +105,7 @@ export const EntityStateUpdateSchema = z.object({
   metadata: z.record(z.string(), z.unknown()).optional(),
 })
 
+// 变量作用：变量 StoryMemoryPayloadSchema，用于 StoryMemoryPayloadSchema 相关配置或状态。
 export const StoryMemoryPayloadSchema = z.object({
   session_id: z.string(),
   story_id: z.string().nullable().optional(),
@@ -115,6 +127,7 @@ export const StoryMemoryPayloadSchema = z.object({
   }).nullable().optional(),
 })
 
+// 变量作用：变量 V2GenerateResponseSchema，用于 V2GenerateResponseSchema 相关配置或状态。
 export const V2GenerateResponseSchema = z.object({
   session_id: z.string(),
   thread_id: z.string(),

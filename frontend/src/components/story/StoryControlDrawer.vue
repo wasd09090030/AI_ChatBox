@@ -1,4 +1,5 @@
 <script setup lang="ts">
+// 文件说明：前端可复用界面组件。
 import { computed, ref, watch } from 'vue'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -19,6 +20,7 @@ import type { LorebookEntry } from '@/services/lorebookService'
 import type { PersonaProfile } from '@/services/roleplayService'
 import type { ScriptDesign, ScriptEventNode, ScriptStage } from '@/domains/story/api/scriptDesignApi'
 
+// 变量作用：变量 props，用于 props 相关配置或状态。
 const props = defineProps<{
   open: boolean
   panelTitle: string
@@ -50,6 +52,7 @@ const props = defineProps<{
   generating: boolean
 }>()
 
+// 变量作用：变量 emit，用于 emit 相关配置或状态。
 const emit = defineEmits<{
   (event: 'update:open', value: boolean): void
   (event: 'update:showControlPanel', value: boolean): void
@@ -68,56 +71,67 @@ const emit = defineEmits<{
   (event: 'update:dialogueStyleHint', value: string): void
 }>()
 
+// 变量作用：变量 selectedPersonaModel，用于 selectedPersonaModel 相关配置或状态。
 const selectedPersonaModel = computed({
   get: () => props.selectedPersonaSelectValue,
   set: (value: string) => emit('update:selectedPersonaSelectValue', value),
 })
 
+// 变量作用：变量 selectedPrincipalCharacterModel，用于 selectedPrincipalCharacterModel 相关配置或状态。
 const selectedPrincipalCharacterModel = computed({
   get: () => props.selectedPrincipalCharacterId,
   set: (value: string) => emit('update:selectedPrincipalCharacterId', value),
 })
 
+// 变量作用：变量 selectedScriptDesignModel，用于 selectedScriptDesignModel 相关配置或状态。
 const selectedScriptDesignModel = computed({
   get: () => props.selectedScriptDesignId,
   set: (value: string) => emit('update:selectedScriptDesignId', value),
 })
 
+// 变量作用：变量 selectedScriptStageModel，用于 selectedScriptStageModel 相关配置或状态。
 const selectedScriptStageModel = computed({
   get: () => props.selectedScriptStageId,
   set: (value: string) => emit('update:selectedScriptStageId', value),
 })
 
+// 变量作用：变量 selectedScriptEventModel，用于 selectedScriptEventModel 相关配置或状态。
 const selectedScriptEventModel = computed({
   get: () => props.selectedScriptEventId,
   set: (value: string) => emit('update:selectedScriptEventId', value),
 })
 
+// 变量作用：变量 followScriptDesignModel，用于 followScriptDesignModel 相关配置或状态。
 const followScriptDesignModel = computed({
   get: () => props.followScriptDesign,
   set: (value: boolean) => emit('update:followScriptDesign', value),
 })
 
+// 变量作用：变量 dialogueModeModel，用于 dialogueModeModel 相关配置或状态。
 const dialogueModeModel = computed({
   get: () => props.dialogueMode,
   set: (value: 'auto' | 'focused' | 'required') => emit('update:dialogueMode', value),
 })
 
+// 变量作用：变量 dialogueTargetModel，用于 dialogueTargetModel 相关配置或状态。
 const dialogueTargetModel = computed({
   get: () => props.dialogueTarget,
   set: (value: string) => emit('update:dialogueTarget', value),
 })
 
+// 变量作用：变量 dialogueIntentModel，用于 dialogueIntentModel 相关配置或状态。
 const dialogueIntentModel = computed({
   get: () => props.dialogueIntent,
   set: (value: string) => emit('update:dialogueIntent', value),
 })
 
+// 变量作用：变量 dialogueStyleHintModel，用于 dialogueStyleHintModel 相关配置或状态。
 const dialogueStyleHintModel = computed({
   get: () => props.dialogueStyleHint,
   set: (value: string) => emit('update:dialogueStyleHint', value),
 })
 
+// 变量作用：变量 improvScriptSectionOpen，用于 improvScriptSectionOpen 相关配置或状态。
 const improvScriptSectionOpen = ref(props.selectedScriptDesignId !== props.noneOptionValue)
 
 watch(

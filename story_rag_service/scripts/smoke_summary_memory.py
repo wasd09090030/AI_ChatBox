@@ -13,6 +13,7 @@ from services.summary_memory_manager import SummaryMemoryManager
 
 
 def main() -> None:
+    """功能：处理 main。"""
     manager = SummaryMemoryManager()
     session_id = f"summary_smoke_{uuid.uuid4().hex[:8]}"
     world_id = "global"

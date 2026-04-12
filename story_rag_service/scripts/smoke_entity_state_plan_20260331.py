@@ -31,23 +31,32 @@ from typing import Any, Optional
 
 import httpx
 
+# 变量作用：变量 BASE_URL，用于保存 base url 相关模块级状态。
 BASE_URL = os.getenv("SMOKE_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
+# 变量作用：变量 USER_ID，用于保存用户 ID 相关模块级状态。
 USER_ID = os.getenv("SMOKE_USER_ID", "user_1773820783085_bk1gzshza")
+# 变量作用：变量 PROVIDER，用于保存模型提供商相关模块级状态。
 PROVIDER = os.getenv("SMOKE_PROVIDER", "deepseek")
+# 变量作用：变量 MODEL，用于保存模型相关模块级状态。
 MODEL = os.getenv("SMOKE_MODEL", "deepseek-chat")
+# 变量作用：变量 TIMEOUT，用于保存 timeout 相关模块级状态。
 TIMEOUT = 180.0
+# 变量作用：路径变量 REPORT_DIR，用于定位文件系统资源。
 REPORT_DIR = Path(__file__).resolve().parents[1] / "docs" / "TestResult"
+# 变量作用：变量 REPORT_JSON，用于保存 report JSON 相关模块级状态。
 REPORT_JSON = REPORT_DIR / "Plan0331_EntityState_Validation_Run.json"
 
 
 @dataclass
 class Check:
+    """作用：定义 Check 类型，承载本模块核心状态与行为。"""
     name: str
     passed: bool
     detail: dict[str, Any]
 
 
 def _headers() -> dict[str, str]:
+    """功能：处理 headers。"""
     return {"X-User-ID": USER_ID}
 
 
@@ -58,6 +67,7 @@ def _request(
     payload: Optional[dict[str, Any]] = None,
     with_user: bool = False,
 ) -> tuple[int, dict[str, Any]]:
+    """功能：处理请求。"""
     headers = _headers() if with_user else {}
     response = client.request(method.upper(), f"{BASE_URL}{path}", json=payload, headers=headers)
     try:
@@ -73,6 +83,7 @@ def _stream_generate(
     *,
     with_user: bool,
 ) -> tuple[int, dict[str, Any], int]:
+    """功能：处理 stream generate。"""
     headers = _headers() if with_user else {}
     final_event: dict[str, Any] = {}
     chunk_count = 0
@@ -110,10 +121,12 @@ def _stream_generate(
 
 
 def _add(checks: list[Check], cond: bool, name: str, detail: dict[str, Any]) -> None:
+    """功能：处理 add。"""
     checks.append(Check(name=name, passed=bool(cond), detail=detail))
 
 
 def _find_entity(items: list[dict[str, Any]], display_name: str) -> Optional[dict[str, Any]]:
+    """功能：处理 find 实体。"""
     for item in items:
         if str(item.get("display_name") or "").strip() == display_name:
             return item
@@ -121,6 +134,7 @@ def _find_entity(items: list[dict[str, Any]], display_name: str) -> Optional[dic
 
 
 def _extract_items_from_snapshot(snapshot: Any) -> list[dict[str, Any]]:
+    """功能：处理 extract items from 快照。"""
     if not isinstance(snapshot, dict):
         return []
     raw_items = snapshot.get("items")
@@ -134,6 +148,7 @@ def _has_entity_update(
     *,
     source: Optional[str] = None,
 ) -> bool:
+    """功能：处理 has 实体 update。"""
     for item in memory_updates:
         if item.get("memory_layer") != "entity_state":
             continue
@@ -144,6 +159,7 @@ def _has_entity_update(
 
 
 def _operation_ids(memory_updates: list[dict[str, Any]], memory_layer: str) -> set[str]:
+    """功能：处理操作 ID列表。"""
     return {
         str(item.get("operation_id"))
         for item in memory_updates
@@ -152,6 +168,7 @@ def _operation_ids(memory_updates: list[dict[str, Any]], memory_layer: str) -> s
 
 
 def _timeline_entity_sources(items: list[dict[str, Any]]) -> set[str]:
+    """功能：处理 timeline 实体 sources。"""
     return {
         str(item.get("source"))
         for item in items
@@ -160,6 +177,7 @@ def _timeline_entity_sources(items: list[dict[str, Any]]) -> set[str]:
 
 
 def _preflight(client: httpx.Client, checks: list[Check]) -> None:
+    """功能：处理 preflight。"""
     status, body = _request(client, "GET", "/api/v2/health")
     _add(checks, status == 200 and body.get("status") == "healthy", "health", {"status": status, "body": body})
 
@@ -184,6 +202,7 @@ def _preflight(client: httpx.Client, checks: list[Check]) -> None:
 
 
 def run_smoke() -> dict[str, Any]:
+    """功能：执行 smoke。"""
     checks: list[Check] = []
     evidence: dict[str, Any] = {}
 
@@ -748,6 +767,7 @@ def run_smoke() -> dict[str, Any]:
 
 
 def main() -> None:
+    """功能：处理 main。"""
     result = run_smoke()
     print(json.dumps(result, ensure_ascii=False, indent=2))
     print(f"\nReport written: {REPORT_JSON}")

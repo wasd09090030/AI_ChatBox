@@ -25,6 +25,7 @@ import {
 import type { BulkImportEntry } from '@/services/lorebookService'
 import type { BulkImportResult } from '@/domains/lorebook/types'
 
+// 变量作用：变量 EXAMPLE_JSON，用于 EXAMPLE JSON 相关配置或状态。
 const EXAMPLE_JSON = `[
   {
     "entry_type": "character",
@@ -60,6 +61,7 @@ const EXAMPLE_JSON = `[
   }
 ]`
 
+// 变量作用：变量 props，用于 props 相关配置或状态。
 const props = defineProps<{
   open: boolean
   worldId: string
@@ -67,13 +69,16 @@ const props = defineProps<{
   result: BulkImportResult | null
 }>()
 
+// 变量作用：变量 emit，用于 emit 相关配置或状态。
 const emit = defineEmits<{
   'update:open': [v: boolean]
   import: [entries: BulkImportEntry[]]
 }>()
 
+// 变量作用：变量 jsonText，用于 jsonText 相关配置或状态。
 const jsonText = ref('')
 
+// 变量作用：变量 parseError，用于 parseError 相关配置或状态。
 const parseError = computed(() => {
   if (!jsonText.value.trim()) return null
   try {
@@ -90,6 +95,7 @@ const parseError = computed(() => {
   }
 })
 
+// 变量作用：变量 parsedEntries，用于 parsedEntries 相关配置或状态。
 const parsedEntries = computed<BulkImportEntry[] | null>(() => {
   if (parseError.value !== null || !jsonText.value.trim()) return null
   try {
@@ -99,16 +105,19 @@ const parsedEntries = computed<BulkImportEntry[] | null>(() => {
   }
 })
 
+/** 功能：函数 doImport，负责 doImport 相关处理。 */
 async function doImport() {
   if (!parsedEntries.value || !props.worldId) return
   emit('import', parsedEntries.value)
 }
 
+/** 功能：函数 handleClose，负责 handleClose 相关处理。 */
 function handleClose() {
   jsonText.value = ''
   emit('update:open', false)
 }
 
+/** 功能：函数 loadExample，负责 loadExample 相关处理。 */
 function loadExample() {
   jsonText.value = EXAMPLE_JSON
 }

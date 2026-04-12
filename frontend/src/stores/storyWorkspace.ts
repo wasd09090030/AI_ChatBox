@@ -1,3 +1,7 @@
+/**
+ * 文件说明：前端状态管理与会话数据维护。
+ */
+
 import { defineStore } from 'pinia'
 import { ref, watch } from 'vue'
 import { toast } from '@/components/ui/toast'
@@ -6,6 +10,7 @@ import { storyLibraryApi } from '@/domains/story/api/storyLibraryApi'
 import { useStoryDraftStateStore } from '@/stores/storyDraftState'
 import type { StoredStory } from '@/components/story/types'
 
+// 变量作用：变量 useStoryWorkspaceStore，用于 useStoryWorkspaceStore 相关配置或状态。
 export const useStoryWorkspaceStore = defineStore('storyWorkspace', () => {
   const storyDraftStore = useStoryDraftStateStore()
   const selectedWorldId = ref('')

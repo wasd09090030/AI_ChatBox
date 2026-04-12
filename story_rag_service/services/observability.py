@@ -5,6 +5,7 @@ from threading import Lock
 from typing import Dict, Tuple, Optional
 import logging
 
+# 变量作用：模块日志记录器，用于输出运行诊断信息。
 logger = logging.getLogger(__name__)
 
 
@@ -88,4 +89,5 @@ class StoryGenerationMetrics:
         )
 
 
+# 变量作用：变量 metrics_recorder，用于保存 metrics recorder 相关模块级状态。
 metrics_recorder = StoryGenerationMetrics()

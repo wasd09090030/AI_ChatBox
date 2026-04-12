@@ -1,3 +1,5 @@
+"""文件说明：项目文件 env.py 的核心逻辑实现。"""
+
 from __future__ import annotations
 
 from logging.config import fileConfig
@@ -6,6 +8,7 @@ import sys
 from sqlalchemy import create_engine
 from alembic import context
 
+# 变量作用：变量 config，用于保存配置相关模块级状态。
 config = context.config
 
 if config.config_file_name is not None:
@@ -19,11 +22,13 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from config import settings  # noqa: E402
 
+# 变量作用：路径变量 db_path，用于定位文件系统资源。
 db_path = Path(settings.database_path).resolve()
 config.set_main_option("sqlalchemy.url", f"sqlite:///{db_path.as_posix()}")
 
 
 def run_migrations_offline() -> None:
+    """功能：执行 migrations offline。"""
     url = config.get_main_option("sqlalchemy.url")
     context.configure(
         url=url,
@@ -37,6 +42,7 @@ def run_migrations_offline() -> None:
 
 
 def run_migrations_online() -> None:
+    """功能：执行 migrations online。"""
     connectable = create_engine(
         config.get_main_option("sqlalchemy.url"),
         pool_pre_ping=True,

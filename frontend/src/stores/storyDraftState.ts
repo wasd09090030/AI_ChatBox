@@ -1,3 +1,7 @@
+/**
+ * 文件说明：前端状态管理与会话数据维护。
+ */
+
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import type { StoryMode } from '@/components/story/types'
@@ -25,6 +29,7 @@ export interface RouteStoryDraftState {
   progressIntent: StoryProgressIntent
 }
 
+/** 功能：函数 createSharedStoryDraft，负责 createSharedStoryDraft 相关处理。 */
 function createSharedStoryDraft(): SharedStoryDraftState {
   return {
     selectedPersonaId: null,
@@ -38,6 +43,7 @@ function createSharedStoryDraft(): SharedStoryDraftState {
   }
 }
 
+/** 功能：函数 createRouteStoryDraft，负责 createRouteStoryDraft 相关处理。 */
 function createRouteStoryDraft(pageMode: StoryPageMode): RouteStoryDraftState {
   return {
     userInput: '',
@@ -48,6 +54,7 @@ function createRouteStoryDraft(pageMode: StoryPageMode): RouteStoryDraftState {
   }
 }
 
+// 变量作用：变量 useStoryDraftStateStore，用于 useStoryDraftStateStore 相关配置或状态。
 export const useStoryDraftStateStore = defineStore('storyDraftState', () => {
   const sharedDrafts = ref<Record<string, SharedStoryDraftState>>({})
   const routeDrafts = ref<Record<string, RouteStoryDraftState>>({})

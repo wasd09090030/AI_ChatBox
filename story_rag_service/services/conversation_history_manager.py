@@ -7,6 +7,7 @@ import logging
 from models.lorebook import LorebookEntry
 from services.vector_store import VectorStoreManager
 
+# 变量作用：模块日志记录器，用于输出运行诊断信息。
 logger = logging.getLogger(__name__)
 
 

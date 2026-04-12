@@ -6,10 +6,12 @@ from typing import Any, Callable, Dict, List
 
 from models.story_style import PRESET_STYLE_TEMPLATES, get_style_prompt_segment
 
+# 变量作用：变量 PromptRenderer，用于保存 promptrenderer 相关模块级状态。
 PromptRenderer = Callable[..., str]
 
 
 def _render_world_context(*, retrieved_contexts: List[Dict[str, Any]] | None = None, **_: Any) -> str:
+    """功能：处理 render 世界观上下文。"""
     context_list = list(retrieved_contexts or [])
     if not context_list:
         return ""
@@ -22,6 +24,7 @@ def _render_world_context(*, retrieved_contexts: List[Dict[str, Any]] | None = N
     }
 
     def format_contexts(items: List[Dict[str, Any]]) -> str:
+        """功能：格式化 contexts。"""
         if not items:
             return ""
         lines = ["【相关世界设定】"]
@@ -40,6 +43,7 @@ def _render_world_context(*, retrieved_contexts: List[Dict[str, Any]] | None = N
 
 
 def _render_history_context(*, retrieved_history: List[Dict[str, Any]] | None = None, **_: Any) -> str:
+    """功能：处理 render 历史上下文。"""
     history_list = list(retrieved_history or [])
     if not history_list:
         return ""
@@ -56,6 +60,7 @@ def _render_history_context(*, retrieved_history: List[Dict[str, Any]] | None = 
 
 
 def _render_summary_memory(*, summary_memory: Dict[str, Any] | None = None, **_: Any) -> str:
+    """功能：处理 render 摘要记忆。"""
     summary = summary_memory or {}
     summary_text = str(summary.get("summary_text", "")).strip()
     if not summary_text:
@@ -80,6 +85,7 @@ def _render_summary_memory(*, summary_memory: Dict[str, Any] | None = None, **_:
 
 
 def _render_style(*, world_config: Dict[str, Any] | None = None, **_: Any) -> str:
+    """功能：处理 render style。"""
     config = world_config or {}
     if not config:
         return ""
@@ -125,6 +131,7 @@ def _render_style(*, world_config: Dict[str, Any] | None = None, **_: Any) -> st
 
 
 def _render_atmosphere(*, world_config: Dict[str, Any] | None = None, **_: Any) -> str:
+    """功能：处理 render atmosphere。"""
     config = world_config or {}
     if not config:
         return ""
@@ -166,6 +173,7 @@ def _render_atmosphere(*, world_config: Dict[str, Any] | None = None, **_: Any) 
 
 
 def _render_roleplay(*, roleplay_profile: Dict[str, Any] | None = None, **_: Any) -> str:
+    """功能：处理 render roleplay。"""
     profile = roleplay_profile or {}
     if not profile:
         return ""
@@ -228,6 +236,7 @@ def _render_story_core_instruction(
     focus_label: str | None = None,
     **_: Any,
 ) -> str:
+    """功能：处理 render 故事 core instruction。"""
     dialogue_text = """【对话增强要求】
 - 每个角色说话时需体现其独特语音特征（如已设定口头禅、说话风格、口音等）
 - 对话中适当加入潜台词，让角色言外之意丰富
@@ -297,6 +306,7 @@ def _render_story_core_instruction(
 
 
 def _render_input_enhancement(*, context_hint: str, user_input: str, **_: Any) -> str:
+    """功能：处理 render 输入增强。"""
     return (
         "你是互动小说输入优化器。请将用户的简短动作扩写为 1 句可执行行动描述，"
         "保留用户意图，不新增与意图冲突的信息，不超过 60 个中文字符。"
@@ -307,10 +317,12 @@ def _render_input_enhancement(*, context_hint: str, user_input: str, **_: Any) -
 
 
 def _render_summary_system(**_: Any) -> str:
+    """功能：处理 render 摘要 system。"""
     return "你是一名专业的故事编辑，擅长简洁归纳情节。请严格输出JSON。"
 
 
 def _render_summary_user(*, conversation_text: str, **_: Any) -> str:
+    """功能：处理 render 摘要用户。"""
     return (
         "请将以下对话摘要为**200字以内**的叙事摘要，重点保留：\n"
         "- 人物关系变化\n- 重要决策及其后果\n- 当前目标/冲突\n- 已发现的关键线索\n\n"
@@ -322,6 +334,7 @@ def _render_summary_user(*, conversation_text: str, **_: Any) -> str:
 
 
 def _render_lorebook_compress(*, target: int, content: str, **_: Any) -> str:
+    """功能：处理 render 知识库 compress。"""
     return (
         f"你是一个信息压缩工具。将以下文本精炼为不超过{target}字的摘要，保留关键信息（人名、地名、规则、数值）。"
         "只输出摘要文本，不加多余解释。\n\n"
@@ -329,6 +342,7 @@ def _render_lorebook_compress(*, target: int, content: str, **_: Any) -> str:
     )
 
 
+# 变量作用：变量 PROMPT_RENDERERS，用于保存 prompt renderers 相关模块级状态。
 PROMPT_RENDERERS: Dict[str, PromptRenderer] = {
     "story.world_context": _render_world_context,
     "story.history_context": _render_history_context,
@@ -345,6 +359,7 @@ PROMPT_RENDERERS: Dict[str, PromptRenderer] = {
 
 
 def get_prompt_renderer(prompt_id: str) -> PromptRenderer:
+    """功能：获取 prompt renderer。"""
     try:
         return PROMPT_RENDERERS[prompt_id]
     except KeyError as exc:
@@ -352,4 +367,5 @@ def get_prompt_renderer(prompt_id: str) -> PromptRenderer:
 
 
 def render_prompt(prompt_id: str, **context: Any) -> str:
+    """功能：处理 render prompt。"""
     return get_prompt_renderer(prompt_id)(**context).strip()

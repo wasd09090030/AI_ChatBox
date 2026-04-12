@@ -18,6 +18,7 @@ import { API_BASE_URL } from '@/utils/constants'
 // Keys that stay local-only (relative key, without the 'chatbox_' prefix)
 const NO_REMOTE_SYNC = new Set(['api_keys_v2', 'api_keys'])
 
+// 变量作用：变量 REMOTE_BASE，用于 REMOTE BASE 相关配置或状态。
 const REMOTE_BASE = API_BASE_URL
   ? `${API_BASE_URL}/api/client-storage`
   : '/api/client-storage'

@@ -11,10 +11,13 @@ from models.script_design import ScriptDesign, ScriptDesignStatus
 
 
 class ScriptDesignRepository:
+    """作用：定义 ScriptDesignRepository 服务对象，用于封装对应领域流程。"""
     def save(self, script_design: ScriptDesign) -> ScriptDesign:
+        """功能：保存目标对象。"""
         raise NotImplementedError
 
     def get(self, script_design_id: str) -> Optional[ScriptDesign]:
+        """功能：获取目标对象。"""
         raise NotImplementedError
 
     def list_all(
@@ -22,24 +25,31 @@ class ScriptDesignRepository:
         world_id: Optional[str] = None,
         status: Optional[ScriptDesignStatus] = None,
     ) -> List[ScriptDesign]:
+        """功能：查询并返回 all列表。"""
         raise NotImplementedError
 
     def delete(self, script_design_id: str) -> bool:
+        """功能：删除目标对象。"""
         raise NotImplementedError
 
     def delete_by_world(self, world_id: str) -> int:
+        """功能：删除 by 世界观。"""
         raise NotImplementedError
 
     def count(self, world_id: Optional[str] = None) -> int:
+        """功能：处理 count。"""
         raise NotImplementedError
 
 
 class JsonScriptDesignRepository(ScriptDesignRepository):
+    """作用：定义 JsonScriptDesignRepository 服务对象，用于封装对应领域流程。"""
     def __init__(self, storage_path: str = "./data/script_designs.json"):
+        """功能：初始化对象依赖并设置默认运行状态。"""
         self.storage_path = Path(storage_path)
         self.storage_path.parent.mkdir(parents=True, exist_ok=True)
 
     def _load_all(self) -> List[ScriptDesign]:
+        """功能：加载 all。"""
         if not self.storage_path.exists():
             return []
         with open(self.storage_path, "r", encoding="utf-8") as file:
@@ -47,6 +57,7 @@ class JsonScriptDesignRepository(ScriptDesignRepository):
         return [ScriptDesign(**item) for item in data]
 
     def _save_all(self, script_designs: List[ScriptDesign]) -> None:
+        """功能：保存 all。"""
         with open(self.storage_path, "w", encoding="utf-8") as file:
             json.dump(
                 [item.model_dump(mode="json") for item in script_designs],
@@ -56,12 +67,14 @@ class JsonScriptDesignRepository(ScriptDesignRepository):
             )
 
     def save(self, script_design: ScriptDesign) -> ScriptDesign:
+        """功能：保存目标对象。"""
         items = {item.id: item for item in self._load_all()}
         items[script_design.id] = script_design
         self._save_all(list(items.values()))
         return script_design
 
     def get(self, script_design_id: str) -> Optional[ScriptDesign]:
+        """功能：获取目标对象。"""
         items = {item.id: item for item in self._load_all()}
         return items.get(script_design_id)
 
@@ -70,6 +83,7 @@ class JsonScriptDesignRepository(ScriptDesignRepository):
         world_id: Optional[str] = None,
         status: Optional[ScriptDesignStatus] = None,
     ) -> List[ScriptDesign]:
+        """功能：查询并返回 all列表。"""
         items = self._load_all()
         if world_id:
             items = [item for item in items if item.world_id == world_id]
@@ -79,6 +93,7 @@ class JsonScriptDesignRepository(ScriptDesignRepository):
         return items
 
     def delete(self, script_design_id: str) -> bool:
+        """功能：删除目标对象。"""
         items = self._load_all()
         retained = [item for item in items if item.id != script_design_id]
         if len(retained) == len(items):
@@ -87,6 +102,7 @@ class JsonScriptDesignRepository(ScriptDesignRepository):
         return True
 
     def delete_by_world(self, world_id: str) -> int:
+        """功能：删除 by 世界观。"""
         items = self._load_all()
         retained = [item for item in items if item.world_id != world_id]
         deleted_count = len(items) - len(retained)
@@ -95,19 +111,24 @@ class JsonScriptDesignRepository(ScriptDesignRepository):
         return deleted_count
 
     def count(self, world_id: Optional[str] = None) -> int:
+        """功能：处理 count。"""
         return len(self.list_all(world_id=world_id))
 
 
 class SqliteScriptDesignRepository(ScriptDesignRepository):
+    """作用：定义 SqliteScriptDesignRepository 服务对象，用于封装对应领域流程。"""
     def __init__(self, db_path: str = "./data/chatbox.db"):
+        """功能：初始化对象依赖并设置默认运行状态。"""
         self.db_path = db_path
         Path(db_path).parent.mkdir(parents=True, exist_ok=True)
         self._init_table()
 
     def _connect(self):
+        """功能：处理 connect。"""
         return sqlite3.connect(self.db_path)
 
     def _init_table(self):
+        """功能：处理 init table。"""
         with self._connect() as conn:
             cursor = conn.cursor()
             cursor.execute(
@@ -127,6 +148,7 @@ class SqliteScriptDesignRepository(ScriptDesignRepository):
             conn.commit()
 
     def save(self, script_design: ScriptDesign) -> ScriptDesign:
+        """功能：保存目标对象。"""
         payload = json.dumps(script_design.model_dump(mode="json"), ensure_ascii=False)
         with self._connect() as conn:
             cursor = conn.cursor()
@@ -152,6 +174,7 @@ class SqliteScriptDesignRepository(ScriptDesignRepository):
         return script_design
 
     def get(self, script_design_id: str) -> Optional[ScriptDesign]:
+        """功能：获取目标对象。"""
         with self._connect() as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT payload FROM script_designs WHERE id = ?", (script_design_id,))
@@ -165,6 +188,7 @@ class SqliteScriptDesignRepository(ScriptDesignRepository):
         world_id: Optional[str] = None,
         status: Optional[ScriptDesignStatus] = None,
     ) -> List[ScriptDesign]:
+        """功能：查询并返回 all列表。"""
         query = "SELECT payload FROM script_designs"
         clauses = []
         params = []
@@ -185,6 +209,7 @@ class SqliteScriptDesignRepository(ScriptDesignRepository):
         return [ScriptDesign(**json.loads(row[0])) for row in rows]
 
     def delete(self, script_design_id: str) -> bool:
+        """功能：删除目标对象。"""
         with self._connect() as conn:
             cursor = conn.cursor()
             cursor.execute("DELETE FROM script_designs WHERE id = ?", (script_design_id,))
@@ -193,6 +218,7 @@ class SqliteScriptDesignRepository(ScriptDesignRepository):
         return deleted
 
     def delete_by_world(self, world_id: str) -> int:
+        """功能：删除 by 世界观。"""
         with self._connect() as conn:
             cursor = conn.cursor()
             cursor.execute("DELETE FROM script_designs WHERE world_id = ?", (world_id,))
@@ -201,6 +227,7 @@ class SqliteScriptDesignRepository(ScriptDesignRepository):
         return int(deleted)
 
     def count(self, world_id: Optional[str] = None) -> int:
+        """功能：处理 count。"""
         query = "SELECT COUNT(1) FROM script_designs"
         params = []
         if world_id:

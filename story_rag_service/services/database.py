@@ -13,6 +13,7 @@ from datetime import datetime
 
 
 class Database:
+    """作用：定义 Database 类型，承载本模块核心状态与行为。"""
     def __init__(self, db_path: str):
         """初始化数据库连接。"""
         self.db_path = db_path

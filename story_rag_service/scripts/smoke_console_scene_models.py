@@ -21,31 +21,41 @@ from typing import Any
 
 import httpx
 
+# 变量作用：变量 BASE_URL，用于保存 base url 相关模块级状态。
 BASE_URL = os.getenv("SMOKE_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
+# 变量作用：变量 USER_ID，用于保存用户 ID 相关模块级状态。
 USER_ID = os.getenv("SMOKE_USER_ID", "smoke-console-user")
+# 变量作用：变量 TARGET_PROVIDER，用于保存 target 模型提供商相关模块级状态。
 TARGET_PROVIDER = os.getenv("SMOKE_PROVIDER", "deepseek").strip().lower()
+# 变量作用：变量 TARGET_MODEL，用于保存 target 模型相关模块级状态。
 TARGET_MODEL = os.getenv("SMOKE_MODEL", "deepseek-chat").strip()
+# 变量作用：变量 RUN_LLM_SMOKE，用于保存 run LLM smoke 相关模块级状态。
 RUN_LLM_SMOKE = os.getenv("RUN_LLM_SMOKE", "true").lower() == "true"
+# 变量作用：变量 TIMEOUT，用于保存 timeout 相关模块级状态。
 TIMEOUT = 90.0
 
 
 @dataclass
 class StepResult:
+    """作用：定义 StepResult 数据结构，用于约束字段语义与序列化格式。"""
     name: str
     passed: bool
     detail: str
 
 
 def _headers() -> dict[str, str]:
+    """功能：处理 headers。"""
     return {"X-User-ID": USER_ID}
 
 
 def _assert(cond: bool, message: str) -> None:
+    """功能：处理 assert。"""
     if not cond:
         raise AssertionError(message)
 
 
 def _expect_status(resp: httpx.Response, status: int, name: str) -> None:
+    """功能：处理 expect status。"""
     if resp.status_code != status:
         raise AssertionError(
             f"{name} failed: expected {status}, got {resp.status_code}, body={resp.text[:500]}"
@@ -53,6 +63,7 @@ def _expect_status(resp: httpx.Response, status: int, name: str) -> None:
 
 
 def run_smoke() -> list[StepResult]:
+    """功能：执行 smoke。"""
     results: list[StepResult] = []
     with httpx.Client(timeout=TIMEOUT) as client:
         # 1) basic health + provider status
@@ -285,6 +296,7 @@ def run_smoke() -> list[StepResult]:
 
 
 def main() -> None:
+    """功能：处理 main。"""
     print(
         f"[SMOKE-CONSOLE] base_url={BASE_URL} user_id={USER_ID} provider={TARGET_PROVIDER} model={TARGET_MODEL} llm={RUN_LLM_SMOKE}"
     )

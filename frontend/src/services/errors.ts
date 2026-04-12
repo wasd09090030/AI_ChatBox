@@ -1,5 +1,10 @@
+/**
+ * 文件说明：前端通用服务与请求能力。
+ */
+
 import axios, { type AxiosError } from 'axios'
 
+/** 功能：函数 readMessageFromUnknownData，负责 readMessageFromUnknownData 相关处理。 */
 function readMessageFromUnknownData(data: unknown): string | undefined {
   if (!data || typeof data !== 'object') {
     return undefined
@@ -24,6 +29,7 @@ export interface AppError {
   details?: unknown
 }
 
+/** 功能：函数 createAppError，负责 createAppError 相关处理。 */
 export function createAppError(
   message: string,
   code = 'UNKNOWN_ERROR',
@@ -39,6 +45,7 @@ export function createAppError(
   }
 }
 
+/** 功能：函数 normalizeApiError，负责 normalizeApiError 相关处理。 */
 export function normalizeApiError(error: unknown): AppError {
   if (isAppError(error)) {
     return error
@@ -65,6 +72,7 @@ export function normalizeApiError(error: unknown): AppError {
   return createAppError('未知错误')
 }
 
+/** 功能：函数 isAppError，负责 isAppError 相关处理。 */
 export function isAppError(error: unknown): error is AppError {
   return Boolean(
     error &&

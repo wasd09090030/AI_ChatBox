@@ -1,3 +1,7 @@
+/**
+ * 文件说明：项目文件 main.ts 的核心逻辑实现。
+ */
+
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import { VueQueryPlugin } from '@tanstack/vue-query'

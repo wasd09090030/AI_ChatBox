@@ -1,3 +1,7 @@
+/**
+ * 文件说明：前端可复用界面组件。
+ */
+
 export { default as Dialog } from "./Dialog.vue"
 export { default as DialogClose } from "./DialogClose.vue"
 export { default as DialogContent } from "./DialogContent.vue"

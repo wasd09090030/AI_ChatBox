@@ -33,6 +33,7 @@ from repositories.script_design_repository import SqliteScriptDesignRepository
 from repositories.story_runtime_repository import SqliteStoryRuntimeRepository
 from config import settings
 
+# 变量作用：模块日志记录器，用于输出运行诊断信息。
 logger = logging.getLogger(__name__)
 
 
@@ -70,6 +71,7 @@ class ServiceContainer:
     user_manager_ref: Optional[object] = None
 
 
+# 变量作用：容器变量 _container，用于缓存服务装配结果。
 _container: Optional[ServiceContainer] = None
 
 

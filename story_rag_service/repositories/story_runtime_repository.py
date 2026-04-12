@@ -13,17 +13,21 @@ from models.story_runtime import ScriptRuntimeState
 
 
 class SqliteStoryRuntimeRepository:
+    """作用：定义 SqliteStoryRuntimeRepository 服务对象，用于封装对应领域流程。"""
     def __init__(self, db_path: str):
+        """功能：初始化对象依赖并设置默认运行状态。"""
         self.db_path = db_path
         Path(db_path).parent.mkdir(parents=True, exist_ok=True)
         self._init_table()
 
     def _connect(self) -> sqlite3.Connection:
+        """功能：处理 connect。"""
         conn = sqlite3.connect(self.db_path)
         conn.row_factory = sqlite3.Row
         return conn
 
     def _init_table(self) -> None:
+        """功能：处理 init table。"""
         with self._connect() as conn:
             cursor = conn.cursor()
             cursor.execute(
@@ -50,6 +54,7 @@ class SqliteStoryRuntimeRepository:
             conn.commit()
 
     def save(self, runtime_state: ScriptRuntimeState) -> ScriptRuntimeState:
+        """功能：保存目标对象。"""
         payload = json.dumps(runtime_state.model_dump(mode="json"), ensure_ascii=False)
         with self._connect() as conn:
             cursor = conn.cursor()
@@ -87,6 +92,7 @@ class SqliteStoryRuntimeRepository:
         return runtime_state
 
     def get_by_story_id(self, story_id: str) -> Optional[ScriptRuntimeState]:
+        """功能：获取 by 故事ID。"""
         with self._connect() as conn:
             cursor = conn.cursor()
             cursor.execute(
@@ -99,6 +105,7 @@ class SqliteStoryRuntimeRepository:
         return ScriptRuntimeState(**json.loads(row["payload"]))
 
     def get_by_id(self, runtime_state_id: str) -> Optional[ScriptRuntimeState]:
+        """功能：获取 by ID。"""
         with self._connect() as conn:
             cursor = conn.cursor()
             cursor.execute(
@@ -111,6 +118,7 @@ class SqliteStoryRuntimeRepository:
         return ScriptRuntimeState(**json.loads(row["payload"]))
 
     def delete_by_story_id(self, story_id: str) -> bool:
+        """功能：删除 by 故事ID。"""
         with self._connect() as conn:
             cursor = conn.cursor()
             cursor.execute(

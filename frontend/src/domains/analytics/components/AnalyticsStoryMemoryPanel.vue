@@ -1,8 +1,10 @@
 <script setup lang="ts">
+// 文件说明：前端业务域逻辑与接口封装。
 import { Brain, History } from 'lucide-vue-next'
 import { Badge } from '@/components/ui/badge'
 import { useStorySessionStore } from '@/stores/storySession'
 
+// 变量作用：变量 storySessionStore，用于 storySessionStore 相关配置或状态。
 const storySessionStore = useStorySessionStore()
 </script>
 

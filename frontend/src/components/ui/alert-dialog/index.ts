@@ -1,3 +1,7 @@
+/**
+ * 文件说明：前端可复用界面组件。
+ */
+
 export { default as AlertDialog } from "./AlertDialog.vue"
 export { default as AlertDialogAction } from "./AlertDialogAction.vue"
 export { default as AlertDialogCancel } from "./AlertDialogCancel.vue"

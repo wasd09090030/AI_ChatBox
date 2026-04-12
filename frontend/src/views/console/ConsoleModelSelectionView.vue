@@ -1,4 +1,5 @@
 <script setup lang="ts">
+// 文件说明：前端页面级视图编排。
 import { BookOpen, FilePenLine, RefreshCw, Save, Sparkles } from 'lucide-vue-next'
 import { computed, onMounted, reactive, ref } from 'vue'
 import { Badge } from '@/components/ui/badge'
@@ -46,18 +47,24 @@ const SCENE_CARDS: SceneCard[] = [
   },
 ]
 
+// 变量作用：变量 CUSTOM_MODEL_SENTINEL，用于 CUSTOM MODEL SENTINEL 相关配置或状态。
 const CUSTOM_MODEL_SENTINEL = '__custom__'
 
+// 变量作用：变量 configStore，用于 configStore 相关配置或状态。
 const configStore = useConfigStore()
 const { toast } = useToast()
 
+// 变量作用：变量 saving，用于 saving 相关配置或状态。
 const saving = ref(false)
+// 变量作用：变量 loading，用于 loading 相关配置或状态。
 const loading = ref(false)
+// 变量作用：变量 draftPreferences，用于 draftPreferences 相关配置或状态。
 const draftPreferences = reactive<SceneModelPreferences>({
   story_generation: { provider: '', model: '' },
   input_enhancement: { provider: '', model: '' },
   story_adjustment: { provider: '', model: '' },
 })
+// 变量作用：变量 remoteModels，用于 remoteModels 相关配置或状态。
 const remoteModels = reactive<Record<ProviderKey, ModelInfo[]>>({
   deepseek: [],
   qwen: [],
@@ -66,6 +73,7 @@ const remoteModels = reactive<Record<ProviderKey, ModelInfo[]>>({
   anthropic: [],
   custom: [],
 })
+// 变量作用：变量 fetchingModels，用于 fetchingModels 相关配置或状态。
 const fetchingModels = reactive<Record<ProviderKey, boolean>>({
   deepseek: false,
   qwen: false,
@@ -74,12 +82,14 @@ const fetchingModels = reactive<Record<ProviderKey, boolean>>({
   anthropic: false,
   custom: false,
 })
+// 变量作用：变量 customModelEnabled，用于 customModelEnabled 相关配置或状态。
 const customModelEnabled = reactive<Record<SceneModelKey, boolean>>({
   story_generation: false,
   input_enhancement: false,
   story_adjustment: false,
 })
 
+/** 功能：函数 clonePreferences，负责 clonePreferences 相关处理。 */
 function clonePreferences(source: SceneModelPreferences) {
   draftPreferences.story_generation = { ...source.story_generation }
   draftPreferences.input_enhancement = { ...source.input_enhancement }
@@ -92,6 +102,7 @@ function clonePreferences(source: SceneModelPreferences) {
   }
 }
 
+/** 功能：函数 modelOptionsForProvider，负责 modelOptionsForProvider 相关处理。 */
 function modelOptionsForProvider(provider: ProviderKey | '') {
   if (!provider) return []
   const remote = remoteModels[provider]
@@ -101,6 +112,7 @@ function modelOptionsForProvider(provider: ProviderKey | '') {
   return PROVIDERS.find((item) => item.key === provider)?.models ?? []
 }
 
+/** 功能：函数 effectiveFallbackLabel，负责 effectiveFallbackLabel 相关处理。 */
 function effectiveFallbackLabel(scene: SceneModelKey) {
   const fallback = configStore.getResolvedSceneModel(scene)
   if (!fallback.provider || !fallback.model) {
@@ -114,6 +126,7 @@ function effectiveFallbackLabel(scene: SceneModelKey) {
   return `当前保存值：${draftPreferences[scene].provider} / ${draftPreferences[scene].model}`
 }
 
+/** 功能：函数 onProviderChange，负责 onProviderChange 相关处理。 */
 function onProviderChange(scene: SceneModelKey, value: string) {
   const provider = (value || '') as ProviderKey | ''
   draftPreferences[scene].provider = provider
@@ -121,6 +134,7 @@ function onProviderChange(scene: SceneModelKey, value: string) {
   customModelEnabled[scene] = provider === 'custom'
 }
 
+/** 功能：函数 onModelChange，负责 onModelChange 相关处理。 */
 function onModelChange(scene: SceneModelKey, value: string) {
   if (value === CUSTOM_MODEL_SENTINEL) {
     draftPreferences[scene].model = ''
@@ -131,6 +145,7 @@ function onModelChange(scene: SceneModelKey, value: string) {
   customModelEnabled[scene] = draftPreferences[scene].provider === 'custom'
 }
 
+/** 功能：函数 loadSceneModels，负责 loadSceneModels 相关处理。 */
 async function loadSceneModels() {
   loading.value = true
   try {
@@ -147,6 +162,7 @@ async function loadSceneModels() {
   }
 }
 
+/** 功能：函数 fetchModelsForProvider，负责 fetchModelsForProvider 相关处理。 */
 async function fetchModelsForProvider(provider: ProviderKey) {
   fetchingModels[provider] = true
   try {
@@ -169,6 +185,7 @@ async function fetchModelsForProvider(provider: ProviderKey) {
   }
 }
 
+/** 功能：函数 saveAll，负责 saveAll 相关处理。 */
 async function saveAll() {
   for (const scene of SCENE_CARDS) {
     const preference = draftPreferences[scene.key]
@@ -203,6 +220,7 @@ async function saveAll() {
   }
 }
 
+// 变量作用：变量 isDirty，用于 isDirty 相关配置或状态。
 const isDirty = computed(() => JSON.stringify(draftPreferences) !== JSON.stringify(configStore.sceneModelPreferences))
 
 onMounted(async () => {

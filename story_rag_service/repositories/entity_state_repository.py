@@ -13,17 +13,21 @@ from models.entity_state import EntityStateSnapshot
 
 
 class SqliteEntityStateRepository:
+    """作用：定义 SqliteEntityStateRepository 服务对象，用于封装对应领域流程。"""
     def __init__(self, db_path: str):
+        """功能：初始化对象依赖并设置默认运行状态。"""
         self.db_path = db_path
         Path(db_path).parent.mkdir(parents=True, exist_ok=True)
         self._init_table()
 
     def _connect(self) -> sqlite3.Connection:
+        """功能：处理 connect。"""
         conn = sqlite3.connect(self.db_path)
         conn.row_factory = sqlite3.Row
         return conn
 
     def _init_table(self) -> None:
+        """功能：处理 init table。"""
         with self._connect() as conn:
             cursor = conn.cursor()
             cursor.execute(
@@ -60,6 +64,7 @@ class SqliteEntityStateRepository:
         session_id: str,
         states: List[EntityStateSnapshot],
     ) -> List[EntityStateSnapshot]:
+        """功能：处理 replace 故事 states。"""
         with self._connect() as conn:
             cursor = conn.cursor()
             cursor.execute(
@@ -98,6 +103,7 @@ class SqliteEntityStateRepository:
         *,
         entity_type: Optional[str] = None,
     ) -> List[EntityStateSnapshot]:
+        """功能：查询并返回 by 故事ID列表。"""
         with self._connect() as conn:
             cursor = conn.cursor()
             if entity_type:
@@ -129,6 +135,7 @@ class SqliteEntityStateRepository:
         *,
         entity_type: Optional[str] = None,
     ) -> List[EntityStateSnapshot]:
+        """功能：查询并返回 by 会话 ID列表。"""
         with self._connect() as conn:
             cursor = conn.cursor()
             if entity_type:
@@ -155,6 +162,7 @@ class SqliteEntityStateRepository:
         return [EntityStateSnapshot(**json.loads(row["payload"])) for row in rows]
 
     def delete_by_story_id(self, story_id: str) -> int:
+        """功能：删除 by 故事ID。"""
         with self._connect() as conn:
             cursor = conn.cursor()
             cursor.execute(

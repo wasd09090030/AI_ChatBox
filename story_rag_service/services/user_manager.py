@@ -12,14 +12,17 @@ from models.user import User, UserSettingsUpdate
 from repositories.user_repository import SqliteUserRepository, UserRepository
 from services.database import Database
 
+# 变量作用：模块日志记录器，用于输出运行诊断信息。
 logger = logging.getLogger(__name__)
 
+# 变量作用：变量 SCENE_MODEL_COLUMN_MAP，用于保存 scene 模型 column map 相关模块级状态。
 SCENE_MODEL_COLUMN_MAP = {
     "story_generation": ("story_generation_provider", "story_generation_model"),
     "input_enhancement": ("input_enhancement_provider", "input_enhancement_model"),
     "story_adjustment": ("story_adjustment_provider", "story_adjustment_model"),
 }
 
+# 变量作用：变量 SUPPORTED_PROVIDERS，用于保存 supported providers 相关模块级状态。
 SUPPORTED_PROVIDERS = {
     "openai",
     "anthropic",
@@ -31,6 +34,7 @@ SUPPORTED_PROVIDERS = {
 
 
 def _normalize_provider(provider: Optional[str]) -> Optional[str]:
+    """功能：标准化模型提供商。"""
     value = (provider or "").strip().lower()
     return value or None
 
@@ -255,6 +259,7 @@ class UserManager:
         return self.get_user(user_id)
 
     def get_scene_model_preferences(self, user_id: str) -> dict[str, dict[str, Optional[str]]]:
+        """功能：获取 scene 模型 preferences。"""
         user = self.get_or_create_user(user_id)
         result: dict[str, dict[str, Optional[str]]] = {}
         for scene, (provider_attr, model_attr) in SCENE_MODEL_COLUMN_MAP.items():
@@ -269,6 +274,7 @@ class UserManager:
         user_id: str,
         preferences: dict[str, dict[str, Optional[str]]],
     ) -> User:
+        """功能：更新 scene 模型 preferences。"""
         self.get_or_create_user(user_id)
 
         for scene, value in preferences.items():
@@ -296,6 +302,7 @@ class UserManager:
         return self.get_user(user_id)
 
     def get_default_provider_selection(self, user_id: str) -> dict[str, Optional[str]]:
+        """功能：获取 default 模型提供商 selection。"""
         user = self.get_or_create_user(user_id)
         return {
             "provider": _normalize_provider(user.settings.default_provider) or "deepseek",

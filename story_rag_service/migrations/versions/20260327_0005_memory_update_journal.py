@@ -8,13 +8,18 @@ Create Date: 2026-03-27 21:30:00
 from alembic import op
 import sqlalchemy as sa
 
+# 变量作用：变量 revision，用于保存 revision 相关模块级状态。
 revision = "20260327_0005"
+# 变量作用：变量 down_revision，用于保存 down revision 相关模块级状态。
 down_revision = "20260317_0004"
+# 变量作用：变量 branch_labels，用于保存 branch labels 相关模块级状态。
 branch_labels = None
+# 变量作用：变量 depends_on，用于保存 depends on 相关模块级状态。
 depends_on = None
 
 
 def upgrade() -> None:
+    """功能：处理 upgrade。"""
     op.create_table(
         "memory_update_journal",
         sa.Column("event_id", sa.Text(), primary_key=True, nullable=False),
@@ -48,6 +53,7 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
+    """功能：处理 downgrade。"""
     op.drop_index("idx_memory_update_journal_committed_at", table_name="memory_update_journal")
     op.drop_index("idx_memory_update_journal_session_id", table_name="memory_update_journal")
     op.drop_table("memory_update_journal")

@@ -1,5 +1,10 @@
+/**
+ * 文件说明：项目文件 useSidebarCollapse.ts 的核心逻辑实现。
+ */
+
 import { onMounted, ref, watch } from 'vue'
 
+/** 功能：函数 useSidebarCollapse，负责 useSidebarCollapse 相关处理。 */
 export function useSidebarCollapse(storageKey: string, defaultValue = false) {
   const collapsed = ref(defaultValue)
 

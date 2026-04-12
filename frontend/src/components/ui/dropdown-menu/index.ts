@@ -1,3 +1,7 @@
+/**
+ * 文件说明：前端可复用界面组件。
+ */
+
 export { default as DropdownMenu } from "./DropdownMenu.vue"
 
 export { default as DropdownMenuCheckboxItem } from "./DropdownMenuCheckboxItem.vue"

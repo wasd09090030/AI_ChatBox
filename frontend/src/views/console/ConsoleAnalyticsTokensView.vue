@@ -1,4 +1,5 @@
 <script setup lang="ts">
+// 文件说明：前端页面级视图编排。
 import AnalyticsHeader from '@/domains/analytics/components/AnalyticsHeader.vue'
 import AnalyticsMetricGrid from '@/domains/analytics/components/AnalyticsMetricGrid.vue'
 import TokenBreakdownTrendChart from '@/domains/analytics/components/charts/TokenBreakdownTrendChart.vue'

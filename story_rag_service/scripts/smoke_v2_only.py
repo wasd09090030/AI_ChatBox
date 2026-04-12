@@ -16,12 +16,16 @@ import uuid
 
 import httpx
 
+# 变量作用：变量 BASE_URL，用于保存 base url 相关模块级状态。
 BASE_URL = os.getenv("SMOKE_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
+# 变量作用：变量 RUN_LLM_SMOKE，用于保存 run LLM smoke 相关模块级状态。
 RUN_LLM_SMOKE = os.getenv("RUN_LLM_SMOKE", "true").lower() == "true"
+# 变量作用：变量 TIMEOUT，用于保存 timeout 相关模块级状态。
 TIMEOUT = 30.0
 
 
 def main() -> None:
+    """功能：处理 main。"""
     print(f"[SMOKE-V2] base_url={BASE_URL}")
 
     with httpx.Client(timeout=TIMEOUT) as client:

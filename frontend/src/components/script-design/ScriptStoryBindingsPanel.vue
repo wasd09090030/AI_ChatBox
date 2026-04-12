@@ -1,4 +1,5 @@
 <script setup lang="ts">
+// 文件说明：前端可复用界面组件。
 import { Link2 } from 'lucide-vue-next'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'

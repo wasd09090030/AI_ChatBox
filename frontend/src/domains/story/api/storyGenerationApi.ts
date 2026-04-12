@@ -1,3 +1,7 @@
+/**
+ * 文件说明：前端业务域逻辑与接口封装。
+ */
+
 import api from '@/services/api'
 import { ZodError } from 'zod'
 import { createAppError, normalizeApiError } from '@/services/errors'
@@ -5,6 +9,7 @@ import { V2GenerateResponseSchema } from '@/services/schemas'
 import { API_PREFIX } from '@/utils/constants'
 import { getUserId } from '@/domains/user/api/userIdentity'
 
+/** 功能：函数 getStoryHeaders，负责 getStoryHeaders 相关处理。 */
 function getStoryHeaders(contentType = true): Record<string, string> {
   const headers: Record<string, string> = {
     'X-User-ID': getUserId(),
@@ -15,6 +20,7 @@ function getStoryHeaders(contentType = true): Record<string, string> {
   return headers
 }
 
+/** 功能：函数 buildStorySessionId，负责 buildStorySessionId 相关处理。 */
 export function buildStorySessionId(storyId: string): string {
   return `story-${storyId}-v2`
 }
@@ -416,6 +422,7 @@ export async function* streamStoryV2(
   }
 }
 
+/** 功能：函数 createSessionV2，负责 createSessionV2 相关处理。 */
 export async function createSessionV2(
   sessionId: string,
   worldId?: string,
@@ -433,6 +440,7 @@ export async function createSessionV2(
   return res.data
 }
 
+/** 功能：函数 getSessionV2，负责 getSessionV2 相关处理。 */
 export async function getSessionV2(sessionId: string): Promise<SessionInfo> {
   const res = await api.get<SessionInfo>(`/story/session/${encodeURIComponent(sessionId)}`, {
     headers: getStoryHeaders(false),
@@ -440,6 +448,7 @@ export async function getSessionV2(sessionId: string): Promise<SessionInfo> {
   return res.data
 }
 
+/** 功能：函数 rollbackLastMessageApi，负责 rollbackLastMessageApi 相关处理。 */
 export async function rollbackLastMessageApi(sessionId: string): Promise<DeleteLastMessageResponse> {
   const response = await api.delete<DeleteLastMessageResponse>(`/story/session/${encodeURIComponent(sessionId)}/messages/last`, {
     headers: getStoryHeaders(false),
@@ -447,6 +456,7 @@ export async function rollbackLastMessageApi(sessionId: string): Promise<DeleteL
   return response.data
 }
 
+/** 功能：函数 regenerateStoryApi，负责 regenerateStoryApi 相关处理。 */
 export async function regenerateStoryApi(
   sessionId: string,
   payload: RegenerateRequest = {},
@@ -468,6 +478,7 @@ export async function regenerateStoryApi(
   }
 }
 
+/** 功能：函数 generateStoryV2，负责 generateStoryV2 相关处理。 */
 export async function generateStoryV2(
   payload: V2GenerateRequest,
   options?: { abortSignal?: AbortSignal },
@@ -486,6 +497,7 @@ export async function generateStoryV2(
   }
 }
 
+/** 功能：函数 previewEnhancedStoryInput，负责 previewEnhancedStoryInput 相关处理。 */
 export async function previewEnhancedStoryInput(
   payload: V2InputEnhancementPreviewRequest,
   options?: { abortSignal?: AbortSignal },

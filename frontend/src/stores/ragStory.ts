@@ -9,6 +9,7 @@ import { API_PREFIX } from '@/utils/constants'
 import { useConfigStore } from '@/stores/config'
 import { getUserId } from '@/domains/user/api/userIdentity'
 
+/** 功能：函数 asRecord，负责 asRecord 相关处理。 */
 function asRecord(value: unknown): Record<string, unknown> {
   if (value && typeof value === 'object') {
     return value as Record<string, unknown>
@@ -16,6 +17,7 @@ function asRecord(value: unknown): Record<string, unknown> {
   return {}
 }
 
+/** 功能：函数 asString，负责 asString 相关处理。 */
 function asString(value: unknown, fallback = ''): string {
   if (typeof value === 'string') {
     return value
@@ -26,6 +28,7 @@ function asString(value: unknown, fallback = ''): string {
   return String(value)
 }
 
+/** 功能：函数 asStringArray，负责 asStringArray 相关处理。 */
 function asStringArray(value: unknown): string[] {
   if (!Array.isArray(value)) {
     return []
@@ -33,6 +36,7 @@ function asStringArray(value: unknown): string[] {
   return value.map((item) => asString(item)).filter((item) => item.trim() !== '')
 }
 
+/** 功能：函数 asRecordArray，负责 asRecordArray 相关处理。 */
 function asRecordArray(value: unknown): Record<string, unknown>[] {
   if (!Array.isArray(value)) {
     return []
@@ -40,6 +44,7 @@ function asRecordArray(value: unknown): Record<string, unknown>[] {
   return value.map((item) => asRecord(item))
 }
 
+/** 功能：函数 getErrorMessage，负责 getErrorMessage 相关处理。 */
 function getErrorMessage(error: unknown, fallback: string): string {
   if (error instanceof Error && error.message) {
     return error.message
@@ -56,6 +61,7 @@ function getErrorMessage(error: unknown, fallback: string): string {
   return fallback
 }
 
+/** 功能：函数 getValidationErrorMessage，负责 getValidationErrorMessage 相关处理。 */
 function getValidationErrorMessage(detail: unknown, fallback: string): string {
   if (Array.isArray(detail)) {
     return detail
@@ -120,6 +126,7 @@ export interface StoryDebugSnapshot {
   updatedAt: string
 }
 
+// 变量作用：变量 useRagStoryStore，用于 useRagStoryStore 相关配置或状态。
 export const useRagStoryStore = defineStore('ragStory', () => {
   const configStore = useConfigStore()
 

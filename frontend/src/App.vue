@@ -1,4 +1,5 @@
 <script setup lang="ts">
+// 文件说明：项目文件 App.vue 的核心逻辑实现。
 import AppSidebar from '@/components/layout/AppSidebar.vue'
 import { Toaster } from '@/components/ui/toast'
 import { RouterView } from 'vue-router'
@@ -6,7 +7,9 @@ import { onMounted } from 'vue'
 import { useConfigStore } from '@/stores/config'
 import { useStorySessionStore } from '@/stores/storySession'
 
+// 变量作用：变量 configStore，用于 configStore 相关配置或状态。
 const configStore = useConfigStore()
+// 变量作用：变量 storySessionStore，用于 storySessionStore 相关配置或状态。
 const storySessionStore = useStorySessionStore()
 
 onMounted(async () => {

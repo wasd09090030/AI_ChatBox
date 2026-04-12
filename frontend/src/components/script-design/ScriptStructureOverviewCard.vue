@@ -1,19 +1,24 @@
 <script setup lang="ts">
+// 文件说明：前端可复用界面组件。
 import { computed } from 'vue'
 import { Layers3, Milestone, FlagTriangleRight, WandSparkles } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import type { ScriptDesign } from '@/domains/story/api/scriptDesignApi'
 
+// 变量作用：变量 props，用于 props 相关配置或状态。
 const props = defineProps<{
   design: ScriptDesign
 }>()
 
+// 变量作用：变量 emit，用于 emit 相关配置或状态。
 const emit = defineEmits<{
   openDesigner: []
 }>()
 
+// 变量作用：变量 orderedStages，用于 orderedStages 相关配置或状态。
 const orderedStages = computed(() => props.design.stage_outlines.slice().sort((a, b) => a.order - b.order))
+// 变量作用：变量 stagePreview，用于 stagePreview 相关配置或状态。
 const stagePreview = computed(() => orderedStages.value.slice(0, 4))
 </script>
 

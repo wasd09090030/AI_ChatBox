@@ -1,3 +1,7 @@
+/**
+ * 文件说明：前端业务域逻辑与接口封装。
+ */
+
 import { computed, unref, type MaybeRef } from 'vue'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import {
@@ -7,6 +11,7 @@ import {
   type ScriptDesignUpdateInput,
 } from '@/domains/story/api/scriptDesignApi'
 
+// 变量作用：变量 SCRIPT_DESIGN_KEYS，用于 SCRIPT DESIGN KEYS 相关配置或状态。
 export const SCRIPT_DESIGN_KEYS = {
   all: ['script-designs'] as const,
   lists: () => ['script-designs', 'list'] as const,
@@ -15,6 +20,7 @@ export const SCRIPT_DESIGN_KEYS = {
   bindings: (id?: string) => ['script-designs', 'bindings', id ?? 'none'] as const,
 }
 
+/** 功能：函数 useScriptDesignsQuery，负责 useScriptDesignsQuery 相关处理。 */
 export function useScriptDesignsQuery(
   worldId?: MaybeRef<string | undefined>,
   status?: MaybeRef<ScriptDesignStatus | undefined>,
@@ -26,6 +32,7 @@ export function useScriptDesignsQuery(
   })
 }
 
+/** 功能：函数 useScriptDesignQuery，负责 useScriptDesignQuery 相关处理。 */
 export function useScriptDesignQuery(scriptDesignId?: MaybeRef<string | undefined>) {
   return useQuery({
     queryKey: computed(() => SCRIPT_DESIGN_KEYS.detail(unref(scriptDesignId) || undefined)),
@@ -34,6 +41,7 @@ export function useScriptDesignQuery(scriptDesignId?: MaybeRef<string | undefine
   })
 }
 
+/** 功能：函数 useScriptDesignBindingsQuery，负责 useScriptDesignBindingsQuery 相关处理。 */
 export function useScriptDesignBindingsQuery(scriptDesignId?: MaybeRef<string | undefined>) {
   return useQuery({
     queryKey: computed(() => SCRIPT_DESIGN_KEYS.bindings(unref(scriptDesignId) || undefined)),
@@ -42,6 +50,7 @@ export function useScriptDesignBindingsQuery(scriptDesignId?: MaybeRef<string | 
   })
 }
 
+/** 功能：函数 useCreateScriptDesignMutation，负责 useCreateScriptDesignMutation 相关处理。 */
 export function useCreateScriptDesignMutation() {
   const queryClient = useQueryClient()
   return useMutation({
@@ -53,6 +62,7 @@ export function useCreateScriptDesignMutation() {
   })
 }
 
+/** 功能：函数 useUpdateScriptDesignMutation，负责 useUpdateScriptDesignMutation 相关处理。 */
 export function useUpdateScriptDesignMutation() {
   const queryClient = useQueryClient()
   return useMutation({
@@ -66,6 +76,7 @@ export function useUpdateScriptDesignMutation() {
   })
 }
 
+/** 功能：函数 useDeleteScriptDesignMutation，负责 useDeleteScriptDesignMutation 相关处理。 */
 export function useDeleteScriptDesignMutation() {
   const queryClient = useQueryClient()
   return useMutation({

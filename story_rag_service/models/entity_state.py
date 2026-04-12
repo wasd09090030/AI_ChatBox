@@ -8,6 +8,7 @@ from typing import Any, Dict, List, Literal, Optional
 from pydantic import BaseModel, Field
 
 
+# 变量作用：变量 EntityType，用于保存 entitytype 相关模块级状态。
 EntityType = Literal["character"]
 
 

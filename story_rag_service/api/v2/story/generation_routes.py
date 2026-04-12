@@ -31,8 +31,11 @@ from services.observability import metrics_recorder
 
 from .generation_metrics import build_observability_counters, resolve_token_usage
 
+# 变量作用：模块日志记录器，用于输出运行诊断信息。
 logger = logging.getLogger(__name__)
+# 变量作用：FastAPI 路由注册器，用于挂载本模块接口。
 router = APIRouter()
+# 变量作用：正则规则 _CHOICE_LINE_RE，用于文本模式匹配。
 _CHOICE_LINE_RE = re.compile(r"^\[([ABC])\]\s*(.+)$")
 
 

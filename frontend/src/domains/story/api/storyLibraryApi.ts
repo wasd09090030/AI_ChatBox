@@ -1,3 +1,7 @@
+/**
+ * 文件说明：前端业务域逻辑与接口封装。
+ */
+
 import api from '@/services/api'
 import type { StoredStory } from '@/components/story/types'
 import type { EntityStateCollection, MemoryUpdateEvent } from '@/domains/story/api/storyGenerationApi'
@@ -96,6 +100,7 @@ export interface CommitStoryAdjustmentsResponse {
   warnings: string[]
 }
 
+// 变量作用：变量 storyLibraryApi，用于 storyLibraryApi 相关配置或状态。
 export const storyLibraryApi = {
   listByWorld(worldId: string) {
     return api

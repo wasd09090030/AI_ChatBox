@@ -1,8 +1,13 @@
+/**
+ * 文件说明：前端可复用界面组件。
+ */
+
 import type { VariantProps } from "class-variance-authority"
 import { cva } from "class-variance-authority"
 
 export { default as Badge } from "./Badge.vue"
 
+// 变量作用：变量 badgeVariants，用于 badgeVariants 相关配置或状态。
 export const badgeVariants = cva(
   "inline-flex gap-1 items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
   {

@@ -17,18 +17,24 @@ import os
 
 import httpx
 
+# 变量作用：变量 BASE_URL，用于保存 base url 相关模块级状态。
 BASE_URL = os.getenv("SMOKE_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
+# 变量作用：变量 RUN_LLM_SMOKE，用于保存 run LLM smoke 相关模块级状态。
 RUN_LLM_SMOKE = os.getenv("RUN_LLM_SMOKE", "true").lower() == "true"
+# 变量作用：变量 SMOKE_WORLD_ID，用于保存 smoke 世界观 ID 相关模块级状态。
 SMOKE_WORLD_ID = os.getenv("SMOKE_WORLD_ID")
+# 变量作用：变量 TIMEOUT，用于保存 timeout 相关模块级状态。
 TIMEOUT = 90.0
 
 
 def _assert(cond: bool, msg: str) -> None:
+    """功能：处理 assert。"""
     if not cond:
         raise AssertionError(f"[FAIL] {msg}")
 
 
 def _create_session(client: httpx.Client) -> str:
+    """功能：创建会话。"""
     payload = {"world_id": SMOKE_WORLD_ID} if SMOKE_WORLD_ID else {}
     response = client.post(f"{BASE_URL}/api/v2/story/session", json=payload)
     _assert(response.status_code == 200, f"Create session failed: {response.status_code} {response.text[:200]}")
@@ -38,6 +44,7 @@ def _create_session(client: httpx.Client) -> str:
 
 
 def test_stream_contract(client: httpx.Client) -> None:
+    """功能：处理 test stream contract。"""
     session_id = _create_session(client)
     payload = {
         "session_id": session_id,
@@ -92,6 +99,7 @@ def test_stream_contract(client: httpx.Client) -> None:
 
 
 def main() -> None:
+    """功能：处理 main。"""
     print(f"[SMOKE-STREAM-CONTRACT] base_url={BASE_URL} llm={RUN_LLM_SMOKE} world_id={SMOKE_WORLD_ID}")
     with httpx.Client(timeout=TIMEOUT) as client:
         health = client.get(f"{BASE_URL}/api/v2/health")

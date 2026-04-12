@@ -1,4 +1,5 @@
 <script setup lang="ts">
+// 文件说明：前端可复用界面组件。
 import { computed, ref, watch } from 'vue'
 import { ChevronDown, Plus, Save, Sparkles, Trash2 } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
@@ -97,29 +98,38 @@ interface SimpleForeshadowDraft {
   notes: string
 }
 
+// 变量作用：变量 props，用于 props 相关配置或状态。
 const props = defineProps<{
   design: ScriptDesign
   saving?: boolean
 }>()
 
+// 变量作用：变量 emit，用于 emit 相关配置或状态。
 const emit = defineEmits<{
   save: [payload: { stage_outlines: ScriptStage[]; event_nodes: ScriptEventNode[]; foreshadows: ForeshadowRecord[] }]
 }>()
 
+// 变量作用：变量 stageDrafts，用于 stageDrafts 相关配置或状态。
 const stageDrafts = ref<SimpleStageDraft[]>([])
+// 变量作用：变量 foreshadowDrafts，用于 foreshadowDrafts 相关配置或状态。
 const foreshadowDrafts = ref<SimpleForeshadowDraft[]>([])
 
+// 变量作用：变量 stageTitleMap，用于 stageTitleMap 相关配置或状态。
 const stageTitleMap = computed(() => new Map(stageDrafts.value.map((stage) => [stage.id, stage.title])))
+// 变量作用：变量 eventTitleMap，用于 eventTitleMap 相关配置或状态。
 const eventTitleMap = computed(() => new Map(stageDrafts.value.flatMap((stage) => stage.events.map((eventNode) => [eventNode.id, eventNode.title] as const))))
 
+/** 功能：函数 idsToText，负责 idsToText 相关处理。 */
 function idsToText(ids: string[]) {
   return ids.join(', ')
 }
 
+/** 功能：函数 textToIds，负责 textToIds 相关处理。 */
 function textToIds(value: string) {
   return value.split(',').map((item) => item.trim()).filter(Boolean)
 }
 
+/** 功能：函数 toEventDraft，负责 toEventDraft 相关处理。 */
 function toEventDraft(eventNode: ScriptEventNode): SimpleEventDraft {
   return {
     id: eventNode.id,
@@ -183,6 +193,7 @@ watch(
   { immediate: true, deep: true },
 )
 
+/** 功能：函数 addStage，负责 addStage 相关处理。 */
 function addStage() {
   stageDrafts.value.push({
     id: crypto.randomUUID(),
@@ -199,6 +210,7 @@ function addStage() {
   })
 }
 
+/** 功能：函数 removeStage，负责 removeStage 相关处理。 */
 function removeStage(stageId: string) {
   stageDrafts.value = stageDrafts.value.filter((stage) => stage.id !== stageId)
   foreshadowDrafts.value = foreshadowDrafts.value.map((item) => ({
@@ -208,6 +220,7 @@ function removeStage(stageId: string) {
   }))
 }
 
+/** 功能：函数 addEvent，负责 addEvent 相关处理。 */
 function addEvent(stageId: string) {
   const stage = stageDrafts.value.find((item) => item.id === stageId)
   if (!stage) return
@@ -232,6 +245,7 @@ function addEvent(stageId: string) {
   })
 }
 
+/** 功能：函数 removeEvent，负责 removeEvent 相关处理。 */
 function removeEvent(stageId: string, eventId: string) {
   const stage = stageDrafts.value.find((item) => item.id === stageId)
   if (!stage) return
@@ -243,6 +257,7 @@ function removeEvent(stageId: string, eventId: string) {
   }))
 }
 
+/** 功能：函数 addForeshadow，负责 addForeshadow 相关处理。 */
 function addForeshadow() {
   foreshadowDrafts.value.push({
     id: crypto.randomUUID(),
@@ -260,10 +275,12 @@ function addForeshadow() {
   })
 }
 
+/** 功能：函数 removeForeshadow，负责 removeForeshadow 相关处理。 */
 function removeForeshadow(id: string) {
   foreshadowDrafts.value = foreshadowDrafts.value.filter((item) => item.id !== id)
 }
 
+/** 功能：函数 submit，负责 submit 相关处理。 */
 function submit() {
   const stage_outlines: ScriptStage[] = stageDrafts.value
     .map((stage, index) => ({

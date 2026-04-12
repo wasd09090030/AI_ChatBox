@@ -1,4 +1,5 @@
 ﻿<script setup lang="ts">
+// 文件说明：前端页面级视图编排。
 import { ref, computed, watch, nextTick, onActivated } from 'vue'
 import {
   Send, Square, Sparkles, ListOrdered, ChevronRight, Wand2, LoaderCircle, CircleHelp, PenLine, Route,
@@ -56,14 +57,18 @@ import type { StoryRuntimeState } from '@/domains/story/api/storyLibraryApi'
 import type { LorebookEntry } from '@/services/lorebookService'
 import type { StoredStory } from '@/components/story/types'
 
+// 变量作用：变量 props，用于 props 相关配置或状态。
 const props = withDefaults(defineProps<{
   pageMode?: 'improv' | 'scripted'
 }>(), {
   pageMode: 'improv',
 })
 
+// 变量作用：变量 configStore，用于 configStore 相关配置或状态。
 const configStore = useConfigStore()
+// 变量作用：变量 storySessionStore，用于 storySessionStore 相关配置或状态。
 const storySessionStore = useStorySessionStore()
+// 变量作用：变量 storyDraftStore，用于 storyDraftStore 相关配置或状态。
 const storyDraftStore = useStoryDraftStateStore()
 const { toast } = useToast()
 
@@ -92,8 +97,11 @@ const { data: scriptDesignsData } = useScriptDesignsQuery(selectedWorldId)
 
 // ── Generation state ─────────────────────────────────────────────────────────
 const scrollRef = ref<HTMLElement | null>(null)
+// 变量作用：变量 textareaRef，用于 textareaRef 相关配置或状态。
 const textareaRef = ref<HTMLTextAreaElement | null>(null)
+// 变量作用：变量 shouldStickToBottom，用于 shouldStickToBottom 相关配置或状态。
 const shouldStickToBottom = ref(true)
+// 变量作用：变量 currentStoryId，用于 currentStoryId 相关配置或状态。
 const currentStoryId = computed(() => currentStory.value?.id ?? null)
 
 function sharedDraftRef<K extends keyof SharedStoryDraftState>(
@@ -134,41 +142,65 @@ function routeDraftRef<K extends keyof RouteStoryDraftState>(
 
 // ── SillyTavern controls ─────────────────────────────────────────────────────
 const storyMode = routeDraftRef('storyMode', 'choices' as StoryMode)
+// 变量作用：变量 authorsNote，用于 authorsNote 相关配置或状态。
 const authorsNote = routeDraftRef('authorsNote', '')
+// 变量作用：变量 instruction，用于 instruction 相关配置或状态。
 const instruction = routeDraftRef('instruction', '')
+// 变量作用：变量 showControlPanel，用于 showControlPanel 相关配置或状态。
 const showControlPanel = ref(false)
+// 变量作用：变量 showControlDrawer，用于 showControlDrawer 相关配置或状态。
 const showControlDrawer = ref(false)
+// 变量作用：变量 showScriptSidebar，用于 showScriptSidebar 相关配置或状态。
 const showScriptSidebar = ref(false)
+// 变量作用：变量 selectedPersonaId，用于 selectedPersonaId 相关配置或状态。
 const selectedPersonaId = sharedDraftRef('selectedPersonaId', null)
+// 变量作用：变量 selectedScriptDesignId，用于 selectedScriptDesignId 相关配置或状态。
 const selectedScriptDesignId = ref<string | null>(null)
+// 变量作用：变量 selectedScriptStageId，用于 selectedScriptStageId 相关配置或状态。
 const selectedScriptStageId = ref<string | null>(null)
+// 变量作用：变量 selectedScriptEventId，用于 selectedScriptEventId 相关配置或状态。
 const selectedScriptEventId = ref<string | null>(null)
+// 变量作用：变量 followScriptDesign，用于 followScriptDesign 相关配置或状态。
 const followScriptDesign = ref(false)
+// 变量作用：变量 creationMode，用于 creationMode 相关配置或状态。
 const creationMode = ref<'improv' | 'scripted'>(props.pageMode)
+// 变量作用：变量 progressIntent，用于 progressIntent 相关配置或状态。
 const progressIntent = routeDraftRef('progressIntent', 'hold')
+// 变量作用：变量 runtimeStateId，用于 runtimeStateId 相关配置或状态。
 const runtimeStateId = ref<string | null>(null)
+// 变量作用：变量 selectedPrincipalCharacterId，用于 selectedPrincipalCharacterId 相关配置或状态。
 const selectedPrincipalCharacterId = sharedDraftRef('selectedPrincipalCharacterId', null)
+// 变量作用：变量 dialogueMode，用于 dialogueMode 相关配置或状态。
 const dialogueMode = sharedDraftRef('dialogueMode', 'auto')
+// 变量作用：变量 dialogueTarget，用于 dialogueTarget 相关配置或状态。
 const dialogueTarget = sharedDraftRef('dialogueTarget', '')
+// 变量作用：变量 dialogueIntent，用于 dialogueIntent 相关配置或状态。
 const dialogueIntent = sharedDraftRef('dialogueIntent', '')
+// 变量作用：变量 dialogueStyleHint，用于 dialogueStyleHint 相关配置或状态。
 const dialogueStyleHint = sharedDraftRef('dialogueStyleHint', '')
+// 变量作用：变量 userInputDraft，用于 userInputDraft 相关配置或状态。
 const userInputDraft = routeDraftRef('userInput', '')
+// 变量作用：变量 selectedContextEntryIdsDraft，用于 selectedContextEntryIdsDraft 相关配置或状态。
 const selectedContextEntryIdsDraft = sharedDraftRef('selectedContextEntryIds', [])
+// 变量作用：变量 selectedFocusTemplateIdDraft，用于 selectedFocusTemplateIdDraft 相关配置或状态。
 const selectedFocusTemplateIdDraft = sharedDraftRef('selectedFocusTemplateId', '')
 
 // ── Context / memory sidebar ─────────────────────────────────────────────────
 const showSidebar = ref(false)
+// 变量作用：变量 currentStoryMemoryPayload，用于 currentStoryMemoryPayload 相关配置或状态。
 const currentStoryMemoryPayload = computed(() => {
   const sessionId = v2SessionId.value || (currentStory.value ? `story-${currentStory.value.id}-v2` : '')
   if (!sessionId) return null
   return storySessionStore.getStoryMemorySession(sessionId)?.storyMemory ?? null
 })
+// 变量作用：变量 currentSummarySnapshot，用于 currentSummarySnapshot 相关配置或状态。
 const currentSummarySnapshot = computed(() => {
   const sessionId = v2SessionId.value || (currentStory.value ? `story-${currentStory.value.id}-v2` : '')
   const summaryFromMemory = getStoryMemorySummarySnapshot(currentStoryMemoryPayload.value)
   if (summaryFromMemory) return summaryFromMemory
   return (sessionId ? storySessionStore.getSummarySnapshot(sessionId) : null) ?? lastSummary.value
 })
+// 变量作用：变量 currentMemoryUpdates，用于 currentMemoryUpdates 相关配置或状态。
 const currentMemoryUpdates = computed(() => {
   const sessionId = v2SessionId.value || (currentStory.value ? `story-${currentStory.value.id}-v2` : '')
   const storyMemoryUpdates = getStoryMemoryTimelineEvents(currentStoryMemoryPayload.value, 20)
@@ -193,6 +225,7 @@ const currentMemoryUpdates = computed(() => {
     committed_at: item.committedAt,
   }))
 })
+// 变量作用：变量 currentEntityStateSnapshot，用于 currentEntityStateSnapshot 相关配置或状态。
 const currentEntityStateSnapshot = computed(() => {
   const sessionId = v2SessionId.value || (currentStory.value ? `story-${currentStory.value.id}-v2` : '')
   const storyMemorySnapshot = getStoryMemoryEntitySnapshot(currentStoryMemoryPayload.value)
@@ -200,6 +233,7 @@ const currentEntityStateSnapshot = computed(() => {
   if (!sessionId) return null
   return storySessionStore.getEntityStateSnapshot(sessionId)
 })
+// 变量作用：变量 currentEntityStateUpdates，用于 currentEntityStateUpdates 相关配置或状态。
 const currentEntityStateUpdates = computed(() => {
   const sessionId = v2SessionId.value || (currentStory.value ? `story-${currentStory.value.id}-v2` : '')
   const storyMemoryUpdates = getStoryMemoryEntityUpdates(currentStoryMemoryPayload.value, 12)
@@ -207,6 +241,7 @@ const currentEntityStateUpdates = computed(() => {
   if (!sessionId) return []
   return storySessionStore.getSessionEntityStateUpdates(sessionId, 12)
 })
+// 变量作用：变量 currentWorldUpdate，用于 currentWorldUpdate 相关配置或状态。
 const currentWorldUpdate = computed(() => {
   const sessionId = v2SessionId.value || (currentStory.value ? `story-${currentStory.value.id}-v2` : '')
   const storyMemoryWorldUpdate = getStoryMemoryWorldUpdate(currentStoryMemoryPayload.value)
@@ -222,87 +257,116 @@ const modeLabels: Record<StoryMode, string> = {
   instruction: '指令',
 }
 
+// 变量作用：变量 pageModeLabel，用于 pageModeLabel 相关配置或状态。
 const pageModeLabel = computed(() => (
   props.pageMode === 'scripted' ? '严格剧本创作' : '渐进式创作'
 ))
+// 变量作用：变量 isScriptedPage，用于 isScriptedPage 相关配置或状态。
 const isScriptedPage = computed(() => props.pageMode === 'scripted')
+// 变量作用：变量 pageModeDescription，用于 pageModeDescription 相关配置或状态。
 const pageModeDescription = computed(() => (
   props.pageMode === 'scripted'
     ? '结构驱动的主线创作页面，剧情推进以后端运行态为准。'
     : '高自由度的即兴创作页面，允许 Prompt 和上下文自然扩展故事。'
 ))
+// 变量作用：变量 alternateRoute，用于 alternateRoute 相关配置或状态。
 const alternateRoute = computed(() => (
   props.pageMode === 'scripted' ? '/story/improv' : '/story/scripted'
 ))
+// 变量作用：变量 alternateRouteLabel，用于 alternateRouteLabel 相关配置或状态。
 const alternateRouteLabel = computed(() => (
   props.pageMode === 'scripted' ? '切换到渐进式创作' : '切换到严格剧本创作'
 ))
+// 变量作用：变量 promptInputDomId，用于 promptInputDomId 相关配置或状态。
 const promptInputDomId = computed(() => (
   isScriptedPage.value ? 'story-scripted-micro-adjust-input' : 'story-improv-prompt-input'
 ))
+// 变量作用：变量 promptInputName，用于 promptInputName 相关配置或状态。
 const promptInputName = computed(() => (
   isScriptedPage.value ? 'scripted_micro_adjust_note' : 'improv_prompt'
 ))
+// 变量作用：变量 controlDrawerTitle，用于 controlDrawerTitle 相关配置或状态。
 const controlDrawerTitle = computed(() => (
   isScriptedPage.value ? '角色控制' : '创作控制'
 ))
+// 变量作用：变量 promptComposerButtonLabel，用于 promptComposerButtonLabel 相关配置或状态。
 const promptComposerButtonLabel = computed(() => (
   isScriptedPage.value ? '本轮微调' : 'Prompt 编排'
 ))
+// 变量作用：变量 inputAssistTitle，用于 inputAssistTitle 相关配置或状态。
 const inputAssistTitle = computed(() => (
   isScriptedPage.value ? '本轮微调说明' : 'AI 增强 Prompt'
 ))
+// 变量作用：变量 inputAssistDescription，用于 inputAssistDescription 相关配置或状态。
 const inputAssistDescription = computed(() => (
   isScriptedPage.value
     ? '这里只优化本轮镜头、节奏和描写重点，不负责决定主线推进。'
     : '点击按钮生成增强版本，再决定是否填入输入框'
 ))
+// 变量作用：变量 inputAssistButtonLabel，用于 inputAssistButtonLabel 相关配置或状态。
 const inputAssistButtonLabel = computed(() => (
   isScriptedPage.value ? '优化微调说明' : '增强 Prompt'
 ))
+// 变量作用：变量 inputPreviewOriginalLabel，用于 inputPreviewOriginalLabel 相关配置或状态。
 const inputPreviewOriginalLabel = computed(() => (
   isScriptedPage.value ? '原始微调说明' : '原始 Prompt'
 ))
+// 变量作用：变量 inputPreviewEnhancedLabel，用于 inputPreviewEnhancedLabel 相关配置或状态。
 const inputPreviewEnhancedLabel = computed(() => (
   isScriptedPage.value ? '优化后微调说明' : '增强后 Prompt'
 ))
+// 变量作用：变量 templatePreviewTitle，用于 templatePreviewTitle 相关配置或状态。
 const templatePreviewTitle = computed(() => (
   isScriptedPage.value ? '微调模板预览' : '指令模板预览'
 ))
+// 变量作用：变量 inputPlaceholder，用于 inputPlaceholder 相关配置或状态。
 const inputPlaceholder = computed(() => (
   isScriptedPage.value
     ? '输入本轮微调说明，例如强调当前事件的冲突、节奏或对白重点… (Shift+Enter 换行)'
     : '输入提示词继续故事… (Shift+Enter 换行)'
 ))
+// 变量作用：变量 scriptedMicroAdjustHelp，用于 scriptedMicroAdjustHelp 相关配置或状态。
 const scriptedMicroAdjustHelp = [
   '可以写：本轮镜头重点、情绪力度、对白密度、节奏快慢。',
   '不要写：直接切换主线、跳过阶段、强行完成未达条件的事件。',
   '推荐写法：强调当前事件里的冲突、悬念、人物互动或信息揭示方式。',
 ]
 
+// 变量作用：变量 promptFocusTemplates，用于 promptFocusTemplates 相关配置或状态。
 const promptFocusTemplates = STORY_PROMPT_FOCUS_TEMPLATES
+// 变量作用：变量 NONE_OPTION_VALUE，用于 NONE OPTION VALUE 相关配置或状态。
 const NONE_OPTION_VALUE = '__story-persona-none__'
 
+// 变量作用：变量 lorebookEntries，用于 lorebookEntries 相关配置或状态。
 const lorebookEntries = computed(() => lorebookEntriesData.value?.entries ?? [])
+// 变量作用：变量 scriptDesigns，用于 scriptDesigns 相关配置或状态。
 const scriptDesigns = computed(() => scriptDesignsData.value ?? [])
+// 变量作用：变量 selectedScriptDesign，用于 selectedScriptDesign 相关配置或状态。
 const selectedScriptDesign = computed(() => (
   scriptDesigns.value.find((item) => item.id === selectedScriptDesignId.value) ?? null
 ))
+// 变量作用：变量 scriptStages，用于 scriptStages 相关配置或状态。
 const scriptStages = computed(() => selectedScriptDesign.value?.stage_outlines ?? [])
+// 变量作用：变量 activeScriptStage，用于 activeScriptStage 相关配置或状态。
 const activeScriptStage = computed(() => (
   scriptStages.value.find((item) => item.id === selectedScriptStageId.value) ?? null
 ))
+// 变量作用：变量 scriptEvents，用于 scriptEvents 相关配置或状态。
 const scriptEvents = computed(() => {
   const design = selectedScriptDesign.value
   if (!design) return []
   if (!selectedScriptStageId.value) return design.event_nodes
   return design.event_nodes.filter((item) => item.stage_id === selectedScriptStageId.value)
 })
+// 变量作用：变量 activeScriptEvent，用于 activeScriptEvent 相关配置或状态。
 const activeScriptEvent = computed(() => (
   (selectedScriptDesign.value?.event_nodes ?? []).find((item) => item.id === selectedScriptEventId.value) ?? null
 ))
+// 变量作用：变量 progressUpdating，用于 progressUpdating 相关配置或状态。
 const progressUpdating = ref(false)
+// 变量作用：变量 lorebookCharacterEntries，用于 lorebookCharacterEntries 相关配置或状态。
 const lorebookCharacterEntries = computed(() => lorebookEntries.value.filter((entry) => entry.type === 'character'))
+// 变量作用：变量 selectedPrincipalCharacter，用于 selectedPrincipalCharacter 相关配置或状态。
 const selectedPrincipalCharacter = computed<LorebookEntry | null>(() => (
   lorebookCharacterEntries.value.find((entry) => entry.id === selectedPrincipalCharacterId.value) ?? null
 ))
@@ -335,13 +399,17 @@ const {
   selectedContextEntryIds: selectedContextEntryIdsDraft,
   selectedFocusTemplateId: selectedFocusTemplateIdDraft,
 })
+// 变量作用：变量 controlDrawerBadgeText，用于 controlDrawerBadgeText 相关配置或状态。
 const controlDrawerBadgeText = computed(() => (
   isScriptedPage.value ? '角色' : modeLabels[storyMode.value]
 ))
+// 变量作用：变量 selectedPersona，用于 selectedPersona 相关配置或状态。
 const selectedPersona = computed(() => (
   personas.value?.find((item) => item.id === selectedPersonaId.value) ?? null
 ))
+// 变量作用：变量 selectedPersonaSummaryText，用于 selectedPersonaSummaryText 相关配置或状态。
 const selectedPersonaSummaryText = computed(() => selectedPersona.value?.name ?? '默认：你自己')
+// 变量作用：变量 selectedPersonaSelectValue，用于 selectedPersonaSelectValue 相关配置或状态。
 const selectedPersonaSelectValue = computed({
   get: () => selectedPersonaId.value ?? NONE_OPTION_VALUE,
   set: (value: string) => {
@@ -362,6 +430,7 @@ watch(() => props.pageMode, (mode) => {
   }
 }, { immediate: true })
 
+/** 功能：函数 hydrateRuntimeStateFromStory，负责 hydrateRuntimeStateFromStory 相关处理。 */
 async function hydrateRuntimeStateFromStory(story: StoredStory | null) {
   if (!story) return
 
@@ -398,6 +467,7 @@ async function hydrateRuntimeStateFromStory(story: StoredStory | null) {
   }
 }
 
+/** 功能：函数 refreshEntityStateFromStory，负责 refreshEntityStateFromStory 相关处理。 */
 async function refreshEntityStateFromStory(story: StoredStory | null) {
   if (!story) return
   try {
@@ -408,16 +478,19 @@ async function refreshEntityStateFromStory(story: StoredStory | null) {
   }
 }
 
+/** 功能：函数 isNearBottom，负责 isNearBottom 相关处理。 */
 function isNearBottom() {
   if (!scrollRef.value) return true
   const distance = scrollRef.value.scrollHeight - scrollRef.value.scrollTop - scrollRef.value.clientHeight
   return distance <= 80
 }
 
+/** 功能：函数 handleStoryScroll，负责 handleStoryScroll 相关处理。 */
 function handleStoryScroll() {
   shouldStickToBottom.value = isNearBottom()
 }
 
+/** 功能：函数 scrollToBottom，负责 scrollToBottom 相关处理。 */
 function scrollToBottom(options?: { force?: boolean }) {
   if (!scrollRef.value) return
   if (!options?.force && !shouldStickToBottom.value) return
@@ -487,6 +560,7 @@ const {
   },
 })
 
+/** 功能：函数 openControlDrawer，负责 openControlDrawer 相关处理。 */
 function openControlDrawer() {
   showControlDrawer.value = true
 }
@@ -500,6 +574,7 @@ const controlBadgeText = computed(() => {
   return parts.join(' · ')
 })
 
+/** 功能：函数 handleKeydown，负责 handleKeydown 相关处理。 */
 function handleKeydown(e: KeyboardEvent) {
   if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault()
@@ -586,12 +661,14 @@ watch(creationMode, (mode) => {
   }
 })
 
+/** 功能：函数 formatTime，负责 formatTime 相关处理。 */
 function formatTime(ts: string) {
   try {
     return new Date(ts).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
   } catch { return '' }
 }
 
+/** 功能：函数 syncStoryLocally，负责 syncStoryLocally 相关处理。 */
 function syncStoryLocally(updatedStory: StoredStory) {
   const index = stories.value.findIndex((item) => item.id === updatedStory.id)
   if (index >= 0) {
@@ -602,6 +679,7 @@ function syncStoryLocally(updatedStory: StoredStory) {
   }
 }
 
+/** 功能：函数 syncRuntimeLocally，负责 syncRuntimeLocally 相关处理。 */
 function syncRuntimeLocally(runtimeState: StoryRuntimeState) {
   runtimeStateId.value = runtimeState.id
   selectedScriptDesignId.value = runtimeState.script_design_id
@@ -638,6 +716,7 @@ function syncRuntimeLocally(runtimeState: StoryRuntimeState) {
   }
 }
 
+/** 功能：函数 persistStoryProgress，负责 persistStoryProgress 相关处理。 */
 async function persistStoryProgress(progress: {
   script_design_id?: string | null
   active_stage_id?: string | null
@@ -669,6 +748,7 @@ async function persistStoryProgress(progress: {
   }
 }
 
+/** 功能：函数 saveCurrentProgress，负责 saveCurrentProgress 相关处理。 */
 async function saveCurrentProgress() {
   await persistStoryProgress(
     {
@@ -683,6 +763,7 @@ async function saveCurrentProgress() {
   )
 }
 
+/** 功能：函数 advanceToNextEvent，负责 advanceToNextEvent 相关处理。 */
 async function advanceToNextEvent() {
   const design = selectedScriptDesign.value
   if (!design || !selectedScriptEventId.value) return
@@ -706,6 +787,7 @@ async function advanceToNextEvent() {
   )
 }
 
+/** 功能：函数 advanceToNextStage，负责 advanceToNextStage 相关处理。 */
 async function advanceToNextStage() {
   const design = selectedScriptDesign.value
   if (!design || !selectedScriptStageId.value) return

@@ -9,7 +9,9 @@ import uuid
 from pydantic import BaseModel, Field
 
 
+# 变量作用：变量 CreationMode，用于保存 creationmode 相关模块级状态。
 CreationMode = Literal["improv", "scripted"]
+# 变量作用：变量 ProgressIntent，用于保存 progressintent 相关模块级状态。
 ProgressIntent = Literal["hold", "advance", "complete"]
 
 

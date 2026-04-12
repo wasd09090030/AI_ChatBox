@@ -1,4 +1,5 @@
 <script setup lang="ts">
+// 文件说明：前端可复用界面组件。
 import { RotateCcw } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import {

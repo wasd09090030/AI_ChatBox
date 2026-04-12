@@ -1,4 +1,5 @@
 <script setup lang="ts">
+// 文件说明：前端可复用界面组件。
 import { ref, watch } from 'vue'
 import { X } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
@@ -15,11 +16,13 @@ import {
 } from '@/components/ui/dialog'
 import type { World, WorldCreate } from '@/services/lorebookService'
 
+// 变量作用：变量 props，用于 props 相关配置或状态。
 const props = defineProps<{
   open: boolean
   editing: World | null
 }>()
 
+// 变量作用：变量 emit，用于 emit 相关配置或状态。
 const emit = defineEmits<{
   'update:open': [v: boolean]
   save: [payload: WorldCreate]
@@ -37,6 +40,7 @@ interface WorldForm {
   vocabulary_style: string
 }
 
+// 变量作用：变量 defaultForm，用于 defaultForm 相关配置或状态。
 const defaultForm = (): WorldForm => ({
   name: '',
   description: '',
@@ -49,7 +53,9 @@ const defaultForm = (): WorldForm => ({
   vocabulary_style: '',
 })
 
+// 变量作用：变量 form，用于 form 相关配置或状态。
 const form = ref<WorldForm>(defaultForm())
+// 变量作用：变量 newTag，用于 newTag 相关配置或状态。
 const newTag = ref('')
 
 watch(
@@ -75,16 +81,19 @@ watch(
   { immediate: true },
 )
 
+/** 功能：函数 addTag，负责 addTag 相关处理。 */
 function addTag() {
   const t = newTag.value.trim()
   if (t && !form.value.style_tags.includes(t)) form.value.style_tags.push(t)
   newTag.value = ''
 }
 
+/** 功能：函数 removeTag，负责 removeTag 相关处理。 */
 function removeTag(tag: string) {
   form.value.style_tags = form.value.style_tags.filter((t) => t !== tag)
 }
 
+/** 功能：函数 submit，负责 submit 相关处理。 */
 function submit() {
   emit('save', {
     name: form.value.name.trim(),

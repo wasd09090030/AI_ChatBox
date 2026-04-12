@@ -64,6 +64,7 @@ class EntityStateProjectionService:
         return sorted(state_map.values(), key=lambda item: item.display_name)
 
     def _apply_patch(self, snapshot: EntityStateSnapshot, patch: EntityStatePatch) -> None:
+        """功能：应用 patch。"""
         self._mutate_field(snapshot, patch.field_name, patch.op, patch.value)
         snapshot.last_source_turn = patch.source_turn
         snapshot.updated_at = datetime.now()
@@ -73,6 +74,7 @@ class EntityStateProjectionService:
             snapshot.display_name = patch.entity_name
 
     def _apply_event(self, snapshot: EntityStateSnapshot, event: EntityStateEventRecord) -> None:
+        """功能：应用事件。"""
         self._mutate_field(snapshot, event.field_name, event.op, event.value)
         snapshot.last_source_turn = event.source_turn
         snapshot.updated_at = self._normalize_datetime(event.committed_at)
@@ -82,6 +84,7 @@ class EntityStateProjectionService:
             snapshot.display_name = event.entity_name
 
     def _mutate_field(self, snapshot: EntityStateSnapshot, field_name: str, op: str, value: Any) -> None:
+        """功能：处理 mutate field。"""
         if field_name in self._LIST_FIELDS:
             current = list(getattr(snapshot, field_name) or [])
             normalized_values = self._normalize_list_values(value)
@@ -106,6 +109,7 @@ class EntityStateProjectionService:
 
     @staticmethod
     def _normalize_scalar_value(value: Any) -> Any:
+        """功能：标准化 scalar value。"""
         if value is None:
             return None
         if isinstance(value, str):
@@ -115,6 +119,7 @@ class EntityStateProjectionService:
 
     @staticmethod
     def _normalize_list_values(value: Any) -> List[str]:
+        """功能：标准化 list values。"""
         if value is None:
             return []
         if isinstance(value, list):
@@ -130,6 +135,7 @@ class EntityStateProjectionService:
 
     @staticmethod
     def _append_unique(items: List[str], value: str, *, limit: int | None = None) -> None:
+        """功能：处理 append unique。"""
         text = str(value or "").strip()
         if not text:
             return
@@ -140,6 +146,7 @@ class EntityStateProjectionService:
 
     @staticmethod
     def _normalize_datetime(value: Any) -> datetime:
+        """功能：标准化 datetime。"""
         if isinstance(value, datetime):
             return value
         text = str(value or "").strip()

@@ -19,6 +19,7 @@ from api.v2.schemas import (
 )
 from application.memory.journal import list_memory_update_events
 
+# 变量作用：FastAPI 路由注册器，用于挂载本模块接口。
 router = APIRouter()
 
 

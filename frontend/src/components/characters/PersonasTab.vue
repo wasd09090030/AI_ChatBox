@@ -1,4 +1,5 @@
 <script setup lang="ts">
+// 文件说明：前端可复用界面组件。
 import { Plus, Pencil, Trash2, UserRound } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -20,6 +21,7 @@ defineProps<{
   personasLoading: boolean
 }>()
 
+// 变量作用：变量 emit，用于 emit 相关配置或状态。
 const emit = defineEmits<{
   (event: 'new-persona'): void
   (event: 'edit-persona', persona: PersonaProfile): void

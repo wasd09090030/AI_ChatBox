@@ -1,4 +1,5 @@
 <script setup lang="ts">
+// 文件说明：前端可复用界面组件。
 import { Eye, EyeOff, Check, ChevronDown, ChevronRight, Link, Wifi, Loader2, List, Star } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -26,6 +27,7 @@ import type { TestConnectionResult, ModelInfo } from '@/domains/settings/api/pro
 import type { ProviderKey } from '@/utils/types'
 import type { ProviderMeta, ProviderModelOption } from '@/components/config/types'
 
+// 变量作用：变量 props，用于 props 相关配置或状态。
 const props = defineProps<{
   providers: ProviderMeta[]
   keyInputs: Record<ProviderKey, string>
@@ -51,10 +53,12 @@ const props = defineProps<{
   saveBaseUrl: (provider: ProviderKey) => void | Promise<void>
 }>()
 
+/** 功能：函数 toggleKeyVisibility，负责 toggleKeyVisibility 相关处理。 */
 function toggleKeyVisibility(provider: ProviderKey) {
   props.showKey[provider] = !props.showKey[provider]
 }
 
+/** 功能：函数 onSelectModel，负责 onSelectModel 相关处理。 */
 function onSelectModel(provider: ProviderKey, value: unknown) {
   if (value === null || value === undefined || value === '') return
   props.selectedModels[provider] = String(value)

@@ -1,3 +1,7 @@
+/**
+ * 文件说明：前端业务域逻辑与接口封装。
+ */
+
 import { computed, ref } from 'vue'
 import { useAnalyticsDailyQuery } from '@/domains/analytics/queries/useAnalyticsDailyQuery'
 import { useAnalyticsEventsQuery } from '@/domains/analytics/queries/useAnalyticsEventsQuery'
@@ -14,6 +18,7 @@ import {
 } from '@/domains/analytics/utils/formatters'
 import { useWorldsQuery } from '@/domains/lorebook/queries/useLorebookQueries'
 
+/** 功能：函数 useConsoleAnalyticsState，负责 useConsoleAnalyticsState 相关处理。 */
 export function useConsoleAnalyticsState() {
   const days = ref('14')
   const eventsLimit = ref(50)

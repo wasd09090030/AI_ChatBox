@@ -1,6 +1,11 @@
+/**
+ * 文件说明：前端业务域逻辑与接口封装。
+ */
+
 import api from '@/services/api'
 import type { Role } from '@/utils/types'
 
+// 变量作用：变量 roleApi，用于 roleApi 相关配置或状态。
 export const roleApi = {
   async getRoles(): Promise<Role[]> {
     const response = await api.get<Role[]>('/roles')

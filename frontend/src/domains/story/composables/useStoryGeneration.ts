@@ -1,3 +1,7 @@
+/**
+ * 文件说明：前端业务域逻辑与接口封装。
+ */
+
 import { computed, nextTick, onUnmounted, ref, type ComputedRef, type Ref } from 'vue'
 import { useToast } from '@/components/ui/toast'
 import {
@@ -61,6 +65,7 @@ interface UseStoryGenerationArgs {
   onFocusInput?: () => void
 }
 
+/** 功能：函数 parseChoices，负责 parseChoices 相关处理。 */
 function parseChoices(text: string): string[] {
   const re = /\[(?:选项\s*\d+|[A-Z])\]\s*([^\[\n]+)/g
   const results: string[] = []
@@ -72,6 +77,7 @@ function parseChoices(text: string): string[] {
   return results
 }
 
+/** 功能：函数 formatActivationHits，负责 formatActivationHits 相关处理。 */
 function formatActivationHits(logs: StoryActivationLog[]): StoryContextHit[] {
   return logs
     .filter((log) => {
@@ -98,6 +104,7 @@ function formatActivationHits(logs: StoryActivationLog[]): StoryContextHit[] {
     })
 }
 
+/** 功能：函数 buildSummaryDiff，负责 buildSummaryDiff 相关处理。 */
 function buildSummaryDiff(
   previous: SummaryMemorySnapshot | null | undefined,
   next: SummaryMemorySnapshot | null | undefined,
@@ -118,6 +125,7 @@ function buildSummaryDiff(
   }
 }
 
+/** 功能：函数 hydrateSummarySnapshotFromStore，负责 hydrateSummarySnapshotFromStore 相关处理。 */
 function hydrateSummarySnapshotFromStore(
   summaryRecord:
     | {
@@ -138,6 +146,7 @@ function hydrateSummarySnapshotFromStore(
   }
 }
 
+/** 功能：函数 extractContextHitsFromUpdates，负责 extractContextHitsFromUpdates 相关处理。 */
 function extractContextHitsFromUpdates(events: MemoryUpdateEvent[]): StoryContextHit[] {
   return events
     .filter((event) => event.memory_layer === 'episodic' && event.memory_key === 'conversation_history_index')
@@ -148,6 +157,7 @@ function extractContextHitsFromUpdates(events: MemoryUpdateEvent[]): StoryContex
     }))
 }
 
+/** 功能：函数 useStoryGeneration，负责 useStoryGeneration 相关处理。 */
 export function useStoryGeneration(args: UseStoryGenerationArgs) {
   const { toast } = useToast()
 

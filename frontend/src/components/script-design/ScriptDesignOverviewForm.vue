@@ -1,4 +1,5 @@
 <script setup lang="ts">
+// 文件说明：前端可复用界面组件。
 import { reactive, watch } from 'vue'
 import { Save } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
@@ -31,6 +32,7 @@ interface OverviewFormState {
   enforce_foreshadow_tracking: boolean
 }
 
+// 变量作用：变量 props，用于 props 相关配置或状态。
 const props = withDefaults(defineProps<{
   design: ScriptDesign
   saving?: boolean
@@ -39,10 +41,12 @@ const props = withDefaults(defineProps<{
   advancedOnly: false,
 })
 
+// 变量作用：变量 emit，用于 emit 相关配置或状态。
 const emit = defineEmits<{
   save: [payload: ScriptDesignUpdateInput]
 }>()
 
+// 变量作用：变量 form，用于 form 相关配置或状态。
 const form = reactive<OverviewFormState>({
   title: '',
   summary: '',
@@ -81,6 +85,7 @@ watch(
   { immediate: true },
 )
 
+/** 功能：函数 submit，负责 submit 相关处理。 */
 function submit() {
   emit('save', {
     title: form.title.trim(),

@@ -11,6 +11,7 @@ from typing import Any, Dict, List, Optional
 from application.memory import MemoryBundle
 from prompting import render_prompt
 
+# 变量作用：模块日志记录器，用于输出运行诊断信息。
 logger = logging.getLogger(__name__)
 
 # 为 recent history / user input 预留空间，控制 system prompt 上限
@@ -34,24 +35,29 @@ class PromptComponent:
     enabled: bool = True
 
     def render(self, **context: Any) -> str:
+        """功能：处理 render。"""
         raise NotImplementedError
 
     def estimate_tokens(self, text: str) -> int:
+        """功能：处理 estimate Token。"""
         return _estimate_tokens_fast(text)
 
 
 @dataclass
 class RenderedComponent:
+    """作用：定义 RenderedComponent 类型，承载本模块核心状态与行为。"""
     component: PromptComponent
     text: str
     tokens: int
 
 
 class WorldContextComponent(PromptComponent):
+    """作用：定义 WorldContextComponent 类型，承载本模块核心状态与行为。"""
     name = "WorldContextComponent"
     priority = 50
 
     def render(self, **context: Any) -> str:
+        """功能：处理 render。"""
         return render_prompt(
             "story.world_context",
             retrieved_contexts=list(context.get("retrieved_contexts") or []),
@@ -59,10 +65,12 @@ class WorldContextComponent(PromptComponent):
 
 
 class HistoryContextComponent(PromptComponent):
+    """作用：定义 HistoryContextComponent 类型，承载本模块核心状态与行为。"""
     name = "HistoryContextComponent"
     priority = 10
 
     def render(self, **context: Any) -> str:
+        """功能：处理 render。"""
         return render_prompt(
             "story.history_context",
             retrieved_history=list(context.get("retrieved_history") or []),
@@ -70,10 +78,12 @@ class HistoryContextComponent(PromptComponent):
 
 
 class SummaryMemoryComponent(PromptComponent):
+    """作用：定义 SummaryMemoryComponent 类型，承载本模块核心状态与行为。"""
     name = "SummaryMemoryComponent"
     priority = 40
 
     def render(self, **context: Any) -> str:
+        """功能：处理 render。"""
         return render_prompt(
             "story.summary_memory",
             summary_memory=context.get("summary_memory") or {},
@@ -81,27 +91,33 @@ class SummaryMemoryComponent(PromptComponent):
 
 
 class StyleComponent(PromptComponent):
+    """作用：定义 StyleComponent 类型，承载本模块核心状态与行为。"""
     name = "StyleComponent"
     priority = 30
 
     def render(self, **context: Any) -> str:
+        """功能：处理 render。"""
         return render_prompt("story.style", world_config=context.get("world_config") or {})
 
 
 class AtmosphereComponent(PromptComponent):
+    """作用：定义 AtmosphereComponent 类型，承载本模块核心状态与行为。"""
     name = "AtmosphereComponent"
     priority = 20
 
     def render(self, **context: Any) -> str:
+        """功能：处理 render。"""
         return render_prompt("story.atmosphere", world_config=context.get("world_config") or {})
 
 
 class RoleplayComponent(PromptComponent):
+    """作用：定义 RoleplayComponent 类型，承载本模块核心状态与行为。"""
     name = "RoleplayComponent"
     priority = 80
     required = True
 
     def render(self, **context: Any) -> str:
+        """功能：处理 render。"""
         return render_prompt(
             "story.roleplay",
             roleplay_profile=context.get("roleplay_profile") or {},
@@ -109,10 +125,12 @@ class RoleplayComponent(PromptComponent):
 
 
 class DialogueControlComponent(PromptComponent):
+    """作用：定义 DialogueControlComponent 类型，承载本模块核心状态与行为。"""
     name = "DialogueControlComponent"
     priority = 82
 
     def render(self, **context: Any) -> str:
+        """功能：处理 render。"""
         controls = context.get("dialogue_controls") or {}
         principal_character_id = controls.get("principal_character_id")
         dialogue_target = controls.get("dialogue_target")
@@ -149,10 +167,12 @@ class DialogueControlComponent(PromptComponent):
 
 
 class ScriptDesignComponent(PromptComponent):
+    """作用：定义 ScriptDesignComponent 类型，承载本模块核心状态与行为。"""
     name = "ScriptDesignComponent"
     priority = 84
 
     def render(self, **context: Any) -> str:
+        """功能：处理 render。"""
         script_guidance = context.get("script_guidance") or {}
         if not script_guidance or not script_guidance.get("follow_script_design"):
             return ""
@@ -197,11 +217,13 @@ class ScriptDesignComponent(PromptComponent):
 
 
 class CoreInstructionComponent(PromptComponent):
+    """作用：定义 CoreInstructionComponent 类型，承载本模块核心状态与行为。"""
     name = "CoreInstructionComponent"
     priority = 90
     required = True
 
     def render(self, **context: Any) -> str:
+        """功能：处理 render。"""
         return render_prompt(
             "story.core_instruction",
             style=str(context.get("style") or "narrative"),
@@ -250,6 +272,7 @@ def _trim_to_budget(rendered: List[RenderedComponent], budget: int) -> List[Rend
 
 
 def _build_components() -> List[PromptComponent]:
+    """功能：构建 components。"""
     return [
         HistoryContextComponent(),
         AtmosphereComponent(),
@@ -282,6 +305,7 @@ def _normalize_prompt_context(
     script_guidance: Optional[Dict[str, Any]],
     script_design_context: Optional[Dict[str, Any]],
 ) -> Dict[str, Any]:
+    """功能：标准化 prompt 上下文。"""
     if not bundle:
         normalized_dialogue_controls = dialogue_controls
         if normalized_dialogue_controls is None:

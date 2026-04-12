@@ -1,4 +1,5 @@
 <script setup lang="ts">
+// 文件说明：前端可复用界面组件。
 import { Globe, Plus, Pencil, Trash2, ChevronsLeft, ChevronsRight } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -17,12 +18,14 @@ import type { World } from '@/services/lorebookService'
 import { cn } from '@/lib/utils'
 import { useSidebarCollapse } from '@/lib/useSidebarCollapse'
 
+// 变量作用：变量 props，用于 props 相关配置或状态。
 const props = defineProps<{
   worlds: World[] | undefined
   loading: boolean
   selectedId: string
 }>()
 
+// 变量作用：变量 emit，用于 emit 相关配置或状态。
 const emit = defineEmits<{
   select: [id: string]
   add: []
@@ -30,6 +33,7 @@ const emit = defineEmits<{
   delete: [world: World]
 }>()
 
+// 变量作用：变量 collapsed，用于 collapsed 相关配置或状态。
 const collapsed = useSidebarCollapse('world-sidebar-collapsed')
 </script>
 

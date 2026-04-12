@@ -19,6 +19,7 @@ class EntityStateEventReplayService:
         entity_state_event_repository,
         entity_state_projection_service,
     ):
+        """功能：初始化对象依赖并设置默认运行状态。"""
         self.entity_state_repository = entity_state_repository
         self.entity_state_event_repository = entity_state_event_repository
         self.entity_state_projection_service = entity_state_projection_service
@@ -35,6 +36,7 @@ class EntityStateEventReplayService:
         allow_empty_result: bool = False,
         persist: bool = True,
     ) -> EntityStateRebuildResponse:
+        """功能：处理 replay 故事状态。"""
         events = self.entity_state_event_repository.list_by_story_id(story_id)
         return self._replay(
             story_id=story_id,
@@ -60,6 +62,7 @@ class EntityStateEventReplayService:
         allow_empty_result: bool = False,
         persist: bool = True,
     ) -> EntityStateRebuildResponse:
+        """功能：处理 replay 会话状态。"""
         events = self.entity_state_event_repository.list_by_session_id(session_id)
         return self._replay(
             story_id=story_id,
@@ -86,6 +89,7 @@ class EntityStateEventReplayService:
         allow_empty_result: bool,
         persist: bool,
     ) -> EntityStateRebuildResponse:
+        """功能：处理 replay。"""
         filtered_events = self._filter_events(
             events=events,
             story_id=story_id,
@@ -154,6 +158,7 @@ class EntityStateEventReplayService:
         session_id: str,
         source_turn_lte: Optional[int],
     ) -> List[EntityStateEventRecord]:
+        """功能：处理 filter 事件。"""
         filtered: List[EntityStateEventRecord] = []
         for event in events:
             if event.story_id != story_id or event.session_id != session_id:
@@ -175,6 +180,7 @@ class EntityStateEventReplayService:
         projected_by_id: Dict[str, EntityStateSnapshot],
         replay_event_count: int,
     ) -> List[Dict[str, Any]]:
+        """功能：构建记忆更新。"""
         memory_updates: List[Dict[str, Any]] = []
         for state in projected_states:
             before_state = previous_by_id.get(state.entity_id)
@@ -214,6 +220,7 @@ class EntityStateEventReplayService:
 
     @staticmethod
     def _snapshot_preview(state: Optional[EntityStateSnapshot]) -> Optional[Dict[str, Any]]:
+        """功能：处理快照预览。"""
         if state is None:
             return None
         return {

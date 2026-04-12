@@ -10,6 +10,7 @@ from models.entity_state import EntityStateCollection
 from models.entity_state_event import EntityPatchExtractionResult
 from services.entity_state_manager import EntityStateManager
 
+# 变量作用：模块日志记录器，用于输出运行诊断信息。
 logger = logging.getLogger(__name__)
 
 
@@ -27,6 +28,7 @@ class EntityPatchUpdateService:
         entity_patch_validator,
         entity_patch_applier,
     ):
+        """功能：初始化对象依赖并设置默认运行状态。"""
         self.lorebook_manager = lorebook_manager
         self.entity_state_manager = entity_state_manager
         self.entity_state_fallback_service = entity_state_fallback_service
@@ -47,6 +49,7 @@ class EntityPatchUpdateService:
         sequence_start: int,
         activation_logs: List[Dict[str, Any]],
     ) -> Dict[str, Any]:
+        """功能：处理 process async。"""
         current_states, character_lookup, location_lookup = self._prepare_inputs(
             request=request,
             world_id=world_id,
@@ -101,6 +104,7 @@ class EntityPatchUpdateService:
         sequence_start: int,
         activation_logs: List[Dict[str, Any]],
     ) -> Dict[str, Any]:
+        """功能：处理 process sync。"""
         current_states, character_lookup, location_lookup = self._prepare_inputs(
             request=request,
             world_id=world_id,
@@ -144,6 +148,7 @@ class EntityPatchUpdateService:
             )
 
     def _prepare_inputs(self, *, request, world_id: Optional[str]):
+        """功能：准备 inputs。"""
         story_id = self._resolve_story_id(request)
         current_states = self.entity_state_manager.list_story_states(story_id) if story_id else []
         entries = self._load_world_entries(world_id)
@@ -165,6 +170,7 @@ class EntityPatchUpdateService:
         sequence_start: int,
         activation_logs: List[Dict[str, Any]],
     ) -> Dict[str, Any]:
+        """功能：收敛并完成 patch result。"""
         story_id = self._resolve_story_id(request)
         if not story_id:
             return {
@@ -293,6 +299,7 @@ class EntityPatchUpdateService:
         activation_logs: List[Dict[str, Any]],
         warnings: List[str],
     ) -> Dict[str, Any]:
+        """功能：处理 fallback rebuild result。"""
         activation_logs.append(
             {
                 "source": "entity_patch",
@@ -362,6 +369,7 @@ class EntityPatchUpdateService:
         }
 
     def _load_world_entries(self, world_id: Optional[str]) -> List[Dict[str, Any]]:
+        """功能：加载世界观条目。"""
         if not self.lorebook_manager:
             return []
         try:
@@ -371,6 +379,7 @@ class EntityPatchUpdateService:
 
     @staticmethod
     def _resolve_story_id(request) -> Optional[str]:
+        """功能：解析并返回故事ID。"""
         story_id = getattr(request, "story_id", None)
         if story_id:
             return str(story_id).strip() or None

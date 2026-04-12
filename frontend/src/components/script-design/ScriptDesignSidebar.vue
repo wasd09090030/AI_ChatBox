@@ -1,4 +1,5 @@
 <script setup lang="ts">
+// 文件说明：前端可复用界面组件。
 import { BookOpenText, Plus, Trash2, ChevronsLeft, ChevronsRight } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -17,6 +18,7 @@ defineProps<{
   creatingDisabled?: boolean
 }>()
 
+// 变量作用：变量 emit，用于 emit 相关配置或状态。
 const emit = defineEmits<{
   'select-world': [worldId: string]
   'select-script': [scriptDesignId: string]
@@ -24,6 +26,7 @@ const emit = defineEmits<{
   'delete-script': [scriptDesign: ScriptDesign]
 }>()
 
+// 变量作用：变量 collapsed，用于 collapsed 相关配置或状态。
 const collapsed = useSidebarCollapse('script-design-sidebar-collapsed')
 </script>
 

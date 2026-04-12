@@ -9,6 +9,7 @@ import {
   type PersonaUpdate,
 } from '@/services/roleplayService'
 
+// 变量作用：变量 ROLEPLAY_KEYS，用于 ROLEPLAY KEYS 相关配置或状态。
 export const ROLEPLAY_KEYS = {
   personas: ['roleplay', 'personas'] as const,
   persona: (id: string) => ['roleplay', 'personas', id] as const,
@@ -23,6 +24,7 @@ export function usePersonasQuery() {
   })
 }
 
+/** 功能：函数 useCreatePersonaMutation，负责 useCreatePersonaMutation 相关处理。 */
 export function useCreatePersonaMutation() {
   const qc = useQueryClient()
   return useMutation({
@@ -31,6 +33,7 @@ export function useCreatePersonaMutation() {
   })
 }
 
+/** 功能：函数 useUpdatePersonaMutation，负责 useUpdatePersonaMutation 相关处理。 */
 export function useUpdatePersonaMutation() {
   const qc = useQueryClient()
   return useMutation({
@@ -40,6 +43,7 @@ export function useUpdatePersonaMutation() {
   })
 }
 
+/** 功能：函数 useDeletePersonaMutation，负责 useDeletePersonaMutation 相关处理。 */
 export function useDeletePersonaMutation() {
   const qc = useQueryClient()
   return useMutation({

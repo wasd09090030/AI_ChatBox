@@ -7,13 +7,18 @@ Create Date: 2026-03-17 00:00:00
 
 from alembic import op
 
+# 变量作用：变量 revision，用于保存 revision 相关模块级状态。
 revision = "20260317_0004"
+# 变量作用：变量 down_revision，用于保存 down revision 相关模块级状态。
 down_revision = "20260302_0003"
+# 变量作用：变量 branch_labels，用于保存 branch labels 相关模块级状态。
 branch_labels = None
+# 变量作用：变量 depends_on，用于保存 depends on 相关模块级状态。
 depends_on = None
 
 
 def upgrade() -> None:
+    """功能：处理 upgrade。"""
     op.execute("DROP INDEX IF EXISTS idx_messages_created_at")
     op.execute("DROP INDEX IF EXISTS idx_messages_conversation_id")
     op.execute("DROP INDEX IF EXISTS idx_conversations_created_at")
@@ -23,6 +28,7 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
+    """功能：处理 downgrade。"""
     op.execute(
         """
         CREATE TABLE IF NOT EXISTS conversations (

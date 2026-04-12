@@ -10,19 +10,25 @@ from services.database import Database
 
 
 class UserRepository:
+    """作用：定义 UserRepository 服务对象，用于封装对应领域流程。"""
     def get_user(self, user_id: str) -> Optional[User]:
+        """功能：获取用户。"""
         raise NotImplementedError
 
     def create_user_with_defaults(self, user_id: str) -> None:
+        """功能：创建用户 with defaults。"""
         raise NotImplementedError
 
     def update_settings(self, user_id: str, settings_update: UserSettingsUpdate) -> bool:
+        """功能：更新 settings。"""
         raise NotImplementedError
 
     def update_api_key(self, user_id: str, provider_column: str, encrypted_key: Optional[str]) -> None:
+        """功能：更新 API key。"""
         raise NotImplementedError
 
     def update_base_url(self, user_id: str, base_url_column: str, base_url: Optional[str]) -> None:
+        """功能：更新 base url。"""
         raise NotImplementedError
 
     def update_scene_model_preference(
@@ -33,14 +39,18 @@ class UserRepository:
         provider: Optional[str],
         model: Optional[str],
     ) -> None:
+        """功能：更新 scene 模型 preference。"""
         raise NotImplementedError
 
 
 class SqliteUserRepository(UserRepository):
+    """作用：定义 SqliteUserRepository 服务对象，用于封装对应领域流程。"""
     def __init__(self, db: Database):
+        """功能：初始化对象依赖并设置默认运行状态。"""
         self.db = db
 
     def get_user(self, user_id: str) -> Optional[User]:
+        """功能：获取用户。"""
         with self.db.get_cursor() as cursor:
             cursor.execute(
                 """
@@ -96,11 +106,13 @@ class SqliteUserRepository(UserRepository):
             )
 
     def create_user_with_defaults(self, user_id: str) -> None:
+        """功能：创建用户 with defaults。"""
         with self.db.get_cursor() as cursor:
             cursor.execute("INSERT INTO users (user_id) VALUES (?)", (user_id,))
             cursor.execute("INSERT INTO user_settings (user_id) VALUES (?)", (user_id,))
 
     def update_settings(self, user_id: str, settings_update: UserSettingsUpdate) -> bool:
+        """功能：更新 settings。"""
         updates = []
         params = []
 
@@ -133,6 +145,7 @@ class SqliteUserRepository(UserRepository):
         return True
 
     def update_api_key(self, user_id: str, provider_column: str, encrypted_key: Optional[str]) -> None:
+        """功能：更新 API key。"""
         with self.db.get_cursor() as cursor:
             cursor.execute(
                 f"UPDATE user_settings SET {provider_column} = ?, updated_at = CURRENT_TIMESTAMP WHERE user_id = ?",
@@ -157,6 +170,7 @@ class SqliteUserRepository(UserRepository):
         provider: Optional[str],
         model: Optional[str],
     ) -> None:
+        """功能：更新 scene 模型 preference。"""
         with self.db.get_cursor() as cursor:
             cursor.execute(
                 f"""

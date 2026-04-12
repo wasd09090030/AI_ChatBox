@@ -1,8 +1,14 @@
+/**
+ * 文件说明：前端可复用界面组件。
+ */
+
 import type { Component, VNode } from "vue"
 import type { ToastProps } from "."
 import { computed, ref } from "vue"
 
+// 变量作用：变量 TOAST_LIMIT，用于 TOAST LIMIT 相关配置或状态。
 const TOAST_LIMIT = 1
+// 变量作用：变量 TOAST_REMOVE_DELAY，用于 TOAST REMOVE DELAY 相关配置或状态。
 const TOAST_REMOVE_DELAY = 1000000
 
 export type StringOrVNode
@@ -17,6 +23,7 @@ type ToasterToast = ToastProps & {
   action?: Component
 }
 
+// 变量作用：变量 actionTypes，用于 actionTypes 相关配置或状态。
 const actionTypes = {
   ADD_TOAST: "ADD_TOAST",
   UPDATE_TOAST: "UPDATE_TOAST",
@@ -24,8 +31,10 @@ const actionTypes = {
   REMOVE_TOAST: "REMOVE_TOAST",
 } as const
 
+// 变量作用：变量 count，用于 count 相关配置或状态。
 let count = 0
 
+/** 功能：函数 genId，负责 genId 相关处理。 */
 function genId() {
   count = (count + 1) % Number.MAX_VALUE
   return count.toString()
@@ -55,8 +64,10 @@ interface State {
   toasts: ToasterToast[]
 }
 
+// 变量作用：变量 toastTimeouts，用于 toastTimeouts 相关配置或状态。
 const toastTimeouts = new Map<string, ReturnType<typeof setTimeout>>()
 
+/** 功能：函数 addToRemoveQueue，负责 addToRemoveQueue 相关处理。 */
 function addToRemoveQueue(toastId: string) {
   if (toastTimeouts.has(toastId))
     return
@@ -72,10 +83,12 @@ function addToRemoveQueue(toastId: string) {
   toastTimeouts.set(toastId, timeout)
 }
 
+// 变量作用：变量 state，用于 state 相关配置或状态。
 const state = ref<State>({
   toasts: [],
 })
 
+/** 功能：函数 dispatch，负责 dispatch 相关处理。 */
 function dispatch(action: Action) {
   switch (action.type) {
     case actionTypes.ADD_TOAST:
@@ -121,6 +134,7 @@ function dispatch(action: Action) {
   }
 }
 
+/** 功能：函数 useToast，负责 useToast 相关处理。 */
 function useToast() {
   return {
     toasts: computed(() => state.value.toasts),
@@ -131,6 +145,7 @@ function useToast() {
 
 type Toast = Omit<ToasterToast, "id">
 
+/** 功能：函数 toast，负责 toast 相关处理。 */
 function toast(props: Toast) {
   const id = genId()
 

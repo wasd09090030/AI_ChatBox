@@ -1,3 +1,7 @@
+/**
+ * 文件说明：前端业务域逻辑与接口封装。
+ */
+
 import type { MemoryUpdateEvent, SummaryMemorySnapshot } from '@/domains/story/api/storyGenerationApi'
 
 export type SummaryLifecycleState = 'absent' | 'created' | 'reset' | 'recreated' | 'stale'
@@ -26,6 +30,7 @@ export interface MemoryOperationGroup<TEvent extends MemoryUpdateEvent = MemoryU
   status: 'committed' | 'failed' | 'stale'
 }
 
+// 变量作用：变量 OPERATION_WINDOW_MS，用于 OPERATION WINDOW MS 相关配置或状态。
 const OPERATION_WINDOW_MS = 5000
 
 const MEMORY_LAYER_LABELS: Record<string, string> = {
@@ -52,6 +57,7 @@ function sortEventsAsc<TEvent extends Pick<MemoryUpdateEvent, 'committed_at'>>(e
   return [...events].sort((a, b) => a.committed_at.localeCompare(b.committed_at))
 }
 
+/** ????? sortEventsWithinOperation??? sortEventsWithinOperation ????? */
 function sortEventsWithinOperation<TEvent extends MemoryUpdateEvent>(events: TEvent[]): TEvent[] {
   return [...events].sort((a, b) => {
     const aSequence = typeof a.sequence === 'number' ? a.sequence : Number.MAX_SAFE_INTEGER
@@ -66,6 +72,7 @@ function sortEventsWithinOperation<TEvent extends MemoryUpdateEvent>(events: TEv
   })
 }
 
+/** 功能：函数 deriveSummaryLifecycleState，负责 deriveSummaryLifecycleState 相关处理。 */
 export function deriveSummaryLifecycleState(
   events: Pick<MemoryUpdateEvent, 'memory_layer' | 'action' | 'status' | 'committed_at'>[],
   currentSummary?: SummaryMemorySnapshot | null,
@@ -85,6 +92,7 @@ export function deriveSummaryLifecycleState(
   return 'absent'
 }
 
+/** 功能：函数 getSummaryLifecycleDescriptor，负责 getSummaryLifecycleDescriptor 相关处理。 */
 export function getSummaryLifecycleDescriptor(
   state: SummaryLifecycleState,
   options?: {
@@ -150,6 +158,7 @@ export function getSummaryLifecycleDescriptor(
   }
 }
 
+/** 功能：函数 getMemorySourceLabel，负责 getMemorySourceLabel 相关处理。 */
 export function getMemorySourceLabel(source: string): string {
   switch (source) {
     case 'generate':
@@ -165,14 +174,17 @@ export function getMemorySourceLabel(source: string): string {
   }
 }
 
+/** 功能：函数 getMemoryLayerLabel，负责 getMemoryLayerLabel 相关处理。 */
 export function getMemoryLayerLabel(layer: string): string {
   return MEMORY_LAYER_LABELS[layer] ?? (layer || '未知层级')
 }
 
+/** 功能：函数 getMemoryActionLabel，负责 getMemoryActionLabel 相关处理。 */
 export function getMemoryActionLabel(action: string): string {
   return MEMORY_ACTION_LABELS[action] ?? (action || '未知动作')
 }
 
+/** 功能：函数 getMemoryStatusLabel，负责 getMemoryStatusLabel 相关处理。 */
 export function getMemoryStatusLabel(status?: string | null): string {
   switch (status) {
     case 'failed':
@@ -185,6 +197,7 @@ export function getMemoryStatusLabel(status?: string | null): string {
   }
 }
 
+/** 功能：函数 formatMemoryPayloadFields，负责 formatMemoryPayloadFields 相关处理。 */
 export function formatMemoryPayloadFields(payload?: Record<string, unknown> | null): MemoryPayloadField[] {
   if (!payload) return []
 
@@ -225,6 +238,7 @@ export function formatMemoryPayloadFields(payload?: Record<string, unknown> | nu
   ]
 }
 
+/** ????? groupMemoryEventsByOperation??? groupMemoryEventsByOperation ????? */
 export function groupMemoryEventsByOperation<TEvent extends MemoryUpdateEvent>(events: TEvent[]): MemoryOperationGroup<TEvent>[] {
   if (!events.length) return []
 

@@ -44,18 +44,28 @@ from typing import Any, Optional
 
 import httpx
 
+# 变量作用：变量 BASE_URL，用于保存 base url 相关模块级状态。
 BASE_URL = os.getenv("SMOKE_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
+# 变量作用：变量 USER_ID，用于保存用户 ID 相关模块级状态。
 USER_ID = os.getenv("SMOKE_USER_ID", "user_1773820783085_bk1gzshza")
+# 变量作用：变量 PROVIDER，用于保存模型提供商相关模块级状态。
 PROVIDER = os.getenv("SMOKE_PROVIDER", "deepseek")
+# 变量作用：变量 MODEL，用于保存模型相关模块级状态。
 MODEL = os.getenv("SMOKE_MODEL", "deepseek-chat")
+# 变量作用：变量 TIMEOUT，用于保存 timeout 相关模块级状态。
 TIMEOUT = float(os.getenv("SMOKE_TIMEOUT", "180"))
 
+# 变量作用：路径变量 DEFAULT_DB_PATH，用于定位文件系统资源。
 DEFAULT_DB_PATH = Path(__file__).resolve().parents[1] / "data" / "chatbox.db"
+# 变量作用：路径变量 DB_PATH，用于定位文件系统资源。
 DB_PATH = Path(os.getenv("SMOKE_DB_PATH", str(DEFAULT_DB_PATH)))
 
+# 变量作用：路径变量 REPORT_DIR，用于定位文件系统资源。
 REPORT_DIR = Path(__file__).resolve().parents[1] / "docs" / "TestResult"
+# 变量作用：变量 REPORT_JSON，用于保存 report JSON 相关模块级状态。
 REPORT_JSON = REPORT_DIR / "Plan0409_DualRoutePatch_Validation_Run.json"
 
+# 变量作用：变量 PATCH_FIELDS，用于保存 patch fields 相关模块级状态。
 PATCH_FIELDS = {
     "current_location",
     "inventory",
@@ -64,17 +74,20 @@ PATCH_FIELDS = {
     "short_goal",
     "state_summary",
 }
+# 变量作用：变量 PATCH_OPS，用于保存 patch ops 相关模块级状态。
 PATCH_OPS = {"set", "add", "remove", "clear", "reset"}
 
 
 @dataclass
 class Check:
+    """作用：定义 Check 类型，承载本模块核心状态与行为。"""
     name: str
     passed: bool
     detail: dict[str, Any]
 
 
 def _headers() -> dict[str, str]:
+    """功能：处理 headers。"""
     return {"X-User-ID": USER_ID}
 
 
@@ -85,6 +98,7 @@ def _request(
     payload: Optional[dict[str, Any]] = None,
     with_user: bool = False,
 ) -> tuple[int, dict[str, Any]]:
+    """功能：处理请求。"""
     headers = _headers() if with_user else {}
     try:
         response = client.request(method.upper(), f"{BASE_URL}{path}", json=payload, headers=headers)
@@ -108,6 +122,7 @@ def _stream_generate(
     *,
     with_user: bool,
 ) -> tuple[int, dict[str, Any], int]:
+    """功能：处理 stream generate。"""
     headers = _headers() if with_user else {}
     final_event: dict[str, Any] = {}
     chunk_count = 0
@@ -153,10 +168,12 @@ def _stream_generate(
 
 
 def _add(checks: list[Check], cond: bool, name: str, detail: dict[str, Any]) -> None:
+    """功能：处理 add。"""
     checks.append(Check(name=name, passed=bool(cond), detail=detail))
 
 
 def _extract_items_from_snapshot(snapshot: Any) -> list[dict[str, Any]]:
+    """功能：处理 extract items from 快照。"""
     if not isinstance(snapshot, dict):
         return []
     raw_items = snapshot.get("items")
@@ -166,6 +183,7 @@ def _extract_items_from_snapshot(snapshot: Any) -> list[dict[str, Any]]:
 
 
 def _find_entity(items: list[dict[str, Any]], display_name: str) -> Optional[dict[str, Any]]:
+    """功能：处理 find 实体。"""
     for item in items:
         if str(item.get("display_name") or "").strip() == display_name:
             return item
@@ -173,6 +191,7 @@ def _find_entity(items: list[dict[str, Any]], display_name: str) -> Optional[dic
 
 
 def _has_entity_update(memory_updates: list[dict[str, Any]], *, source: Optional[str] = None) -> bool:
+    """功能：处理 has 实体 update。"""
     for item in memory_updates:
         if item.get("memory_layer") != "entity_state":
             continue
@@ -183,6 +202,7 @@ def _has_entity_update(memory_updates: list[dict[str, Any]], *, source: Optional
 
 
 def _operation_ids(memory_updates: list[dict[str, Any]], memory_layer: str) -> set[str]:
+    """功能：处理操作 ID列表。"""
     return {
         str(item.get("operation_id"))
         for item in memory_updates
@@ -191,10 +211,12 @@ def _operation_ids(memory_updates: list[dict[str, Any]], memory_layer: str) -> s
 
 
 def _all_operation_ids(memory_updates: list[dict[str, Any]]) -> set[str]:
+    """功能：处理 all 操作 ID列表。"""
     return {str(item.get("operation_id")) for item in memory_updates if item.get("operation_id")}
 
 
 def _is_positive_int(value: Any) -> bool:
+    """功能：处理 is positive int。"""
     return isinstance(value, int) and value > 0
 
 
@@ -203,6 +225,7 @@ def _validate_entity_updates(
     *,
     expected_source: Optional[str] = None,
 ) -> tuple[bool, dict[str, Any]]:
+    """功能：校验实体更新。"""
     errors: list[str] = []
     sequences: list[int] = []
     operation_ids: set[str] = set()
@@ -254,6 +277,7 @@ def _validate_entity_updates(
 
 
 def _extract_patch_meta(world_update: Any) -> dict[str, Any]:
+    """功能：处理 extract patch meta。"""
     if not isinstance(world_update, dict):
         return {}
     entity_patch = world_update.get("entity_patch")
@@ -263,6 +287,7 @@ def _extract_patch_meta(world_update: Any) -> dict[str, Any]:
 
 
 def _timeline_entity_sources(items: list[dict[str, Any]]) -> set[str]:
+    """功能：处理 timeline 实体 sources。"""
     return {
         str(item.get("source"))
         for item in items
@@ -271,10 +296,12 @@ def _timeline_entity_sources(items: list[dict[str, Any]]) -> set[str]:
 
 
 def _db_enabled() -> bool:
+    """功能：处理数据库 enabled。"""
     return DB_PATH.exists()
 
 
 def _db_fetchall(sql: str, params: tuple[Any, ...] = ()) -> list[dict[str, Any]]:
+    """功能：处理数据库 fetchall。"""
     if not _db_enabled():
         return []
     try:
@@ -287,6 +314,7 @@ def _db_fetchall(sql: str, params: tuple[Any, ...] = ()) -> list[dict[str, Any]]
 
 
 def _db_table_exists(table_name: str) -> bool:
+    """功能：处理数据库 table exists。"""
     rows = _db_fetchall(
         "SELECT name FROM sqlite_master WHERE type='table' AND name=?",
         (table_name,),
@@ -295,6 +323,7 @@ def _db_table_exists(table_name: str) -> bool:
 
 
 def _db_table_columns(table_name: str) -> set[str]:
+    """功能：处理数据库 table columns。"""
     rows = _db_fetchall(f"PRAGMA table_info({table_name})")
     return {str(row.get("name")) for row in rows if row.get("name")}
 
@@ -305,6 +334,7 @@ def _db_count_entity_events(
     session_id: Optional[str] = None,
     operation_id: Optional[str] = None,
 ) -> int:
+    """功能：处理数据库 count 实体事件。"""
     clauses: list[str] = []
     params: list[Any] = []
     if story_id:
@@ -331,6 +361,7 @@ def _db_list_entity_events(
     operation_id: Optional[str] = None,
     limit: int = 20,
 ) -> list[dict[str, Any]]:
+    """功能：处理数据库 list 实体事件。"""
     clauses: list[str] = []
     params: list[Any] = []
     if story_id:
@@ -361,6 +392,7 @@ def _db_count_memory_journal(
     operation_id: Optional[str] = None,
     memory_layer: Optional[str] = None,
 ) -> int:
+    """功能：处理数据库 count 记忆日志。"""
     clauses: list[str] = []
     params: list[Any] = []
     if session_id:
@@ -381,6 +413,7 @@ def _db_count_memory_journal(
 
 
 def _preflight(client: httpx.Client, checks: list[Check]) -> None:
+    """功能：处理 preflight。"""
     status, body = _request(client, "GET", "/api/v2/health")
     _add(checks, status == 200 and body.get("status") == "healthy", "health", {"status": status, "body": body})
 
@@ -410,6 +443,7 @@ def _preflight(client: httpx.Client, checks: list[Check]) -> None:
 
 
 def run_smoke() -> dict[str, Any]:
+    """功能：执行 smoke。"""
     checks: list[Check] = []
     evidence: dict[str, Any] = {}
 
@@ -1308,6 +1342,7 @@ def run_smoke() -> dict[str, Any]:
 
 
 def main() -> None:
+    """功能：处理 main。"""
     result = run_smoke()
     print(json.dumps(result, ensure_ascii=False, indent=2))
     print(f"\nReport written: {REPORT_JSON}")

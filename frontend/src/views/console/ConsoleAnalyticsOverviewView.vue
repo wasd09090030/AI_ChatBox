@@ -1,4 +1,5 @@
 <script setup lang="ts">
+// 文件说明：前端页面级视图编排。
 import AnalyticsEventsTable from '@/domains/analytics/components/AnalyticsEventsTable.vue'
 import AnalyticsHeader from '@/domains/analytics/components/AnalyticsHeader.vue'
 import AnalyticsInsightPanel from '@/domains/analytics/components/AnalyticsInsightPanel.vue'

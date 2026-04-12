@@ -1,3 +1,7 @@
+/**
+ * 文件说明：前端业务域逻辑与接口封装。
+ */
+
 export interface AnalyticsOverview {
   total_requests: number
   success_requests: number

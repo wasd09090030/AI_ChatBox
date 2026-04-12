@@ -1,4 +1,5 @@
 <script setup lang="ts">
+// 文件说明：前端页面级视图编排。
 import { computed, ref, watch } from 'vue'
 import type { AxiosError } from 'axios'
 import { useToast } from '@/components/ui/toast'
@@ -39,8 +40,11 @@ const beginnerTemplates: Array<{
 const { toast } = useToast()
 const { data: worlds, isLoading: worldsLoading } = useWorldsQuery()
 
+// 变量作用：变量 selectedWorldId，用于 selectedWorldId 相关配置或状态。
 const selectedWorldId = ref('')
+// 变量作用：变量 selectedScriptDesignId，用于 selectedScriptDesignId 相关配置或状态。
 const selectedScriptDesignId = ref('')
+// 变量作用：变量 showStructureDesigner，用于 showStructureDesigner 相关配置或状态。
 const showStructureDesigner = ref(false)
 
 watch(worlds, (list) => {
@@ -49,14 +53,18 @@ watch(worlds, (list) => {
   }
 }, { immediate: true })
 
+// 变量作用：变量 selectedWorld，用于 selectedWorld 相关配置或状态。
 const selectedWorld = computed(() => worlds.value?.find((world) => world.id === selectedWorldId.value) ?? null)
 
 const { data: scriptDesigns, isLoading: scriptDesignsLoading } = useScriptDesignsQuery(selectedWorldId)
 const { data: currentScriptDesign, isLoading: currentScriptDesignLoading } = useScriptDesignQuery(selectedScriptDesignId)
 const { data: bindingsData, isLoading: bindingsLoading } = useScriptDesignBindingsQuery(selectedScriptDesignId)
 
+// 变量作用：变量 createScriptDesignMut，用于 createScriptDesignMut 相关配置或状态。
 const createScriptDesignMut = useCreateScriptDesignMutation()
+// 变量作用：变量 updateScriptDesignMut，用于 updateScriptDesignMut 相关配置或状态。
 const updateScriptDesignMut = useUpdateScriptDesignMutation()
+// 变量作用：变量 deleteScriptDesignMut，用于 deleteScriptDesignMut 相关配置或状态。
 const deleteScriptDesignMut = useDeleteScriptDesignMutation()
 
 watch(scriptDesigns, (list) => {
@@ -70,6 +78,7 @@ watch(scriptDesigns, (list) => {
   }
 }, { immediate: true })
 
+/** 功能：函数 normalizeAxiosMessage，负责 normalizeAxiosMessage 相关处理。 */
 function normalizeAxiosMessage(error: unknown, fallback: string): string {
   const axiosError = error as AxiosError<{ detail?: string | { message?: string; story_binding_count?: number } }>
   const detail = axiosError?.response?.data?.detail
@@ -81,6 +90,7 @@ function normalizeAxiosMessage(error: unknown, fallback: string): string {
   return fallback
 }
 
+/** 功能：函数 createScriptDesign，负责 createScriptDesign 相关处理。 */
 async function createScriptDesign() {
   if (!selectedWorldId.value) return
   try {
@@ -96,6 +106,7 @@ async function createScriptDesign() {
   }
 }
 
+/** 功能：函数 saveOverview，负责 saveOverview 相关处理。 */
 async function saveOverview(payload: ScriptDesignUpdateInput) {
   if (!selectedScriptDesignId.value) return
   try {
@@ -106,6 +117,7 @@ async function saveOverview(payload: ScriptDesignUpdateInput) {
   }
 }
 
+/** 功能：函数 saveSimpleStructure，负责 saveSimpleStructure 相关处理。 */
 async function saveSimpleStructure(payload: {
   stage_outlines: ScriptStage[]
   event_nodes: ScriptEventNode[]
@@ -123,6 +135,7 @@ async function saveSimpleStructure(payload: {
   }
 }
 
+/** 功能：函数 buildTemplatePayload，负责 buildTemplatePayload 相关处理。 */
 function buildTemplatePayload(templateKey: BeginnerTemplateKey): ScriptDesignUpdateInput {
   const stage1Id = crypto.randomUUID()
   const stage2Id = crypto.randomUUID()
@@ -565,6 +578,7 @@ function buildTemplatePayload(templateKey: BeginnerTemplateKey): ScriptDesignUpd
   }
 }
 
+/** 功能：函数 applyBeginnerTemplate，负责 applyBeginnerTemplate 相关处理。 */
 async function applyBeginnerTemplate(templateKey: BeginnerTemplateKey) {
   if (!selectedScriptDesignId.value || !currentScriptDesign.value) return
 
@@ -584,6 +598,7 @@ async function applyBeginnerTemplate(templateKey: BeginnerTemplateKey) {
   }
 }
 
+/** 功能：函数 deleteScriptDesign，负责 deleteScriptDesign 相关处理。 */
 async function deleteScriptDesign(scriptDesign: ScriptDesign) {
   if (!window.confirm(`确认删除剧本设计「${scriptDesign.title}」？`)) return
   try {

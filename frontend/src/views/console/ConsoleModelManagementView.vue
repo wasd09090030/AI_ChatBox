@@ -1,4 +1,5 @@
 <script setup lang="ts">
+// 文件说明：前端页面级视图编排。
 import ConfigPageHeader from '@/components/config/ConfigPageHeader.vue'
 import ConfigResetPanel from '@/components/config/ConfigResetPanel.vue'
 import GenerationParamsPanel from '@/components/config/GenerationParamsPanel.vue'

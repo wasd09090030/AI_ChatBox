@@ -23,8 +23,11 @@ from .nodes import (
 )
 from .state import StoryGraphState
 
+# 变量作用：模块日志记录器，用于输出运行诊断信息。
 logger = logging.getLogger(__name__)
+# 变量作用：变量 _story_graph，用于保存故事 graph 相关模块级状态。
 _story_graph = None
+# 变量作用：变量 _async_checkpointer_context，用于保存 async checkpointer 上下文相关模块级状态。
 _async_checkpointer_context = None
 
 

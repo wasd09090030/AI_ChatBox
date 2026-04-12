@@ -1,3 +1,7 @@
+/**
+ * 文件说明：项目文件 prompts.ts 的核心逻辑实现。
+ */
+
 import type { Role } from '@/utils/types'
 
 export interface PromptFocusTemplate {

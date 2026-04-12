@@ -19,6 +19,7 @@ from repositories.story_repository import (
     SqliteStoryRepository,
 )
 
+# 变量作用：模块日志记录器，用于输出运行诊断信息。
 logger = logging.getLogger(__name__)
 
 

@@ -1,3 +1,7 @@
+/**
+ * 文件说明：前端业务域逻辑与接口封装。
+ */
+
 import api from '@/services/api'
 import type { World } from '@/services/lorebookService'
 
@@ -141,6 +145,7 @@ export interface ScriptDesignUpdateInput {
 
 export interface ScriptDesignSidebarWorld extends Pick<World, 'id' | 'name' | 'genre'> {}
 
+// 变量作用：变量 scriptDesignApi，用于 scriptDesignApi 相关配置或状态。
 export const scriptDesignApi = {
   list(worldId?: string, status?: ScriptDesignStatus) {
     return api

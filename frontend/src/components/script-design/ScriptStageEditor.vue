@@ -1,4 +1,5 @@
 <script setup lang="ts">
+// 文件说明：前端可复用界面组件。
 import { ref, watch } from 'vue'
 import { Plus, Save, Trash2 } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
@@ -22,6 +23,7 @@ interface StageDraft {
   linkedLorebookEntryIdsText: string
 }
 
+// 变量作用：变量 props，用于 props 相关配置或状态。
 const props = withDefaults(defineProps<{
   stages: ScriptStage[]
   saving?: boolean
@@ -30,12 +32,15 @@ const props = withDefaults(defineProps<{
   advancedOnly: false,
 })
 
+// 变量作用：变量 emit，用于 emit 相关配置或状态。
 const emit = defineEmits<{
   save: [payload: ScriptStage[]]
 }>()
 
+// 变量作用：变量 drafts，用于 drafts 相关配置或状态。
 const drafts = ref<StageDraft[]>([])
 
+/** 功能：函数 toDraft，负责 toDraft 相关处理。 */
 function toDraft(stage: ScriptStage): StageDraft {
   return {
     id: stage.id,
@@ -60,6 +65,7 @@ watch(
   { immediate: true, deep: true },
 )
 
+/** 功能：函数 addStage，负责 addStage 相关处理。 */
 function addStage() {
   drafts.value.push({
     id: crypto.randomUUID(),
@@ -76,10 +82,12 @@ function addStage() {
   })
 }
 
+/** 功能：函数 removeStage，负责 removeStage 相关处理。 */
 function removeStage(id: string) {
   drafts.value = drafts.value.filter((stage) => stage.id !== id)
 }
 
+/** 功能：函数 submit，负责 submit 相关处理。 */
 function submit() {
   emit('save', drafts.value.map((stage, index) => ({
     id: stage.id,

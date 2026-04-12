@@ -1,3 +1,5 @@
+"""文件说明：后端应用层用例编排。"""
+
 from __future__ import annotations
 
 import json
@@ -10,12 +12,15 @@ from config import settings
 from .events import finalize_memory_update_events
 from .models import MemoryUpdateEvent
 
+# 变量作用：模块日志记录器，用于输出运行诊断信息。
 logger = logging.getLogger(__name__)
 
+# 变量作用：变量 _MAX_PAYLOAD_LENGTH，用于保存 max 载荷 length 相关模块级状态。
 _MAX_PAYLOAD_LENGTH = 4000
 
 
 def _serialize_payload(payload: Optional[dict[str, Any]]) -> Optional[str]:
+    """功能：序列化载荷。"""
     if payload is None:
         return None
 
@@ -39,6 +44,7 @@ def _serialize_payload(payload: Optional[dict[str, Any]]) -> Optional[str]:
 
 
 def _ensure_memory_update_journal_columns(conn: sqlite3.Connection) -> None:
+    """功能：确保记忆 update 日志 columns。"""
     try:
         rows = conn.execute("PRAGMA table_info(memory_update_journal)").fetchall()
     except Exception:
@@ -68,6 +74,7 @@ def persist_memory_update_events(
     operation_id: Optional[str] = None,
     sequence_start: int = 1,
 ) -> None:
+    """功能：持久化记忆 update 事件。"""
     event_list = [event for event in events if event.get("event_id") and event.get("session_id")]
     if not event_list:
         return
@@ -171,6 +178,7 @@ def persist_memory_update_events(
 
 
 def _deserialize_payload(payload: Optional[str]) -> Optional[dict[str, Any]]:
+    """功能：反序列化载荷。"""
     if not payload:
         return None
     try:
@@ -194,6 +202,7 @@ def list_memory_update_events(
     page_size: int = 50,
     db_path: Optional[str] = None,
 ) -> dict[str, Any]:
+    """功能：查询并返回记忆 update 事件列表。"""
     target_path = db_path or settings.database_path
     safe_page = max(1, int(page))
     safe_page_size = max(1, min(int(page_size), 200))

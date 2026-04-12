@@ -1,3 +1,7 @@
+/**
+ * 文件说明：前端业务域逻辑与接口封装。
+ */
+
 import { storeToRefs } from 'pinia'
 import { useWorldsQuery } from '@/domains/lorebook/queries/useLorebookQueries'
 import { useStoryWorkspaceStore } from '@/stores/storyWorkspace'
@@ -7,6 +11,7 @@ interface UseStoryLibraryOptions {
   onStoryChanged?: (story: StoredStory | null) => void
 }
 
+/** 功能：函数 useStoryLibrary，负责 useStoryLibrary 相关处理。 */
 export function useStoryLibrary(options: UseStoryLibraryOptions = {}) {
   const storyWorkspace = useStoryWorkspaceStore()
   const { data: worlds, isLoading: worldsLoading } = useWorldsQuery()

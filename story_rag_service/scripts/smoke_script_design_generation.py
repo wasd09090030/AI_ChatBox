@@ -7,6 +7,7 @@ from pathlib import Path
 
 from fastapi.testclient import TestClient
 
+# 变量作用：路径变量 PROJECT_ROOT，用于定位文件系统资源。
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
@@ -17,6 +18,7 @@ from api.v2.story import generation_routes
 
 
 async def _fake_run_story_graph(state):
+    """功能：处理 fake run 故事 graph。"""
     payload = state["request_payload"]
     return {
         "v2_response": {
@@ -46,6 +48,7 @@ async def _fake_run_story_graph(state):
 
 
 def main() -> None:
+    """功能：处理 main。"""
     reset_container()
     init_services()
     client = TestClient(app)

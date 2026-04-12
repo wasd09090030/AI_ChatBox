@@ -17,24 +17,29 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 
+// 变量作用：变量 props，用于 props 相关配置或状态。
 const props = defineProps<{
   segId: string
   choices: string[]
   generating: boolean
 }>()
 
+// 变量作用：变量 emit，用于 emit 相关配置或状态。
 const emit = defineEmits<{
   (e: 'send', payload: { prompt: string; chosenIdx: number }): void
 }>()
 
 // ── Internal state ───────────────────────────────────────────────────────────
 const selectedIdx = ref<number | null>(null)
+// 变量作用：变量 supplement，用于 supplement 相关配置或状态。
 const supplement = ref('')
+// 变量作用：变量 supplementRef，用于 supplementRef 相关配置或状态。
 const supplementRef = ref<HTMLTextAreaElement | null>(null)
 
 // ── Computed ─────────────────────────────────────────────────────────────────
 const isSelected = (idx: number) => selectedIdx.value === idx
 
+// 变量作用：变量 finalPrompt，用于 finalPrompt 相关配置或状态。
 const finalPrompt = computed(() => {
   if (selectedIdx.value === null) return ''
   const base = props.choices[selectedIdx.value]!
@@ -57,11 +62,13 @@ function selectCard(idx: number) {
   setTimeout(() => supplementRef.value?.focus(), 50)
 }
 
+/** 功能：函数 cancelSelection，负责 cancelSelection 相关处理。 */
 function cancelSelection() {
   selectedIdx.value = null
   supplement.value = ''
 }
 
+/** 功能：函数 sendBranch，负责 sendBranch 相关处理。 */
 function sendBranch() {
   if (selectedIdx.value === null || props.generating) return
   emit('send', {
@@ -72,6 +79,7 @@ function sendBranch() {
   supplement.value = ''
 }
 
+/** 功能：函数 handleSupplementKeydown，负责 handleSupplementKeydown 相关处理。 */
 function handleSupplementKeydown(e: KeyboardEvent) {
   if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault()

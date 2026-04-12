@@ -1,3 +1,7 @@
+/**
+ * 文件说明：前端业务域逻辑与接口封装。
+ */
+
 import { ref, type Ref } from 'vue'
 import { useQueryClient } from '@tanstack/vue-query'
 import { useToast } from '@/components/ui/toast'
@@ -6,6 +10,7 @@ import { LOREBOOK_KEYS } from '@/domains/lorebook/queries/useLorebookQueries'
 import type { BulkImportEntry } from '@/services/lorebookService'
 import type { BulkImportResult } from '@/domains/lorebook/types'
 
+/** 功能：函数 useLorebookBulkImport，负责 useLorebookBulkImport 相关处理。 */
 export function useLorebookBulkImport(selectedWorldId: Ref<string>) {
   const { toast } = useToast()
   const queryClient = useQueryClient()

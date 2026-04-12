@@ -1,4 +1,5 @@
 <script setup lang="ts">
+// 文件说明：前端可复用界面组件。
 import { computed } from 'vue'
 import { BookOpen, Plus, Trash2, Globe, FileText, ChevronsLeft, ChevronsRight } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
@@ -26,6 +27,7 @@ import {
 import type { World } from '@/services/lorebookService'
 import type { StoredStory } from '@/components/story/types'
 
+// 变量作用：变量 props，用于 props 相关配置或状态。
 const props = withDefaults(
   defineProps<{
     selectedWorldId: string
@@ -44,6 +46,7 @@ const props = withDefaults(
   },
 )
 
+// 变量作用：变量 emit，用于 emit 相关配置或状态。
 const emit = defineEmits<{
   (event: 'update:selectedWorldId', value: string): void
   (event: 'create-story'): void
@@ -51,11 +54,13 @@ const emit = defineEmits<{
   (event: 'delete-story', story: StoredStory): void
 }>()
 
+// 变量作用：变量 selectedWorldModel，用于 selectedWorldModel 相关配置或状态。
 const selectedWorldModel = computed({
   get: () => props.selectedWorldId,
   set: (value: string) => emit('update:selectedWorldId', value),
 })
 
+// 变量作用：变量 collapsed，用于 collapsed 相关配置或状态。
 const collapsed = useSidebarCollapse('story-library-sidebar-collapsed')
 </script>
 

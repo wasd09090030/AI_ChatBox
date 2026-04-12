@@ -1,4 +1,5 @@
 <script setup lang="ts">
+// 文件说明：前端业务域逻辑与接口封装。
 const props = withDefaults(defineProps<{
   title: string
   description?: string

@@ -1,3 +1,7 @@
+/**
+ * 文件说明：前端可复用界面组件。
+ */
+
 export { default as Select } from "./Select.vue"
 export { default as SelectContent } from "./SelectContent.vue"
 export { default as SelectGroup } from "./SelectGroup.vue"

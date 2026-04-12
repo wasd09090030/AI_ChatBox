@@ -1,3 +1,7 @@
+/**
+ * 文件说明：前端可复用界面组件。
+ */
+
 export type StoryMode = 'narrative' | 'choices' | 'instruction'
 
 export interface StorySegment {

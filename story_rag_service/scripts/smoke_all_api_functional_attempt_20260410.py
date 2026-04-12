@@ -32,24 +32,37 @@ from typing import Any, Optional
 
 import httpx
 
+# 变量作用：变量 BASE_URL，用于保存 base url 相关模块级状态。
 BASE_URL = os.getenv("SMOKE_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
+# 变量作用：变量 TIMEOUT，用于保存 timeout 相关模块级状态。
 TIMEOUT = float(os.getenv("SMOKE_TIMEOUT", "40"))
+# 变量作用：变量 USER_ID，用于保存用户 ID 相关模块级状态。
 USER_ID = os.getenv("SMOKE_USER_ID", "user_1773820783085_bk1gzshza")
+# 变量作用：变量 PROVIDER，用于保存模型提供商相关模块级状态。
 PROVIDER = os.getenv("SMOKE_PROVIDER", "deepseek")
+# 变量作用：变量 MODEL，用于保存模型相关模块级状态。
 MODEL = os.getenv("SMOKE_MODEL", "deepseek-chat")
+# 变量作用：变量 INCLUDE_OPTIONAL_QUERY，用于保存 include 可选查询参数相关模块级状态。
 INCLUDE_OPTIONAL_QUERY = os.getenv("SMOKE_INCLUDE_OPTIONAL_QUERY", "false").lower() in {"1", "true", "yes"}
 
+# 变量作用：变量 DATE_TAG，用于保存 date tag 相关模块级状态。
 DATE_TAG = time.strftime("%Y-%m-%d")
+# 变量作用：路径变量 REPORT_DIR，用于定位文件系统资源。
 REPORT_DIR = Path(__file__).resolve().parents[1] / "docs" / "TestResult"
+# 变量作用：变量 REPORT_JSON，用于保存 report JSON 相关模块级状态。
 REPORT_JSON = REPORT_DIR / f"AllApiFunctional_Attempt_Run_{DATE_TAG}.json"
+# 变量作用：变量 REPORT_MD，用于保存 report md 相关模块级状态。
 REPORT_MD = REPORT_DIR / f"AllApiFunctional_Attempt_Report_{DATE_TAG}.md"
 
+# 变量作用：变量 HTTP_METHODS，用于保存 HTTP methods 相关模块级状态。
 HTTP_METHODS = ["get", "post", "put", "patch", "delete"]
+# 变量作用：正则规则 PATH_PARAM_PATTERN，用于文本模式匹配。
 PATH_PARAM_PATTERN = re.compile(r"\{([^{}]+)\}")
 
 
 @dataclass
 class FixtureContext:
+    """作用：定义 FixtureContext 类型，承载本模块核心状态与行为。"""
     world_id: Optional[str] = None
     story_id: Optional[str] = None
     session_id: Optional[str] = None
@@ -64,6 +77,7 @@ class FixtureContext:
 
 @dataclass
 class EndpointResult:
+    """作用：定义 EndpointResult 数据结构，用于约束字段语义与序列化格式。"""
     method: str
     path: str
     probe_url_path: str
@@ -81,10 +95,12 @@ class EndpointResult:
 
 
 def _headers() -> dict[str, str]:
+    """功能：处理 headers。"""
     return {"X-User-ID": USER_ID}
 
 
 def _safe_json_response(response: httpx.Response) -> Any:
+    """功能：处理 safe JSON 响应。"""
     if not response.text:
         return {}
     try:
@@ -94,6 +110,7 @@ def _safe_json_response(response: httpx.Response) -> Any:
 
 
 def _shorten(value: Any, limit: int = 350) -> Any:
+    """功能：处理 shorten。"""
     try:
         text = json.dumps(value, ensure_ascii=False)
     except Exception:
@@ -104,6 +121,7 @@ def _shorten(value: Any, limit: int = 350) -> Any:
 
 
 def _pick_first_id(payload: Any, candidates: list[str]) -> Optional[str]:
+    """功能：提取 first ID。"""
     if not isinstance(payload, dict):
         return None
     for key in candidates:
@@ -114,6 +132,7 @@ def _pick_first_id(payload: Any, candidates: list[str]) -> Optional[str]:
 
 
 def _pick_latest_segment_id(payload: Any) -> Optional[str]:
+    """功能：提取 latest segment ID。"""
     if not isinstance(payload, dict):
         return None
     segments = payload.get("segments")
@@ -129,6 +148,7 @@ def _pick_latest_segment_id(payload: Any) -> Optional[str]:
 
 
 def _create_world(client: httpx.Client, *, label: str = "AllApiProbe-World") -> Optional[str]:
+    """功能：创建世界观。"""
     status, body, _, _ = _request(
         client,
         "POST",
@@ -151,6 +171,7 @@ def _create_story(
     world_id: Optional[str] = None,
     label: str = "AllApiProbe-Story",
 ) -> Optional[str]:
+    """功能：创建故事。"""
     effective_world_id = world_id or ctx.world_id
     if not effective_world_id:
         return None
@@ -171,6 +192,7 @@ def _create_story(
 
 
 def _create_persona(client: httpx.Client, *, label: str = "Probe Persona") -> Optional[str]:
+    """功能：创建人格卡。"""
     status, body, _, _ = _request(
         client,
         "POST",
@@ -193,6 +215,7 @@ def _create_script_design(
     world_id: Optional[str] = None,
     label: str = "Probe Script Design",
 ) -> Optional[str]:
+    """功能：创建剧本设计。"""
     effective_world_id = world_id or ctx.world_id
     if not effective_world_id:
         return None
@@ -216,6 +239,7 @@ def _create_story_segment(
     client: httpx.Client,
     story_id: str,
 ) -> Optional[str]:
+    """功能：创建故事 segment。"""
     status, body, _, _ = _request(
         client,
         "POST",
@@ -240,6 +264,7 @@ def _request(
     json_body: Optional[dict[str, Any]] = None,
     stream_mode: bool = False,
 ) -> tuple[int, Any, Optional[str], int]:
+    """功能：处理请求。"""
     start = time.time()
     try:
         if stream_mode:
@@ -274,6 +299,7 @@ def _request(
 
 
 def _classify(status: int, error: Optional[str]) -> tuple[str, bool]:
+    """功能：处理 classify。"""
     if error:
         return "FAIL", False
     if status >= 500 or status == 0:
@@ -285,6 +311,7 @@ def _classify(status: int, error: Optional[str]) -> tuple[str, bool]:
 
 
 def _resolve_ref(schema: dict[str, Any], components: dict[str, Any]) -> dict[str, Any]:
+    """功能：解析并返回 ref。"""
     ref = schema.get("$ref")
     if not isinstance(ref, str):
         return schema
@@ -298,6 +325,7 @@ def _resolve_ref(schema: dict[str, Any], components: dict[str, Any]) -> dict[str
 
 
 def _sample_from_schema(schema: Optional[dict[str, Any]], components: dict[str, Any], depth: int = 0) -> Any:
+    """功能：处理 sample from 模式。"""
     if not isinstance(schema, dict):
         return None
     if depth > 5:
@@ -374,6 +402,7 @@ def _sample_from_schema(schema: Optional[dict[str, Any]], components: dict[str, 
 
 
 def _route_override(method: str, path: str, ctx: FixtureContext) -> Optional[dict[str, Any]]:
+    """功能：处理路由 override。"""
     method = method.upper()
 
     if method == "POST" and path == "/api/v2/worlds":
@@ -550,6 +579,7 @@ def _route_override(method: str, path: str, ctx: FixtureContext) -> Optional[dic
 
 
 def _resolve_path(path_template: str, ctx: FixtureContext) -> str:
+    """功能：解析并返回路径。"""
     mapping = {
         "world_id": ctx.world_id,
         "story_id": ctx.story_id,
@@ -563,6 +593,7 @@ def _resolve_path(path_template: str, ctx: FixtureContext) -> str:
     }
 
     def repl(match: re.Match[str]) -> str:
+        """功能：处理 repl。"""
         key = match.group(1)
         value = mapping.get(key)
         if value:
@@ -580,6 +611,7 @@ def _prepare_probe_target(
     path: str,
     ctx: FixtureContext,
 ) -> tuple[str, list[tuple[str, str]]]:
+    """功能：准备 probe target。"""
     cleanup_calls: list[tuple[str, str]] = []
 
     if method == "DELETE" and path == "/api/v2/worlds/{world_id}":
@@ -640,6 +672,7 @@ def _build_query_params(
     components: dict[str, Any],
     ctx: FixtureContext,
 ) -> dict[str, Any]:
+    """功能：构建 query params。"""
     params: dict[str, Any] = {}
     for item in operation.get("parameters") or []:
         if not isinstance(item, dict):
@@ -677,6 +710,7 @@ def _build_body(
     components: dict[str, Any],
     ctx: FixtureContext,
 ) -> tuple[Optional[dict[str, Any]], bool]:
+    """功能：构建 body。"""
     override = _route_override(method, path, ctx)
     if override is not None:
         return override, True
@@ -702,9 +736,11 @@ def _build_body(
 
 
 def _prepare_fixtures(client: httpx.Client, ctx: FixtureContext) -> list[dict[str, Any]]:
+    """功能：准备 fixtures。"""
     logs: list[dict[str, Any]] = []
 
     def call(method: str, path: str, body: Optional[dict[str, Any]] = None) -> tuple[int, Any]:
+        """功能：处理 call。"""
         status, payload, error, _ = _request(client, method, path, json_body=body)
         logs.append({
             "step": f"{method.upper()} {path}",
@@ -846,9 +882,11 @@ def _prepare_fixtures(client: httpx.Client, ctx: FixtureContext) -> list[dict[st
 
 
 def _cleanup_fixtures(client: httpx.Client, ctx: FixtureContext) -> list[dict[str, Any]]:
+    """功能：处理 cleanup fixtures。"""
     logs: list[dict[str, Any]] = []
 
     def call(method: str, path: str) -> None:
+        """功能：处理 call。"""
         status, body, error, _ = _request(client, method, path)
         logs.append({
             "step": f"{method.upper()} {path}",
@@ -868,6 +906,7 @@ def _cleanup_fixtures(client: httpx.Client, ctx: FixtureContext) -> list[dict[st
 
 
 def _collect_endpoints(openapi: dict[str, Any]) -> list[tuple[str, str, dict[str, Any]]]:
+    """功能：收集 endpoints。"""
     endpoints: list[tuple[str, str, dict[str, Any]]] = []
     paths = openapi.get("paths")
     if not isinstance(paths, dict):
@@ -885,6 +924,7 @@ def _collect_endpoints(openapi: dict[str, Any]) -> list[tuple[str, str, dict[str
 
 
 def _render_markdown(report: dict[str, Any]) -> str:
+    """功能：处理 render markdown。"""
     lines: list[str] = []
     summary = report["summary"]
 
@@ -957,6 +997,7 @@ def _render_markdown(report: dict[str, Any]) -> str:
 
 
 def run() -> dict[str, Any]:
+    """功能：执行目标对象。"""
     REPORT_DIR.mkdir(parents=True, exist_ok=True)
 
     ctx = FixtureContext()
@@ -1080,6 +1121,7 @@ def run() -> dict[str, Any]:
 
 
 def main() -> None:
+    """功能：处理 main。"""
     report = run()
     print(json.dumps(report["summary"], ensure_ascii=False, indent=2))
     print(f"JSON report: {REPORT_JSON}")

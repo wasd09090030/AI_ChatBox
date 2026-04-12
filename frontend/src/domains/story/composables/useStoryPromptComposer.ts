@@ -1,3 +1,7 @@
+/**
+ * 文件说明：前端业务域逻辑与接口封装。
+ */
+
 import { computed, ref, type ComputedRef, type Ref } from 'vue'
 import type { LorebookEntry } from '@/services/lorebookService'
 import type { PromptFocusTemplate } from '@/config/prompts'
@@ -11,6 +15,7 @@ interface UseStoryPromptComposerArgs {
   selectedFocusTemplateId?: Ref<string>
 }
 
+/** 功能：函数 useStoryPromptComposer，负责 useStoryPromptComposer 相关处理。 */
 export function useStoryPromptComposer(args: UseStoryPromptComposerArgs) {
   const showPromptComposer = ref(false)
   const selectedContextEntryIds = args.selectedContextEntryIds ?? ref<string[]>([])

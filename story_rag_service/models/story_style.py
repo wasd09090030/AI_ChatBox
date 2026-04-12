@@ -79,6 +79,7 @@ class StyleTemplate(BaseModel):
     )
     
     class Config:
+        """作用：定义配置读取规则与环境变量加载行为。"""
         use_enum_values = True
 
 
@@ -244,6 +245,7 @@ class SceneAtmosphere(BaseModel):
     )
     
     class Config:
+        """作用：定义配置读取规则与环境变量加载行为。"""
         use_enum_values = True
 
 

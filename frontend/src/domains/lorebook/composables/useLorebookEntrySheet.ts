@@ -1,3 +1,7 @@
+/**
+ * 文件说明：前端业务域逻辑与接口封装。
+ */
+
 import { computed, ref, type Ref } from 'vue'
 import { useQueryClient } from '@tanstack/vue-query'
 import { useToast } from '@/components/ui/toast'
@@ -6,6 +10,7 @@ import { LOREBOOK_KEYS, useLorebookEntriesQuery } from '@/domains/lorebook/queri
 import type { EntrySheetSubmitPayload, EntrySheetType } from '@/domains/lorebook/types'
 import type { LorebookEntry } from '@/services/lorebookService'
 
+/** 功能：函数 useLorebookEntrySheet，负责 useLorebookEntrySheet 相关处理。 */
 export function useLorebookEntrySheet(selectedWorldId: Ref<string>) {
   const { toast } = useToast()
   const queryClient = useQueryClient()

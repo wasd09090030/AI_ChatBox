@@ -1,3 +1,5 @@
+"""文件说明：后端应用层用例编排。"""
+
 from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
@@ -11,6 +13,7 @@ from .providers import build_dialogue_controls, load_profile_snapshot, load_scri
 
 
 class MemoryOrchestrator:
+    """作用：定义 MemoryOrchestrator 服务对象，用于封装对应领域流程。"""
     def __init__(
         self,
         *,
@@ -24,6 +27,7 @@ class MemoryOrchestrator:
         entity_state_event_replay_service=None,
         recent_message_count: int = 5,
     ):
+        """功能：初始化对象依赖并设置默认运行状态。"""
         self.lorebook_manager = lorebook_manager
         self.history_manager = history_manager
         self.world_manager = world_manager
@@ -44,6 +48,7 @@ class MemoryOrchestrator:
         assistant_weight: Optional[float] = None,
         log_prefix: str = "",
     ) -> MemoryOrchestratorResult:
+        """功能：构建记忆包。"""
         retrieved_contexts, retrieved_history, world_id, activation_logs = retrieve_rag_context(
             request=request,
             context=context,
@@ -135,6 +140,7 @@ class MemoryOrchestrator:
         }
 
     def _load_profile_snapshot(self, request: StoryGenerationRequest) -> Dict[str, Any]:
+        """功能：加载角色画像快照。"""
         try:
             return load_profile_snapshot(self.roleplay_manager, request)
         except Exception:
@@ -142,6 +148,7 @@ class MemoryOrchestrator:
 
     @staticmethod
     def _build_dialogue_controls(request: StoryGenerationRequest) -> Dict[str, Any]:
+        """功能：构建对话控制参数。"""
         return build_dialogue_controls(request)
 
     def _load_script_guidance(
@@ -149,6 +156,7 @@ class MemoryOrchestrator:
         request: StoryGenerationRequest,
         activation_logs: List[Dict[str, Any]],
     ) -> Dict[str, Any]:
+        """功能：加载剧本指导信息。"""
         try:
             script_guidance = load_script_guidance(self.script_design_app, request)
         except Exception:
@@ -172,6 +180,7 @@ class MemoryOrchestrator:
         session_id: str,
         activation_logs: List[Dict[str, Any]],
     ) -> Optional[Dict[str, Any]]:
+        """功能：加载摘要记忆。"""
         if not self.summary_memory_manager or not settings.rp_summary_memory_enabled:
             return None
 
@@ -192,6 +201,7 @@ class MemoryOrchestrator:
         session_id: str,
         explicit_story_id: Optional[str],
     ) -> Optional[str]:
+        """功能：解析并返回故事ID。"""
         if explicit_story_id:
             return str(explicit_story_id)
         if self.story_runtime_manager:
@@ -203,6 +213,7 @@ class MemoryOrchestrator:
         story_id: Optional[str],
         activation_logs: List[Dict[str, Any]],
     ) -> Optional[Dict[str, Any]]:
+        """功能：加载运行时快照。"""
         if not story_id or not self.story_runtime_manager:
             return None
         runtime_state = self.story_runtime_manager.get_runtime_state(story_id)
@@ -226,6 +237,7 @@ class MemoryOrchestrator:
         session_id: str,
         activation_logs: List[Dict[str, Any]],
     ) -> Optional[Dict[str, Any]]:
+        """功能：加载实体记忆。"""
         if not story_id or not self.entity_state_event_replay_service:
             return None
         replay_result = self.entity_state_event_replay_service.replay_story_state(

@@ -38,16 +38,25 @@ from typing import Any, Optional
 
 import httpx
 
+# 变量作用：变量 BASE_URL，用于保存 base url 相关模块级状态。
 BASE_URL = os.getenv("SMOKE_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
+# 变量作用：变量 USER_ID，用于保存用户 ID 相关模块级状态。
 USER_ID = os.getenv("SMOKE_USER_ID", "user_1773820783085_bk1gzshza")
+# 变量作用：变量 PROVIDER，用于保存模型提供商相关模块级状态。
 PROVIDER = os.getenv("SMOKE_PROVIDER", "deepseek")
+# 变量作用：变量 MODEL，用于保存模型相关模块级状态。
 MODEL = os.getenv("SMOKE_MODEL", "deepseek-chat")
+# 变量作用：变量 TIMEOUT，用于保存 timeout 相关模块级状态。
 TIMEOUT = float(os.getenv("SMOKE_TIMEOUT", "180"))
 
+# 变量作用：路径变量 REPORT_DIR，用于定位文件系统资源。
 REPORT_DIR = Path(__file__).resolve().parents[1] / "docs" / "TestResult"
+# 变量作用：变量 REPORT_JSON，用于保存 report JSON 相关模块级状态。
 REPORT_JSON = REPORT_DIR / "Plan0410_StoryMemoryMerge_Validation_Run.json"
 
+# 变量作用：变量 STORY_MEMORY_VIEWS，用于保存故事记忆 views 相关模块级状态。
 STORY_MEMORY_VIEWS = {"operation", "semantic", "runtime", "entity", "timeline"}
+# 变量作用：变量 COMPAT_FIELDS，用于保存 compat fields 相关模块级状态。
 COMPAT_FIELDS = {
     "summary_memory_snapshot",
     "runtime_state_snapshot",
@@ -59,12 +68,14 @@ COMPAT_FIELDS = {
 
 @dataclass
 class Check:
+    """作用：定义 Check 类型，承载本模块核心状态与行为。"""
     name: str
     passed: bool
     detail: dict[str, Any]
 
 
 def _headers() -> dict[str, str]:
+    """功能：处理 headers。"""
     return {"X-User-ID": USER_ID}
 
 
@@ -76,6 +87,7 @@ def _request(
     *,
     with_user: bool = False,
 ) -> tuple[int, dict[str, Any]]:
+    """功能：处理请求。"""
     headers = _headers() if with_user else {}
     try:
         response = client.request(method.upper(), f"{BASE_URL}{path}", json=payload, headers=headers)
@@ -99,6 +111,7 @@ def _stream_generate(
     *,
     with_user: bool,
 ) -> tuple[int, dict[str, Any], int]:
+    """功能：处理 stream generate。"""
     headers = _headers() if with_user else {}
     final_event: dict[str, Any] = {}
     chunk_count = 0
@@ -144,10 +157,12 @@ def _stream_generate(
 
 
 def _add(checks: list[Check], cond: bool, name: str, detail: dict[str, Any]) -> None:
+    """功能：处理 add。"""
     checks.append(Check(name=name, passed=bool(cond), detail=detail))
 
 
 def _operation_ids(events: Any) -> set[str]:
+    """功能：处理操作 ID列表。"""
     if not isinstance(events, list):
         return set()
     ids: set[str] = set()
@@ -158,6 +173,7 @@ def _operation_ids(events: Any) -> set[str]:
 
 
 def _story_memory_contract(payload: Any) -> dict[str, Any]:
+    """功能：处理故事记忆 contract。"""
     if not isinstance(payload, dict):
         return {
             "ok": False,
@@ -185,6 +201,7 @@ def _story_memory_contract(payload: Any) -> dict[str, Any]:
 
 
 def _compat_fields_contract(payload: Any) -> dict[str, Any]:
+    """功能：处理 compat fields contract。"""
     if not isinstance(payload, dict):
         return {
             "ok": False,
@@ -203,6 +220,7 @@ def _compat_fields_contract(payload: Any) -> dict[str, Any]:
 
 
 def _operation_derivable(story_memory: Any, event_list: Any) -> dict[str, Any]:
+    """功能：处理操作 derivable。"""
     operation_id = None
     if isinstance(story_memory, dict):
         operation = story_memory.get("operation")
@@ -218,6 +236,7 @@ def _operation_derivable(story_memory: Any, event_list: Any) -> dict[str, Any]:
 
 
 def _preflight(client: httpx.Client, checks: list[Check]) -> None:
+    """功能：处理 preflight。"""
     status, body = _request(client, "GET", "/api/v2/health")
     _add(checks, status == 200 and body.get("status") == "healthy", "health", {"status": status, "body": body})
 
@@ -247,6 +266,7 @@ def _preflight(client: httpx.Client, checks: list[Check]) -> None:
 
 
 def run_smoke() -> dict[str, Any]:
+    """功能：执行 smoke。"""
     checks: list[Check] = []
     evidence: dict[str, Any] = {}
 
@@ -682,6 +702,7 @@ def run_smoke() -> dict[str, Any]:
 
 
 def main() -> None:
+    """功能：处理 main。"""
     result = run_smoke()
     print(json.dumps(result, ensure_ascii=False, indent=2))
     print(f"\nReport written: {REPORT_JSON}")

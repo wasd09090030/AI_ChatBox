@@ -1,3 +1,7 @@
+/**
+ * 文件说明：前端状态管理与会话数据维护。
+ */
+
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import type {
@@ -10,6 +14,7 @@ import type {
 export type MemoryUpdateDetailTab = 'timeline' | 'semantic' | 'entity'
 export type MemoryUpdateTimeRange = 'all' | '1h' | '24h' | '7d'
 
+/** 功能：函数 buildDateRange，负责 buildDateRange 相关处理。 */
 function buildDateRange(range: MemoryUpdateTimeRange) {
   if (range === 'all') return { date_from: undefined, date_to: undefined }
   const now = new Date()
@@ -23,6 +28,7 @@ function buildDateRange(range: MemoryUpdateTimeRange) {
   }
 }
 
+// 变量作用：变量 useMemoryUpdateDashboardStore，用于 useMemoryUpdateDashboardStore 相关配置或状态。
 export const useMemoryUpdateDashboardStore = defineStore('memoryUpdateDashboard', () => {
   const searchTerm = ref('')
   const selectedSource = ref('all')

@@ -7,6 +7,7 @@ from typing import Any, Iterable
 
 
 def _serialize_state_snapshot(items: Iterable[dict[str, Any]]) -> str:
+    """功能：序列化状态快照。"""
     return json.dumps(list(items), ensure_ascii=False, indent=2)
 
 

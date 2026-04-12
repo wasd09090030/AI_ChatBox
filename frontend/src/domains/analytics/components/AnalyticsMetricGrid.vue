@@ -1,13 +1,16 @@
 <script setup lang="ts">
+// 文件说明：前端业务域逻辑与接口封装。
 import {
   Clock3, Database, Gauge, Hash, ShieldCheck, TriangleAlert, Waypoints, Waves,
 } from 'lucide-vue-next'
 import type { AnalyticsMetricItem } from '@/domains/analytics/types'
 
+// 变量作用：变量 props，用于 props 相关配置或状态。
 const props = defineProps<{
   metrics: AnalyticsMetricItem[]
 }>()
 
+// 变量作用：变量 iconMap，用于 iconMap 相关配置或状态。
 const iconMap = {
   requests: Hash,
   success: ShieldCheck,
@@ -19,6 +22,7 @@ const iconMap = {
   retrieval: Database,
 } as const
 
+// 变量作用：变量 accentClassMap，用于 accentClassMap 相关配置或状态。
 const accentClassMap = {
   default: 'text-foreground',
   success: 'text-emerald-600 dark:text-emerald-400',

@@ -14,8 +14,10 @@ from models.story_runtime import ScriptRuntimeState
 from models.stored_story import StoredStory
 from repositories.entity_state_repository import SqliteEntityStateRepository
 
+# 变量作用：模块日志记录器，用于输出运行诊断信息。
 logger = logging.getLogger(__name__)
 
+# 变量作用：变量 _STATUS_KEYWORDS，用于保存 status keywords 相关模块级状态。
 _STATUS_KEYWORDS: dict[str, tuple[str, ...]] = {
     "受伤": ("受伤", "伤口", "流血", "负伤"),
     "警觉": ("警觉", "戒备", "警惕"),
@@ -25,13 +27,16 @@ _STATUS_KEYWORDS: dict[str, tuple[str, ...]] = {
     "恐惧": ("恐惧", "害怕", "惊惧"),
     "昏迷": ("昏迷", "失去意识"),
 }
+# 变量作用：正则规则 _INVENTORY_ADD_PATTERNS，用于文本模式匹配。
 _INVENTORY_ADD_PATTERNS: tuple[str, ...] = (
     r"{name}[^。！？\n]{0,18}(?:拿着|握着|攥着|带着|背着|提着|揣着|获得了|捡起了|拾起了)([^，。；！？\n]{1,20})",
     r"{name}[^。！？\n]{0,12}手里(?:拿着|握着|攥着)([^，。；！？\n]{1,20})",
 )
+# 变量作用：正则规则 _INVENTORY_REMOVE_PATTERNS，用于文本模式匹配。
 _INVENTORY_REMOVE_PATTERNS: tuple[str, ...] = (
     r"{name}[^。！？\n]{0,18}(?:丢下了|放下了|失去了|交出了|抛下了)([^，。；！？\n]{1,20})",
 )
+# 变量作用：正则规则 _GOAL_PATTERNS，用于文本模式匹配。
 _GOAL_PATTERNS: tuple[str, ...] = (
     r"{name}[^。！？\n]{0,16}(?:想要|准备|打算|决定|试图)([^，。；！？\n]{2,24})",
 )

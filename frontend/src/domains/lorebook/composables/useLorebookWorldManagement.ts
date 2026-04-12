@@ -1,3 +1,7 @@
+/**
+ * 文件说明：前端业务域逻辑与接口封装。
+ */
+
 import { computed, ref, watch } from 'vue'
 import { useQueryClient } from '@tanstack/vue-query'
 import { useToast } from '@/components/ui/toast'
@@ -5,6 +9,7 @@ import { LOREBOOK_KEYS, useWorldsQuery } from '@/domains/lorebook/queries/useLor
 import { lorebookManagementApi } from '@/domains/lorebook/api/lorebookManagementApi'
 import type { World, WorldCreate } from '@/services/lorebookService'
 
+/** 功能：函数 useLorebookWorldManagement，负责 useLorebookWorldManagement 相关处理。 */
 export function useLorebookWorldManagement() {
   const { toast } = useToast()
   const queryClient = useQueryClient()

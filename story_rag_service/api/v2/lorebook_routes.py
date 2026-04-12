@@ -8,6 +8,7 @@ from pydantic import BaseModel
 from api.service_context import ServiceContainer, get_services
 from models.lorebook import Character, Event, Location, LorebookEntry, LorebookType
 
+# 变量作用：FastAPI 路由注册器，用于挂载本模块接口。
 router = APIRouter()
 
 
@@ -19,11 +20,13 @@ class UpdateEntryRequest(BaseModel):
 
 
 class BulkImportItem(BaseModel):
+    """作用：定义 BulkImportItem 数据结构，用于约束字段语义与序列化格式。"""
     entry_type: str  # 'character' | 'location' | 'event'
     data: Dict[str, Any]
 
 
 class BulkImportRequest(BaseModel):
+    """作用：定义 BulkImportRequest 数据结构，用于约束字段语义与序列化格式。"""
     entries: List[BulkImportItem]
 
 
@@ -32,6 +35,7 @@ async def list_lorebook_entries(
     world_id: Optional[str] = Query(default=None),
     services: ServiceContainer = Depends(get_services),
 ):
+    """功能：查询并返回知识库条目列表。"""
     entries = services.lorebook_manager.get_all_entries(world_id=world_id)
     return {
         "entries": entries,
@@ -46,6 +50,7 @@ async def create_world_character(
     character: Character,
     services: ServiceContainer = Depends(get_services),
 ):
+    """功能：创建世界观角色。"""
     result = services.world_app.create_character_in_world(world_id, character)
     if result is None:
         raise HTTPException(status_code=404, detail="World not found")
@@ -58,6 +63,7 @@ async def create_world_location(
     location: Location,
     services: ServiceContainer = Depends(get_services),
 ):
+    """功能：创建世界观地点。"""
     result = services.world_app.create_location_in_world(world_id, location)
     if result is None:
         raise HTTPException(status_code=404, detail="World not found")
@@ -70,6 +76,7 @@ async def create_world_event(
     event: Event,
     services: ServiceContainer = Depends(get_services),
 ):
+    """功能：创建世界观事件。"""
     result = services.world_app.create_event_in_world(world_id, event)
     if result is None:
         raise HTTPException(status_code=404, detail="World not found")
@@ -78,6 +85,7 @@ async def create_world_event(
 
 @router.delete("/lorebook/entry/{entry_id}")
 async def delete_lorebook_entry(entry_id: str, services: ServiceContainer = Depends(get_services)):
+    """功能：删除知识库条目。"""
     deleted = services.lorebook_manager.delete_entry(entry_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Lorebook entry not found")

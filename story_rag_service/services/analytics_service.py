@@ -12,11 +12,15 @@ from pathlib import Path
 from threading import Lock
 from typing import Any, Dict, List, Optional
 
+# 变量作用：模块日志记录器，用于输出运行诊断信息。
 logger = logging.getLogger(__name__)
 
+# 变量作用：路径变量 DATA_DIR，用于定位文件系统资源。
 DATA_DIR = Path(__file__).parent.parent / "data"
+# 变量作用：变量 ANALYTICS_FILE，用于保存分析文件相关模块级状态。
 ANALYTICS_FILE = DATA_DIR / "analytics.jsonl"
 
+# 变量作用：变量 _write_lock，用于保存 write lock 相关模块级状态。
 _write_lock = Lock()
 
 

@@ -1,3 +1,7 @@
+/**
+ * 文件说明：前端状态管理与会话数据维护。
+ */
+
 ﻿/**
  * Config Store
  *
@@ -31,8 +35,10 @@ import {
 } from '@/domains/settings/api/providerConfigApi'
 import { storage } from '@/utils/storage'
 
+// 变量作用：变量 BASE_URLS_STORAGE_KEY，用于 BASE URLS STORAGE KEY 相关配置或状态。
 const BASE_URLS_STORAGE_KEY = 'provider_base_urls_v1'
 
+// 变量作用：变量 useConfigStore，用于 useConfigStore 相关配置或状态。
 export const useConfigStore = defineStore('config', () => {
   // ── State ────────────────────────────────────────────────────────────────
   const config = ref<UserConfig>({

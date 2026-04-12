@@ -47,6 +47,7 @@ from services.story_generation.llm_factory import (
 )
 from services.story_generation.prompt_builder import build_system_prompt
 
+# 变量作用：模块日志记录器，用于输出运行诊断信息。
 logger = logging.getLogger(__name__)
 
 
@@ -141,6 +142,7 @@ class StoryGenerator:
     def _detect_input_loop(user_input: str, recent_messages: List[Message]) -> bool:
         """检测用户输入是否与最近 3 条 user 消息高度重复（bigram Jaccard > 0.75）。"""
         def _bigrams(text: str) -> set:
+            """功能：处理 bigrams。"""
             chars = text.strip()
             if len(chars) < 2:
                 return {chars}
@@ -570,6 +572,7 @@ class StoryGenerator:
 
     @staticmethod
     def _normalize_entity_update_result(result: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+        """功能：标准化实体 update result。"""
         payload = dict(result or {})
         return {
             "entity_state_snapshot": payload.get("entity_state_snapshot"),
@@ -593,6 +596,7 @@ class StoryGenerator:
         source: str,
         activation_logs: List[Dict[str, Any]],
     ) -> Dict[str, Any]:
+        """功能：更新实体状态 after 生成 async。"""
         operation_id = getattr(request, "memory_operation_id", None)
         sequence_start = int(getattr(request, "memory_operation_sequence_start", 1) or 1) + memory_update_count
 
@@ -650,6 +654,7 @@ class StoryGenerator:
         source: str,
         activation_logs: List[Dict[str, Any]],
     ) -> Dict[str, Any]:
+        """功能：更新实体状态 after 生成 sync。"""
         operation_id = getattr(request, "memory_operation_id", None)
         sequence_start = int(getattr(request, "memory_operation_sequence_start", 1) or 1) + memory_update_count
 

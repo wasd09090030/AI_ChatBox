@@ -12,6 +12,7 @@ declare module 'vue-router' {
   }
 }
 
+// 变量作用：变量 router，用于 router 相关配置或状态。
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [

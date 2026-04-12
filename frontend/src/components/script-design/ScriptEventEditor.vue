@@ -1,4 +1,5 @@
 <script setup lang="ts">
+// 文件说明：前端可复用界面组件。
 import { ref, watch } from 'vue'
 import { Plus, Save, Trash2 } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
@@ -47,6 +48,7 @@ interface EventDraft {
   foreshadowIdsText: string
 }
 
+// 变量作用：变量 props，用于 props 相关配置或状态。
 const props = withDefaults(defineProps<{
   stages: ScriptStage[]
   events: ScriptEventNode[]
@@ -56,12 +58,15 @@ const props = withDefaults(defineProps<{
   advancedOnly: false,
 })
 
+// 变量作用：变量 emit，用于 emit 相关配置或状态。
 const emit = defineEmits<{
   save: [payload: ScriptEventNode[]]
 }>()
 
+// 变量作用：变量 drafts，用于 drafts 相关配置或状态。
 const drafts = ref<EventDraft[]>([])
 
+/** 功能：函数 toDraft，负责 toDraft 相关处理。 */
 function toDraft(eventNode: ScriptEventNode): EventDraft {
   return {
     id: eventNode.id,
@@ -94,6 +99,7 @@ watch(
   { immediate: true, deep: true },
 )
 
+/** 功能：函数 addEvent，负责 addEvent 相关处理。 */
 function addEvent() {
   drafts.value.push({
     id: crypto.randomUUID(),
@@ -118,10 +124,12 @@ function addEvent() {
   })
 }
 
+/** 功能：函数 removeEvent，负责 removeEvent 相关处理。 */
 function removeEvent(id: string) {
   drafts.value = drafts.value.filter((eventNode) => eventNode.id !== id)
 }
 
+/** 功能：函数 submit，负责 submit 相关处理。 */
 function submit() {
   emit('save', drafts.value.map((eventNode, index) => ({
     id: eventNode.id,

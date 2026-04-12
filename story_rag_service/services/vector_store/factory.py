@@ -16,9 +16,11 @@ from langchain_chroma import Chroma
 from langchain_core.embeddings import Embeddings
 from langchain_huggingface import HuggingFaceEmbeddings
 
+# 变量作用：模块日志记录器，用于输出运行诊断信息。
 logger = logging.getLogger(__name__)
 
 
+# 变量作用：正则规则 _TOKEN_PATTERN，用于文本模式匹配。
 _TOKEN_PATTERN = re.compile(r"[\u4e00-\u9fff\u3400-\u4dbf]|[a-zA-Z0-9_-]+")
 
 
@@ -26,15 +28,19 @@ class LightweightFallbackEmbeddings(Embeddings):
     """离线启动兜底嵌入，避免在无网络环境下阻塞应用启动。"""
 
     def __init__(self, dimensions: int = 384):
+        """功能：初始化对象依赖并设置默认运行状态。"""
         self.dimensions = dimensions
 
     def embed_documents(self, texts: List[str]) -> List[List[float]]:
+        """功能：处理 embed documents。"""
         return [self._embed_text(text) for text in texts]
 
     def embed_query(self, text: str) -> List[float]:
+        """功能：处理 embed query。"""
         return self._embed_text(text)
 
     def _embed_text(self, text: str) -> List[float]:
+        """功能：处理 embed text。"""
         vector = [0.0] * self.dimensions
         tokens = _TOKEN_PATTERN.findall((text or "").lower())
 
@@ -61,6 +67,7 @@ class LightweightFallbackEmbeddings(Embeddings):
 
 
 def _create_fallback_embeddings() -> Embeddings:
+    """功能：创建 fallback embeddings。"""
     logger.warning("Using lightweight offline fallback embeddings; semantic retrieval quality will be reduced")
     return LightweightFallbackEmbeddings()
 

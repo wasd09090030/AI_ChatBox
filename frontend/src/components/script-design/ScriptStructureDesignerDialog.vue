@@ -1,4 +1,5 @@
 <script setup lang="ts">
+// 文件说明：前端可复用界面组件。
 import { Layers3 } from 'lucide-vue-next'
 import {
   Dialog,
@@ -10,12 +11,14 @@ import {
 import ScriptDesignSimpleStructureEditor from '@/components/script-design/ScriptDesignSimpleStructureEditor.vue'
 import type { ForeshadowRecord, ScriptDesign, ScriptEventNode, ScriptStage } from '@/domains/story/api/scriptDesignApi'
 
+// 变量作用：变量 props，用于 props 相关配置或状态。
 const props = defineProps<{
   open: boolean
   design: ScriptDesign | null
   saving?: boolean
 }>()
 
+// 变量作用：变量 emit，用于 emit 相关配置或状态。
 const emit = defineEmits<{
   'update:open': [open: boolean]
   saveStructure: [payload: { stage_outlines: ScriptStage[]; event_nodes: ScriptEventNode[]; foreshadows: ForeshadowRecord[] }]

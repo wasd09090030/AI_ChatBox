@@ -20,6 +20,7 @@ class EntityPatchValidator:
         character_lookup: Dict[str, Dict],
         location_lookup: Dict[str, Dict],
     ) -> EntityPatchExtractionResult:
+        """功能：校验目标对象。"""
         warnings = list(extraction.warnings)
         valid_patches: list[EntityStatePatch] = []
 
@@ -82,6 +83,7 @@ class EntityPatchValidator:
         character_lookup: Dict[str, Dict],
         character_id_lookup: Dict[str, Dict],
     ) -> Dict[str, Any] | None:
+        """功能：解析并返回角色条目。"""
         normalized_id = str(entity_id or "").strip()
         if normalized_id and normalized_id in character_id_lookup:
             return character_id_lookup[normalized_id]
@@ -98,6 +100,7 @@ class EntityPatchValidator:
         character_lookup: Dict[str, Dict],
         character_id_lookup: Dict[str, Dict],
     ) -> list[str]:
+        """功能：标准化 companions。"""
         raw_values = value if isinstance(value, list) else [value]
         normalized: list[str] = []
         for item in raw_values:

@@ -7,6 +7,7 @@
 
 from services.ai_proxy import AIProxyService, PROVIDER_REGISTRY, ProviderConfig, _resolve_base_url
 
+# 变量作用：控制 import * 时可导出的公共符号。
 __all__ = [
     "AIProxyService",
     "ProviderConfig",

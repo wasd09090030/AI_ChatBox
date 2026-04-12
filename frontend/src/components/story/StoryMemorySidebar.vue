@@ -1,4 +1,5 @@
 <script setup lang="ts">
+// 文件说明：前端可复用界面组件。
 import { computed } from 'vue'
 import {
   AlertTriangle,
@@ -54,6 +55,7 @@ interface StorySummaryDiff {
   currentLastTurn: number | null
 }
 
+// 变量作用：变量 props，用于 props 相关配置或状态。
 const props = withDefaults(
   defineProps<{
     showScriptProgress?: boolean
@@ -90,33 +92,47 @@ const props = withDefaults(
   },
 )
 
+// 变量作用：变量 emit，用于 emit 相关配置或状态。
 const emit = defineEmits<{
   (event: 'save-progress'): void
   (event: 'advance-event'): void
   (event: 'advance-stage'): void
 }>()
 
+// 变量作用：变量 orderedEvents，用于 orderedEvents 相关配置或状态。
 const orderedEvents = computed(() => [...props.lastMemoryUpdates].sort((a, b) => a.committed_at.localeCompare(b.committed_at)))
+// 变量作用：变量 semanticEvents，用于 semanticEvents 相关配置或状态。
 const semanticEvents = computed(() => props.lastMemoryUpdates.filter((event) => event.memory_layer === 'semantic'))
+// 变量作用：变量 episodicEvents，用于 episodicEvents 相关配置或状态。
 const episodicEvents = computed(() => props.lastMemoryUpdates.filter((event) => event.memory_layer === 'episodic'))
+// 变量作用：变量 entityEvents，用于 entityEvents 相关配置或状态。
 const entityEvents = computed(() => props.lastMemoryUpdates.filter((event) => event.memory_layer === 'entity_state'))
+// 变量作用：变量 failedEvents，用于 failedEvents 相关配置或状态。
 const failedEvents = computed(() => props.lastMemoryUpdates.filter((event) => event.status === 'failed'))
+// 变量作用：变量 orderedEntityItems，用于 orderedEntityItems 相关配置或状态。
 const orderedEntityItems = computed(() => [...(props.lastEntityState?.items ?? [])].sort((a, b) => a.display_name.localeCompare(b.display_name, 'zh-CN')))
+// 变量作用：变量 entityNameMap，用于 entityNameMap 相关配置或状态。
 const entityNameMap = computed(() => new Map(orderedEntityItems.value.map((item) => [item.entity_id, item.display_name])))
+// 变量作用：变量 entityLocationCount，用于 entityLocationCount 相关配置或状态。
 const entityLocationCount = computed(() => new Set(orderedEntityItems.value.map((item) => item.current_location).filter(Boolean)).size)
+// 变量作用：变量 latestEntityEvent，用于 latestEntityEvent 相关配置或状态。
 const latestEntityEvent = computed(() => (
   [...entityEvents.value].reverse().find(Boolean) ?? null
 ))
 
+// 变量作用：变量 latestSemanticEvent，用于 latestSemanticEvent 相关配置或状态。
 const latestSemanticEvent = computed(() => (
   [...semanticEvents.value].reverse().find(Boolean) ?? null
 ))
 
+// 变量作用：变量 latestEpisodicEvent，用于 latestEpisodicEvent 相关配置或状态。
 const latestEpisodicEvent = computed(() => (
   [...episodicEvents.value].reverse().find(Boolean) ?? null
 ))
 
+// 变量作用：变量 summaryState，用于 summaryState 相关配置或状态。
 const summaryState = computed(() => deriveSummaryLifecycleState(props.lastMemoryUpdates, props.lastSummary))
+// 变量作用：变量 summaryLifecycle，用于 summaryLifecycle 相关配置或状态。
 const summaryLifecycle = computed(() => {
   if (props.lastSummary && !semanticEvents.value.length) {
     return {
@@ -131,6 +147,7 @@ const summaryLifecycle = computed(() => {
   })
 })
 
+// 变量作用：变量 episodicLifecycle，用于 episodicLifecycle 相关配置或状态。
 const episodicLifecycle = computed(() => {
   if (!latestEpisodicEvent.value) {
     return '本轮未记录 episodic 维护动作。'
@@ -141,6 +158,7 @@ const episodicLifecycle = computed(() => {
   return '本轮主要更新原始会话消息与历史索引。'
 })
 
+// 变量作用：变量 entityWarnings，用于 entityWarnings 相关配置或状态。
 const entityWarnings = computed(() => {
   const warnings: string[] = []
   if (!orderedEntityItems.value.length) {
@@ -167,10 +185,14 @@ const entityWarnings = computed(() => {
 
   return warnings.slice(0, 3)
 })
+// 变量作用：变量 latestEntityPatch，用于 latestEntityPatch 相关配置或状态。
 const latestEntityPatch = computed(() => props.lastEntityStateUpdates[0] ?? null)
+// 变量作用：变量 orderedEntityPatches，用于 orderedEntityPatches 相关配置或状态。
 const orderedEntityPatches = computed(() => [...props.lastEntityStateUpdates].slice(0, 8))
+// 变量作用：变量 worldUpdateHighlights，用于 worldUpdateHighlights 相关配置或状态。
 const worldUpdateHighlights = computed(() => extractWorldUpdateHighlights(props.lastWorldUpdate))
 
+/** 功能：函数 formatEntityUpdatedAt，负责 formatEntityUpdatedAt 相关处理。 */
 function formatEntityUpdatedAt(value?: string | null) {
   if (!value) return '未知时间'
   try {
@@ -183,10 +205,12 @@ function formatEntityUpdatedAt(value?: string | null) {
   }
 }
 
+/** 功能：函数 resolveCompanionLabel，负责 resolveCompanionLabel 相关处理。 */
 function resolveCompanionLabel(companionId: string) {
   return entityNameMap.value.get(companionId) ?? companionId
 }
 
+/** 功能：函数 entityTone，负责 entityTone 相关处理。 */
 function entityTone(entity: EntityStateSnapshot) {
   if (entity.status_tags.includes('昏迷')) return 'border-rose-300 bg-rose-50/80'
   if (entity.status_tags.includes('受伤')) return 'border-amber-300 bg-amber-50/80'

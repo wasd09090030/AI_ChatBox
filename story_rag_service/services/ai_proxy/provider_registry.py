@@ -20,6 +20,7 @@ class ProviderConfig:
     chat_path: str = "/chat/completions"
 
 
+# 变量作用：变量 PROVIDER_REGISTRY，用于保存模型提供商 registry 相关模块级状态。
 PROVIDER_REGISTRY: Dict[str, ProviderConfig] = {
     "openai": ProviderConfig(
         name="OpenAI (GPT)",

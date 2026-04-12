@@ -1,3 +1,7 @@
+/**
+ * 文件说明：前端可复用界面组件。
+ */
+
 import type { ProviderKey } from '@/utils/types'
 
 export interface ProviderModelOption {

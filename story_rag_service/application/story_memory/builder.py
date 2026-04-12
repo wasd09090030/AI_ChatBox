@@ -1,3 +1,5 @@
+"""文件说明：后端应用层用例编排。"""
+
 from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
@@ -11,6 +13,7 @@ def _pick_operation_id(
     entity_state_updates: List[Dict[str, Any]],
     world_update: Optional[Dict[str, Any]],
 ) -> Optional[str]:
+    """功能：提取操作 ID。"""
     candidates = [
         *((item.get("operation_id") for item in entity_state_updates if item.get("operation_id"))),
         *((item.get("operation_id") for item in memory_updates if item.get("operation_id"))),
@@ -27,6 +30,7 @@ def _pick_operation_source(
     memory_updates: List[Dict[str, Any]],
     entity_state_updates: List[Dict[str, Any]],
 ) -> Optional[str]:
+    """功能：提取操作 source。"""
     for item in entity_state_updates:
         source = item.get("source")
         if source:
@@ -43,6 +47,7 @@ def _pick_operation_status(
     memory_updates: List[Dict[str, Any]],
     entity_state_updates: List[Dict[str, Any]],
 ) -> str:
+    """功能：提取操作 status。"""
     statuses = [
         *(str(item.get("status") or "") for item in memory_updates),
         *(str(item.get("status") or "") for item in entity_state_updates),
@@ -61,6 +66,7 @@ def _pick_operation_time(
     entity_state_updates: List[Dict[str, Any]],
     world_update: Optional[Dict[str, Any]],
 ) -> Optional[str]:
+    """功能：提取操作 time。"""
     candidates = [
         *((item.get("committed_at") for item in entity_state_updates if item.get("committed_at"))),
         *((item.get("committed_at") for item in memory_updates if item.get("committed_at"))),
@@ -76,6 +82,7 @@ def _pick_sequence_range(
     memory_updates: List[Dict[str, Any]],
     entity_state_updates: List[Dict[str, Any]],
 ) -> tuple[Optional[int], Optional[int]]:
+    """功能：提取序号 range。"""
     sequences: List[int] = []
     for item in [*memory_updates, *entity_state_updates]:
         value = item.get("sequence")
@@ -98,6 +105,7 @@ def build_story_memory_payload(
     world_update: Optional[Dict[str, Any]] = None,
     memory_updates: Optional[List[Dict[str, Any]]] = None,
 ) -> StoryMemoryPayload:
+    """功能：构建故事记忆载荷。"""
     normalized_memory_updates = list(memory_updates or [])
     normalized_entity_updates = list(entity_state_updates or [])
     sequence_min, sequence_max = _pick_sequence_range(

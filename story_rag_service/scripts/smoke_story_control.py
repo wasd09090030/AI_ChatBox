@@ -16,17 +16,22 @@ import uuid
 
 import httpx
 
+# 变量作用：变量 BASE_URL，用于保存 base url 相关模块级状态。
 BASE_URL = os.getenv("SMOKE_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
+# 变量作用：变量 RUN_LLM_SMOKE，用于保存 run LLM smoke 相关模块级状态。
 RUN_LLM_SMOKE = os.getenv("RUN_LLM_SMOKE", "true").lower() == "true"
+# 变量作用：变量 TIMEOUT，用于保存 timeout 相关模块级状态。
 TIMEOUT = 60.0
 
 
 def _assert(cond: bool, msg: str) -> None:
+    """功能：处理 assert。"""
     if not cond:
         raise AssertionError(f"[FAIL] {msg}")
 
 
 def _new_session(client: httpx.Client) -> str:
+    """功能：处理 new 会话。"""
     r = client.post(f"{BASE_URL}/api/v2/story/session", json={})
     _assert(r.status_code == 200, f"Failed to create session: {r.status_code} {r.text[:200]}")
     return r.json()["session_id"]
@@ -144,6 +149,7 @@ def test_regenerate_no_user_message(client: httpx.Client) -> None:
 
 
 def main() -> None:
+    """功能：处理 main。"""
     print(f"[SMOKE-P2] base_url={BASE_URL}  llm={RUN_LLM_SMOKE}")
 
     with httpx.Client(timeout=TIMEOUT) as client:
