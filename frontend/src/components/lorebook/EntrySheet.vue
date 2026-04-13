@@ -32,7 +32,7 @@ import type {
 } from '@/services/lorebookService'
 import type { EntrySheetSubmitPayload, EntrySheetType } from '@/domains/lorebook/types'
 
-// 变量作用：变量 props，用于 props 相关配置或状态。
+// 组件输入参数。
 const props = defineProps<{
   open: boolean
   type: EntrySheetType
@@ -42,7 +42,7 @@ const props = defineProps<{
   defaultCharacterRoleTier?: 'npc' | 'principal'
 }>()
 
-// 变量作用：变量 emit，用于 emit 相关配置或状态。
+// 组件事件派发器。
 const emit = defineEmits<{
   'update:open': [v: boolean]
   submit: [payload: EntrySheetSubmitPayload]
@@ -54,7 +54,7 @@ const LABELS: Record<EntrySheetType, string> = {
   location: '地点',
   event: '事件',
 }
-// 变量作用：变量 sheetTitle，用于 sheetTitle 相关配置或状态。
+// sheetTitle 相关状态。
 const sheetTitle = computed(() =>
   props.editing
     ? `编辑${LABELS[props.type]}条目`
@@ -68,34 +68,34 @@ interface CharForm {
   role_tier: 'npc' | 'principal'; dialogue_enabled: boolean; story_function: string
   opening_line: string; example_dialogues: string
 }
-// 变量作用：变量 defaultChar，用于 defaultChar 相关配置或状态。
+// defaultChar 相关状态。
 const defaultChar = (): CharForm => ({
   name: '', age: '', gender: '', appearance: '', personality: '', background: '', speaking_style: '',
   role_tier: 'npc', dialogue_enabled: false, story_function: '', opening_line: '', example_dialogues: '',
 })
-// 变量作用：变量 charForm，用于 charForm 相关配置或状态。
+// charForm 相关状态。
 const charForm = ref<CharForm>(defaultChar())
 
 // ── Location form ─────────────────────────────────────────────────────────────
 interface LocForm {
   name: string; description: string; region: string; climate: string; mood: string
 }
-// 变量作用：变量 defaultLoc，用于 defaultLoc 相关配置或状态。
+// defaultLoc 相关状态。
 const defaultLoc = (): LocForm => ({
   name: '', description: '', region: '', climate: '', mood: '',
 })
-// 变量作用：变量 locForm，用于 locForm 相关配置或状态。
+// locForm 相关状态。
 const locForm = ref<LocForm>(defaultLoc())
 
 // ── Event form ────────────────────────────────────────────────────────────────
 interface EvForm {
   name: string; description: string; time: string; location: string; importance: string
 }
-// 变量作用：变量 defaultEv，用于 defaultEv 相关配置或状态。
+// defaultEv 相关状态。
 const defaultEv = (): EvForm => ({
   name: '', description: '', time: '', location: '', importance: '5',
 })
-// 变量作用：变量 evForm，用于 evForm 相关配置或状态。
+// evForm 相关状态。
 const evForm = ref<EvForm>(defaultEv())
 
 // ── Pre-fill from existing entry (edit mode) ──────────────────────────────────
@@ -168,7 +168,7 @@ async function save() {
   })
 }
 
-/** 功能：函数 buildSubmitData，负责 buildSubmitData 相关处理。 */
+/** 处理 buildSubmitData 相关逻辑。 */
 function buildSubmitData(): CharacterEntryCreate | LocationEntryCreate | EventEntryCreate {
   if (props.type === 'character') {
     return {

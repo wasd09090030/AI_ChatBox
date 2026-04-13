@@ -10,18 +10,18 @@ defineOptions({
   inheritAttrs: false,
 })
 
-// 变量作用：变量 props，用于 props 相关配置或状态。
+// 组件输入参数。
 const props = withDefaults(defineProps<TooltipContentProps & { class?: HTMLAttributes["class"] }>(), {
   sideOffset: 4,
 })
 
-// 变量作用：变量 emits，用于 emits 相关配置或状态。
+// 组件事件声明。
 const emits = defineEmits<TooltipContentEmits>()
 
-// 变量作用：变量 delegatedProps，用于 delegatedProps 相关配置或状态。
+// 去除扩展字段后的透传参数。
 const delegatedProps = reactiveOmit(props, "class")
 
-// 变量作用：变量 forwarded，用于 forwarded 相关配置或状态。
+// 透传到基础组件的参数与事件。
 const forwarded = useForwardPropsEmits(delegatedProps, emits)
 </script>
 

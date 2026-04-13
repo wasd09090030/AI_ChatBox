@@ -21,7 +21,7 @@ defineProps<{
   personasLoading: boolean
 }>()
 
-// 变量作用：变量 emit，用于 emit 相关配置或状态。
+// 组件事件派发器。
 const emit = defineEmits<{
   (event: 'new-persona'): void
   (event: 'edit-persona', persona: PersonaProfile): void

@@ -6,19 +6,19 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import type { ScriptDesign } from '@/domains/story/api/scriptDesignApi'
 
-// 变量作用：变量 props，用于 props 相关配置或状态。
+// 组件输入参数。
 const props = defineProps<{
   design: ScriptDesign
 }>()
 
-// 变量作用：变量 emit，用于 emit 相关配置或状态。
+// 组件事件派发器。
 const emit = defineEmits<{
   openDesigner: []
 }>()
 
-// 变量作用：变量 orderedStages，用于 orderedStages 相关配置或状态。
+// orderedStages 相关状态。
 const orderedStages = computed(() => props.design.stage_outlines.slice().sort((a, b) => a.order - b.order))
-// 变量作用：变量 stagePreview，用于 stagePreview 相关配置或状态。
+// stagePreview 相关状态。
 const stagePreview = computed(() => orderedStages.value.slice(0, 4))
 </script>
 

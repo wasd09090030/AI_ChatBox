@@ -8,7 +8,7 @@ import { getAnalyticsEvents } from '@/domains/analytics/api/analyticsEventsApi'
 import { ANALYTICS_KEYS } from '@/domains/analytics/queries/analyticsKeys'
 import type { AnalyticsFilters } from '@/domains/analytics/types'
 
-/** 功能：函数 createFiltersKey，负责 createFiltersKey 相关处理。 */
+/** 处理 createFiltersKey 相关逻辑。 */
 function createFiltersKey(filters: AnalyticsFilters) {
   return JSON.stringify({
     model: filters.model ?? '',
@@ -17,7 +17,7 @@ function createFiltersKey(filters: AnalyticsFilters) {
   })
 }
 
-/** 功能：函数 useAnalyticsEventsQuery，负责 useAnalyticsEventsQuery 相关处理。 */
+/** 处理 useAnalyticsEventsQuery 相关逻辑。 */
 export function useAnalyticsEventsQuery(limit: MaybeRef<number>, filters: MaybeRef<AnalyticsFilters>) {
   return useQuery({
     queryKey: computed(() => ANALYTICS_KEYS.events(unref(limit), createFiltersKey(unref(filters)))),

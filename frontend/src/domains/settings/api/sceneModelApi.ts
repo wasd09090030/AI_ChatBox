@@ -15,7 +15,7 @@ interface SceneModelPreferencesResponse {
   } | null
 }
 
-/** 功能：函数 normalizePreference，负责 normalizePreference 相关处理。 */
+/** 处理 normalizePreference 相关逻辑。 */
 function normalizePreference(value?: Partial<SceneModelPreference> | null): SceneModelPreference {
   const provider = typeof value?.provider === 'string' ? value.provider : ''
   const model = typeof value?.model === 'string' ? value.model : ''
@@ -25,7 +25,7 @@ function normalizePreference(value?: Partial<SceneModelPreference> | null): Scen
   }
 }
 
-/** 功能：函数 createEmptySceneModelPreferences，负责 createEmptySceneModelPreferences 相关处理。 */
+/** 处理 createEmptySceneModelPreferences 相关逻辑。 */
 export function createEmptySceneModelPreferences(): SceneModelPreferences {
   return {
     story_generation: { provider: '', model: '' },
@@ -34,7 +34,7 @@ export function createEmptySceneModelPreferences(): SceneModelPreferences {
   }
 }
 
-/** 功能：函数 fetchSceneModelPreferences，负责 fetchSceneModelPreferences 相关处理。 */
+/** 处理 fetchSceneModelPreferences 相关逻辑。 */
 export async function fetchSceneModelPreferences(): Promise<SceneModelPreferences> {
   const response = await api.get<SceneModelPreferencesResponse>('/providers/scene-models', {
     headers: getUserHeaders(),
@@ -47,7 +47,7 @@ export async function fetchSceneModelPreferences(): Promise<SceneModelPreference
   }
 }
 
-/** 功能：函数 saveSceneModelPreferences，负责 saveSceneModelPreferences 相关处理。 */
+/** 处理 saveSceneModelPreferences 相关逻辑。 */
 export async function saveSceneModelPreferences(
   preferences: SceneModelPreferences,
 ): Promise<SceneModelPreferences> {

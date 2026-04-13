@@ -11,7 +11,7 @@ interface UseStoryLibraryOptions {
   onStoryChanged?: (story: StoredStory | null) => void
 }
 
-/** 功能：函数 useStoryLibrary，负责 useStoryLibrary 相关处理。 */
+/** 处理 useStoryLibrary 相关逻辑。 */
 export function useStoryLibrary(options: UseStoryLibraryOptions = {}) {
   const storyWorkspace = useStoryWorkspaceStore()
   const { data: worlds, isLoading: worldsLoading } = useWorldsQuery()

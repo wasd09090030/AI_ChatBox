@@ -5,7 +5,7 @@ import type { BadgeVariants } from "."
 import { cn } from "@/lib/utils"
 import { badgeVariants } from "."
 
-// 变量作用：变量 props，用于 props 相关配置或状态。
+// 组件输入参数。
 const props = defineProps<{
   variant?: BadgeVariants["variant"]
   class?: HTMLAttributes["class"]

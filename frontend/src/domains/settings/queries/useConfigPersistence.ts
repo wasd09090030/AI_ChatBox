@@ -12,12 +12,12 @@ import {
   type ConfigPersistState,
 } from '../api/configStorageApi'
 
-// 变量作用：变量 SETTINGS_QUERY_KEYS，用于 SETTINGS QUERY KEYS 相关配置或状态。
+// 常量 SETTINGS_QUERY_KEYS。
 export const SETTINGS_QUERY_KEYS = {
   configState: ['settings', 'config-state'] as const,
 }
 
-/** 功能：函数 fetchConfigState，负责 fetchConfigState 相关处理。 */
+/** 处理 fetchConfigState 相关逻辑。 */
 export async function fetchConfigState(fallbackConfig: UserConfig, fallbackApiKeys: APIKeys) {
   return queryClient.fetchQuery({
     queryKey: SETTINGS_QUERY_KEYS.configState,
@@ -26,7 +26,7 @@ export async function fetchConfigState(fallbackConfig: UserConfig, fallbackApiKe
   })
 }
 
-/** 功能：函数 usePersistConfigMutation，负责 usePersistConfigMutation 相关处理。 */
+/** 处理 usePersistConfigMutation 相关逻辑。 */
 export function usePersistConfigMutation() {
   return useMutation({
     mutationFn: persistConfig,
@@ -47,7 +47,7 @@ export function usePersistConfigMutation() {
   })
 }
 
-/** 功能：函数 usePersistApiKeysMutation，负责 usePersistApiKeysMutation 相关处理。 */
+/** 处理 usePersistApiKeysMutation 相关逻辑。 */
 export function usePersistApiKeysMutation() {
   return useMutation({
     mutationFn: persistApiKeys,

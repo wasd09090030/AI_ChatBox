@@ -13,7 +13,7 @@ import {
 } from '@/services/lorebookService'
 import type { EntrySheetSubmitPayload } from '@/domains/lorebook/types'
 
-/** 功能：函数 buildEntryUpdatePayload，负责 buildEntryUpdatePayload 相关处理。 */
+/** 处理 buildEntryUpdatePayload 相关逻辑。 */
 function buildEntryUpdatePayload(worldId: string, payload: EntrySheetSubmitPayload) {
   return {
     entry_type: payload.type,
@@ -22,7 +22,7 @@ function buildEntryUpdatePayload(worldId: string, payload: EntrySheetSubmitPaylo
   }
 }
 
-// 变量作用：变量 lorebookManagementApi，用于 lorebookManagementApi 相关配置或状态。
+// lorebookManagementApi 相关状态。
 export const lorebookManagementApi = {
   createWorld(payload: WorldCreate) {
     return worldApi.create(payload)

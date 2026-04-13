@@ -5,7 +5,7 @@
 import api from '@/services/api'
 import type { AnalyticsEvent, AnalyticsFilters } from '@/domains/analytics/types'
 
-/** 功能：函数 getAnalyticsEvents，负责 getAnalyticsEvents 相关处理。 */
+/** 处理 getAnalyticsEvents 相关逻辑。 */
 export async function getAnalyticsEvents(limit = 50, filters: AnalyticsFilters = {}): Promise<AnalyticsEvent[]> {
   const response = await api.get<{ events: AnalyticsEvent[] }>('/stats/log', { params: { limit, ...filters } })
   return response.data.events

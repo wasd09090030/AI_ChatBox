@@ -95,7 +95,7 @@ export const PROVIDERS: ProviderMeta[] = [
   },
 ]
 
-/** 功能：函数 resolveToneInfo，负责 resolveToneInfo 相关处理。 */
+/** 处理 resolveToneInfo 相关逻辑。 */
 export function resolveToneInfo(tone: string): ToneInfo | null {
   const normalizedTone = tone.toLowerCase()
   if (!normalizedTone) return null

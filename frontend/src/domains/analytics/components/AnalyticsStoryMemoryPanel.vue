@@ -4,7 +4,7 @@ import { Brain, History } from 'lucide-vue-next'
 import { Badge } from '@/components/ui/badge'
 import { useStorySessionStore } from '@/stores/storySession'
 
-// 变量作用：变量 storySessionStore，用于 storySessionStore 相关配置或状态。
+// storySessionStore 状态仓库实例。
 const storySessionStore = useStorySessionStore()
 </script>
 

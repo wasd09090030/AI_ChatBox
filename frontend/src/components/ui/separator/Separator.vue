@@ -6,7 +6,7 @@ import { reactiveOmit } from "@vueuse/core"
 import { Separator } from "reka-ui"
 import { cn } from "@/lib/utils"
 
-// 变量作用：变量 props，用于 props 相关配置或状态。
+// 组件输入参数。
 const props = withDefaults(defineProps<
   SeparatorProps & { class?: HTMLAttributes["class"] }
 >(), {
@@ -14,7 +14,7 @@ const props = withDefaults(defineProps<
   decorative: true,
 })
 
-// 变量作用：变量 delegatedProps，用于 delegatedProps 相关配置或状态。
+// 去除扩展字段后的透传参数。
 const delegatedProps = reactiveOmit(props, "class")
 </script>
 

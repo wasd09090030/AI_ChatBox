@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import type { AnalyticsFilterOption } from '@/domains/analytics/types'
 
-// 变量作用：变量 props，用于 props 相关配置或状态。
+// 组件输入参数。
 const props = defineProps<{
   days: string
   refreshing?: boolean
@@ -20,7 +20,7 @@ const props = defineProps<{
   description?: string
 }>()
 
-// 变量作用：变量 emit，用于 emit 相关配置或状态。
+// 组件事件派发器。
 const emit = defineEmits<{
   (event: 'update:days', value: string): void
   (event: 'update:model', value: string): void

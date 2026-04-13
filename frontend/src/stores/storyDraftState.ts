@@ -29,7 +29,7 @@ export interface RouteStoryDraftState {
   progressIntent: StoryProgressIntent
 }
 
-/** 功能：函数 createSharedStoryDraft，负责 createSharedStoryDraft 相关处理。 */
+/** 处理 createSharedStoryDraft 相关逻辑。 */
 function createSharedStoryDraft(): SharedStoryDraftState {
   return {
     selectedPersonaId: null,
@@ -43,7 +43,7 @@ function createSharedStoryDraft(): SharedStoryDraftState {
   }
 }
 
-/** 功能：函数 createRouteStoryDraft，负责 createRouteStoryDraft 相关处理。 */
+/** 处理 createRouteStoryDraft 相关逻辑。 */
 function createRouteStoryDraft(pageMode: StoryPageMode): RouteStoryDraftState {
   return {
     userInput: '',
@@ -54,7 +54,7 @@ function createRouteStoryDraft(pageMode: StoryPageMode): RouteStoryDraftState {
   }
 }
 
-// 变量作用：变量 useStoryDraftStateStore，用于 useStoryDraftStateStore 相关配置或状态。
+// useStoryDraftStateStore 状态仓库实例。
 export const useStoryDraftStateStore = defineStore('storyDraftState', () => {
   const sharedDrafts = ref<Record<string, SharedStoryDraftState>>({})
   const routeDrafts = ref<Record<string, RouteStoryDraftState>>({})

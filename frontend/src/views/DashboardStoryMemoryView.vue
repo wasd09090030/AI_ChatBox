@@ -68,9 +68,9 @@ import {
 import { useMemoryUpdateDashboardStore } from '@/stores/memoryUpdateDashboard'
 import { useStorySessionStore } from '@/stores/storySession'
 
-// 变量作用：变量 storySessionStore，用于 storySessionStore 相关配置或状态。
+// 故事会话与记忆快照仓库。
 const storySessionStore = useStorySessionStore()
-// 变量作用：变量 dashboardStore，用于 dashboardStore 相关配置或状态。
+// 记忆看板筛选与分页状态仓库。
 const dashboardStore = useMemoryUpdateDashboardStore()
 
 const {
@@ -86,7 +86,7 @@ const {
   queryFilters,
 } = storeToRefs(dashboardStore)
 
-// 变量作用：变量 sourceOptions，用于 sourceOptions 相关配置或状态。
+// 来源筛选下拉选项。
 const sourceOptions = [
   { value: 'all', label: '全部来源' },
   { value: 'generate', label: '正常生成' },
@@ -95,7 +95,7 @@ const sourceOptions = [
   { value: 'story_adjustment_commit', label: '正文调整提交' },
 ] as const
 
-// 变量作用：变量 layerOptions，用于 layerOptions 相关配置或状态。
+// 记忆层级筛选下拉选项。
 const layerOptions = [
   { value: 'all', label: '全部层级' },
   { value: 'episodic', label: '剧情记录' },
@@ -103,7 +103,7 @@ const layerOptions = [
   { value: 'entity_state', label: '实体状态' },
 ] as const
 
-// 变量作用：变量 statusOptions，用于 statusOptions 相关配置或状态。
+// 状态筛选下拉选项。
 const statusOptions = [
   { value: 'all', label: '全部状态' },
   { value: 'committed', label: '正常' },
@@ -111,7 +111,7 @@ const statusOptions = [
   { value: 'stale', label: '已过期' },
 ] as const
 
-// 变量作用：变量 timeRangeOptions，用于 timeRangeOptions 相关配置或状态。
+// 时间范围筛选下拉选项。
 const timeRangeOptions = [
   { value: 'all', label: '全部时间' },
   { value: '1h', label: '最近 1 小时' },
@@ -119,26 +119,26 @@ const timeRangeOptions = [
   { value: '7d', label: '最近 7 天' },
 ] as const
 
-// 变量作用：变量 pageSizeOptions，用于 pageSizeOptions 相关配置或状态。
+// 分页条数下拉选项。
 const pageSizeOptions = [
   { value: '20', label: '20 条/页' },
   { value: '50', label: '50 条/页' },
   { value: '100', label: '100 条/页' },
 ] as const
 
-// 变量作用：变量 expandedTextState，用于 expandedTextState 相关配置或状态。
+// 可展开文本的展开状态记录。
 const expandedTextState = ref<Record<string, boolean>>({})
 
-// 变量作用：变量 summaries，用于 summaries 相关配置或状态。
+// 本地缓存的会话摘要列表。
 const summaries = computed(() => storySessionStore.getAllSummaries())
-// 变量作用：变量 summaryMap，用于 summaryMap 相关配置或状态。
+// 按 sessionId 索引的摘要映射。
 const summaryMap = computed(() => new Map(summaries.value.map((record) => [record.sessionId, record])))
-// 变量作用：变量 storyMemorySessionMap，用于 storyMemorySessionMap 相关配置或状态。
+// 按 sessionId 索引的 story memory 映射。
 const storyMemorySessionMap = computed(() => new Map(
   storySessionStore.getAllStoryMemorySessions().map((record) => [record.sessionId, record]),
 ))
 const { data: worlds } = useWorldsQuery()
-// 变量作用：变量 worldNameMap，用于 worldNameMap 相关配置或状态。
+// 世界 ID 到名称的映射。
 const worldNameMap = computed(() => new Map((worlds.value ?? []).map((world) => [world.id, world.name])))
 
 const {
@@ -149,14 +149,14 @@ const {
   refetch: refetchList,
 } = useMemoryUpdatesQuery(queryFilters)
 
-// 变量作用：变量 listErrorMessage，用于 listErrorMessage 相关配置或状态。
+// 会话列表加载失败提示文案。
 const listErrorMessage = computed(() => (
   listError.value instanceof Error ? listError.value.message : '无法获取服务端记忆事件列表。'
 ))
-// 变量作用：变量 effectiveListResponse，用于 effectiveListResponse 相关配置或状态。
+// 会话列表的有效数据源（优先远端，回退快照）。
 const effectiveListResponse = computed(() => listResponse.value ?? listSnapshot.value ?? null)
 
-/** 功能：函数 resolveSessionCardState，负责 resolveSessionCardState 相关处理。 */
+/** 推导会话卡片的摘要生命周期状态。*/
 function resolveSessionCardState(
   events: MemoryUpdateTimelineItem[],
   sessionId: string,
@@ -176,28 +176,28 @@ function resolveSessionCardState(
   return storySessionStore.getRuntimeSummaryState(sessionId)
 }
 
-/** 功能：函数 buildEventHeadline，负责 buildEventHeadline 相关处理。 */
+/** 生成事件卡片标题。*/
 function buildEventHeadline(event: Pick<MemoryUpdateTimelineItem, 'memory_layer' | 'action'>) {
   return `${getMemoryLayerLabel(event.memory_layer)}：${getMemoryActionLabel(event.action)}`
 }
 
-/** 功能：函数 compactText，负责 compactText 相关处理。 */
+/** 裁剪长文本并保留省略号。*/
 function compactText(value: string, maxLength = 88) {
   const normalized = value.trim()
   return normalized.length > maxLength ? `${normalized.slice(0, maxLength - 1)}…` : normalized
 }
 
-/** 功能：函数 isTextTruncated，负责 isTextTruncated 相关处理。 */
+/** 判断文本是否超过展示长度。*/
 function isTextTruncated(value: string, maxLength = 88) {
   return value.trim().length > maxLength
 }
 
-/** 功能：函数 isTextExpanded，负责 isTextExpanded 相关处理。 */
+/** 读取指定文本块的展开状态。*/
 function isTextExpanded(key: string) {
   return Boolean(expandedTextState.value[key])
 }
 
-/** 功能：函数 toggleTextExpansion，负责 toggleTextExpansion 相关处理。 */
+/** 切换指定文本块的展开状态。*/
 function toggleTextExpansion(key: string) {
   expandedTextState.value = {
     ...expandedTextState.value,
@@ -205,7 +205,7 @@ function toggleTextExpansion(key: string) {
   }
 }
 
-/** 功能：函数 getExpandableText，负责 getExpandableText 相关处理。 */
+/** 按展开状态返回文本或摘要。*/
 function getExpandableText(key: string, value: string, maxLength = 88) {
   const normalized = value.trim()
   if (!normalized) return ''
@@ -213,7 +213,7 @@ function getExpandableText(key: string, value: string, maxLength = 88) {
   return compactText(normalized, maxLength)
 }
 
-/** 功能：函数 resolveWorldDisplay，负责 resolveWorldDisplay 相关处理。 */
+/** 解析世界显示名（名称 + ID）。*/
 function resolveWorldDisplay(worldId?: string | null) {
   const normalizedWorldId = (worldId ?? '').trim()
   if (!normalizedWorldId) return '未绑定世界'
@@ -222,7 +222,7 @@ function resolveWorldDisplay(worldId?: string | null) {
   return `${worldName} · ${normalizedWorldId}`
 }
 
-/** 功能：函数 formatTimestamp，负责 formatTimestamp 相关处理。 */
+/** 格式化时间戳为本地展示时间。*/
 function formatTimestamp(value?: string | null) {
   if (!value) return '未知时间'
   try {
@@ -238,14 +238,14 @@ function formatTimestamp(value?: string | null) {
   }
 }
 
-/** 功能：函数 statusBadgeClass，负责 statusBadgeClass 相关处理。 */
+/** 按状态返回徽标样式类名。*/
 function statusBadgeClass(status?: string | null) {
   if (status === 'failed') return 'border-rose-200 bg-rose-50 text-rose-700'
   if (status === 'stale') return 'border-amber-200 bg-amber-50 text-amber-700'
   return 'border-emerald-200 bg-emerald-50 text-emerald-700'
 }
 
-/** 功能：函数 layerBadgeClass，负责 layerBadgeClass 相关处理。 */
+/** 按记忆层级返回徽标样式类名。*/
 function layerBadgeClass(layer: string) {
   if (layer === 'semantic') return 'border-violet-200 bg-violet-50 text-violet-700'
   if (layer === 'episodic') return 'border-sky-200 bg-sky-50 text-sky-700'
@@ -253,13 +253,13 @@ function layerBadgeClass(layer: string) {
   return 'border-stone-200 bg-stone-50 text-stone-700'
 }
 
-/** 功能：函数 previewPayloadFields，负责 previewPayloadFields 相关处理。 */
+/** 提取 payload 预览字段。*/
 function previewPayloadFields(payload?: Record<string, unknown> | null, limit = 2) {
   return formatMemoryPayloadFields(payload)
     .slice(0, limit)
 }
 
-/** 功能：函数 summarizeOperation，负责 summarizeOperation 相关处理。 */
+/** 汇总一次操作中各层级变更数量。*/
 function summarizeOperation(events: MemoryUpdateTimelineItem[]) {
   const segments = [
     { layer: 'semantic', count: events.filter((event) => event.memory_layer === 'semantic').length },
@@ -271,7 +271,7 @@ function summarizeOperation(events: MemoryUpdateTimelineItem[]) {
   return segments.map((item) => `${getMemoryLayerLabel(item.layer)} ${item.count} 条`).join('，')
 }
 
-// 变量作用：变量 sessionCards，用于 sessionCards 相关配置或状态。
+// 会话总览卡片列表。
 const sessionCards = computed(() => {
   const grouped = new Map<string, MemoryUpdateTimelineItem[]>()
   for (const item of effectiveListResponse.value?.items ?? []) {
@@ -310,7 +310,7 @@ const sessionCards = computed(() => {
     .sort((a, b) => (b.latestEvent?.committed_at ?? '').localeCompare(a.latestEvent?.committed_at ?? ''))
 })
 
-// 变量作用：变量 failedSessionCount，用于 failedSessionCount 相关配置或状态。
+// 包含失败事件的会话数量。
 const failedSessionCount = computed(() => sessionCards.value.filter((item) => item.hasFailed).length)
 
 watch(sessionCards, (items) => {
@@ -345,11 +345,11 @@ const {
   refetch: refetchTimeline,
 } = useSessionMemoryTimelineQuery(selectedSessionId, detailPage, detailPageSize)
 
-// 变量作用：变量 timelineErrorMessage，用于 timelineErrorMessage 相关配置或状态。
+// 时间线加载失败提示文案。
 const timelineErrorMessage = computed(() => (
   timelineError.value instanceof Error ? timelineError.value.message : '无法获取当前 session 的时间线。'
 ))
-// 变量作用：变量 effectiveTimelineResponse，用于 effectiveTimelineResponse 相关配置或状态。
+// 当前会话时间线的有效数据源。
 const effectiveTimelineResponse = computed(() => (
   timelineResponse.value ?? dashboardStore.getTimelineSnapshot(selectedSessionId.value)
 ))
@@ -366,7 +366,7 @@ const {
   refetch: refetchStoryMemory,
 } = useSessionStoryMemoryQuery(selectedSessionId, detailPage, detailPageSize)
 
-// 变量作用：变量 effectiveStoryMemoryResponse，用于 effectiveStoryMemoryResponse 相关配置或状态。
+// 当前会话 story memory 的有效数据源。
 const effectiveStoryMemoryResponse = computed(() => (
   storyMemoryResponse.value ?? dashboardStore.getStoryMemorySnapshot(selectedSessionId.value)
 ))
@@ -388,12 +388,12 @@ watch(storyMemoryResponse, (value) => {
   }
 }, { immediate: true })
 
-// 变量作用：变量 selectedSessionCard，用于 selectedSessionCard 相关配置或状态。
+// 当前选中的会话卡片。
 const selectedSessionCard = computed(() => (
   sessionCards.value.find((item) => item.sessionId === selectedSessionId.value) ?? null
 ))
 
-// 变量作用：变量 selectedStoryMemory，用于 selectedStoryMemory 相关配置或状态。
+// 当前会话 story memory 数据。
 const selectedStoryMemory = computed(() => {
   if (effectiveStoryMemoryResponse.value?.story_memory) {
     return effectiveStoryMemoryResponse.value.story_memory
@@ -402,7 +402,7 @@ const selectedStoryMemory = computed(() => {
   return storySessionStore.getStoryMemorySession(selectedSessionId.value)?.storyMemory ?? null
 })
 
-// 变量作用：变量 selectedSummarySnapshot，用于 selectedSummarySnapshot 相关配置或状态。
+// 当前会话摘要快照。
 const selectedSummarySnapshot = computed(() => {
   const summaryFromMemory = getStoryMemorySummarySnapshot(selectedStoryMemory.value)
   if (summaryFromMemory) return summaryFromMemory
@@ -416,14 +416,14 @@ const selectedSummarySnapshot = computed(() => {
   }
 })
 
-// 变量作用：变量 selectedTimelineEvents，用于 selectedTimelineEvents 相关配置或状态。
+// 当前会话时间线事件列表。
 const selectedTimelineEvents = computed(() => {
   const timelineFromMemory = getStoryMemoryTimelineEvents(selectedStoryMemory.value, detailPageSize.value)
   if (timelineFromMemory.length) return timelineFromMemory
   return effectiveTimelineResponse.value?.items ?? []
 })
 
-// 变量作用：变量 detailSummaryDescriptor，用于 detailSummaryDescriptor 相关配置或状态。
+// 摘要生命周期说明文案。
 const detailSummaryDescriptor = computed(() => {
   const state = effectiveTimelineResponse.value?.summary_state.state
     ?? deriveSummaryLifecycleState(selectedTimelineEvents.value, selectedSummarySnapshot.value)
@@ -433,45 +433,45 @@ const detailSummaryDescriptor = computed(() => {
   return getSummaryLifecycleDescriptor(state, { reason })
 })
 
-// 变量作用：变量 operationGroups，用于 operationGroups 相关配置或状态。
+// 按 operationId 聚合后的事件分组。
 const operationGroups = computed(() => groupMemoryEventsByOperation(selectedTimelineEvents.value))
-// 变量作用：变量 semanticEvents，用于 semanticEvents 相关配置或状态。
+// 语义层事件列表。
 const semanticEvents = computed(() => selectedTimelineEvents.value.filter((event) => event.memory_layer === 'semantic'))
-// 变量作用：变量 failedEvents，用于 failedEvents 相关配置或状态。
+// 失败事件列表。
 const failedEvents = computed(() => selectedTimelineEvents.value.filter((event) => event.status === 'failed'))
-// 变量作用：变量 latestTimelineEvent，用于 latestTimelineEvent 相关配置或状态。
+// 当前会话最近一条时间线事件。
 const latestTimelineEvent = computed(() => {
   const items = selectedTimelineEvents.value
   return [...items].sort((a, b) => b.committed_at.localeCompare(a.committed_at))[0] ?? null
 })
 
-// 变量作用：变量 selectedEntitySnapshot，用于 selectedEntitySnapshot 相关配置或状态。
+// 当前会话实体状态快照。
 const selectedEntitySnapshot = computed(() => {
   const storyMemorySnapshot = getStoryMemoryEntitySnapshot(selectedStoryMemory.value)
   if (storyMemorySnapshot) return storyMemorySnapshot
   return selectedSessionId.value ? storySessionStore.getEntityStateSnapshot(selectedSessionId.value) : null
 })
 
-// 变量作用：变量 selectedEntityPatchUpdates，用于 selectedEntityPatchUpdates 相关配置或状态。
+// 当前会话实体 patch 更新列表。
 const selectedEntityPatchUpdates = computed(() => {
   const storyMemoryUpdates = getStoryMemoryEntityUpdates(selectedStoryMemory.value, 50)
   if (storyMemoryUpdates.length) return storyMemoryUpdates
   return selectedSessionId.value ? storySessionStore.getSessionEntityStateUpdates(selectedSessionId.value, 50) : []
 })
 
-// 变量作用：变量 selectedWorldUpdate，用于 selectedWorldUpdate 相关配置或状态。
+// 当前会话世界更新快照。
 const selectedWorldUpdate = computed(() => {
   const storyMemoryWorldUpdate = getStoryMemoryWorldUpdate(selectedStoryMemory.value)
   if (storyMemoryWorldUpdate) return storyMemoryWorldUpdate
   return selectedSessionId.value ? storySessionStore.getSessionWorldUpdate(selectedSessionId.value)?.payload ?? null : null
 })
 
-// 变量作用：变量 selectedEntityNameMap，用于 selectedEntityNameMap 相关配置或状态。
+// 实体 ID 到展示名映射。
 const selectedEntityNameMap = computed(() => new Map(
   (selectedEntitySnapshot.value?.items ?? []).map((item) => [item.entity_id, item.display_name]),
 ))
 
-// 变量作用：变量 selectedEntityWarnings，用于 selectedEntityWarnings 相关配置或状态。
+// 实体状态风险提示列表。
 const selectedEntityWarnings = computed(() => {
   const items = selectedEntitySnapshot.value?.items ?? []
   if (!items.length) return ['当前会话还没有缓存到实体状态快照。']
@@ -494,14 +494,14 @@ const selectedEntityWarnings = computed(() => {
   return warnings.slice(0, 3)
 })
 
-// 变量作用：变量 selectedEntityLocationCount，用于 selectedEntityLocationCount 相关配置或状态。
+// 实体分布位置数量统计。
 const selectedEntityLocationCount = computed(() => new Set(
   (selectedEntitySnapshot.value?.items ?? []).map((item) => item.current_location).filter(Boolean),
 ).size)
-// 变量作用：变量 selectedWorldUpdateHighlights，用于 selectedWorldUpdateHighlights 相关配置或状态。
+// 世界更新高亮摘要列表。
 const selectedWorldUpdateHighlights = computed(() => extractWorldUpdateHighlights(selectedWorldUpdate.value).slice(0, 4))
 
-// 变量作用：变量 recentEntityChangeGroups，用于 recentEntityChangeGroups 相关配置或状态。
+// 近期实体变更分组摘要。
 const recentEntityChangeGroups = computed(() => {
   const grouped = new Map<string, {
     id: string
@@ -555,22 +555,22 @@ const recentEntityChangeGroups = computed(() => {
     .slice(0, 6)
 })
 
-// 变量作用：变量 latestSemanticEvent，用于 latestSemanticEvent 相关配置或状态。
+// 最近一次语义层事件。
 const latestSemanticEvent = computed(() => (
   effectiveTimelineResponse.value?.summary_state.last_semantic_event
   ?? semanticEvents.value[0]
   ?? null
 ))
 
-// 变量作用：变量 detailTotal，用于 detailTotal 相关配置或状态。
+// 当前明细总条数。
 const detailTotal = computed(() => (
   effectiveStoryMemoryResponse.value?.timeline_total
   ?? effectiveTimelineResponse.value?.total
   ?? selectedTimelineEvents.value.length
 ))
-// 变量作用：变量 detailPageCount，用于 detailPageCount 相关配置或状态。
+// 当前明细总页数。
 const detailPageCount = computed(() => Math.max(1, Math.ceil(detailTotal.value / detailPageSize.value)))
-// 变量作用：变量 historyRangeLabel，用于 historyRangeLabel 相关配置或状态。
+// 当前分页范围文案。
 const historyRangeLabel = computed(() => {
   if (!detailTotal.value) return '暂无历史记录'
   const start = (detailPage.value - 1) * detailPageSize.value + 1
@@ -584,21 +584,21 @@ watch(detailPageCount, (count) => {
   }
 }, { immediate: true })
 
-/** 功能：函数 goToPreviousPage，负责 goToPreviousPage 相关处理。 */
+/** 切换到上一页。*/
 function goToPreviousPage() {
   if (detailPage.value > 1) {
     dashboardStore.setDetailPage(detailPage.value - 1)
   }
 }
 
-/** 功能：函数 goToNextPage，负责 goToNextPage 相关处理。 */
+/** 切换到下一页。*/
 function goToNextPage() {
   if (detailPage.value < detailPageCount.value) {
     dashboardStore.setDetailPage(detailPage.value + 1)
   }
 }
 
-/** 功能：函数 resolveEntityCompanionLabel，负责 resolveEntityCompanionLabel 相关处理。 */
+/** 解析同行实体展示名。*/
 function resolveEntityCompanionLabel(companionId: string) {
   return selectedEntityNameMap.value.get(companionId) ?? companionId
 }

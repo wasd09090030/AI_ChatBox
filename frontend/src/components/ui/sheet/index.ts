@@ -14,7 +14,7 @@ export { default as SheetHeader } from "./SheetHeader.vue"
 export { default as SheetTitle } from "./SheetTitle.vue"
 export { default as SheetTrigger } from "./SheetTrigger.vue"
 
-// 变量作用：变量 sheetVariants，用于 sheetVariants 相关配置或状态。
+// sheetVariants 相关状态。
 export const sheetVariants = cva(
   "fixed z-50 gap-4 bg-background p-6 shadow-lg transition ease-in-out data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:duration-300 data-[state=open]:duration-500",
   {

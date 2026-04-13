@@ -17,7 +17,7 @@ import {
   type BulkImportEntry,
 } from '@/services/lorebookService'
 
-// 变量作用：变量 LOREBOOK_KEYS，用于 LOREBOOK KEYS 相关配置或状态。
+// 常量 LOREBOOK_KEYS。
 export const LOREBOOK_KEYS = {
   worlds: ['worlds'] as const,
   world: (id: string) => ['worlds', id] as const,
@@ -33,7 +33,7 @@ export function useWorldsQuery() {
   })
 }
 
-/** 功能：函数 useCreateWorldMutation，负责 useCreateWorldMutation 相关处理。 */
+/** 处理 useCreateWorldMutation 相关逻辑。 */
 export function useCreateWorldMutation() {
   const qc = useQueryClient()
   return useMutation({
@@ -42,7 +42,7 @@ export function useCreateWorldMutation() {
   })
 }
 
-/** 功能：函数 useUpdateWorldMutation，负责 useUpdateWorldMutation 相关处理。 */
+/** 处理 useUpdateWorldMutation 相关逻辑。 */
 export function useUpdateWorldMutation() {
   const qc = useQueryClient()
   return useMutation({
@@ -52,7 +52,7 @@ export function useUpdateWorldMutation() {
   })
 }
 
-/** 功能：函数 useDeleteWorldMutation，负责 useDeleteWorldMutation 相关处理。 */
+/** 处理 useDeleteWorldMutation 相关逻辑。 */
 export function useDeleteWorldMutation() {
   const qc = useQueryClient()
   return useMutation({
@@ -72,7 +72,7 @@ export function useLorebookEntriesQuery(worldId?: MaybeRef<string | undefined>) 
   })
 }
 
-/** 功能：函数 useAddCharacterMutation，负责 useAddCharacterMutation 相关处理。 */
+/** 处理 useAddCharacterMutation 相关逻辑。 */
 export function useAddCharacterMutation(worldId: string) {
   const qc = useQueryClient()
   return useMutation({
@@ -81,7 +81,7 @@ export function useAddCharacterMutation(worldId: string) {
   })
 }
 
-/** 功能：函数 useAddLocationMutation，负责 useAddLocationMutation 相关处理。 */
+/** 处理 useAddLocationMutation 相关逻辑。 */
 export function useAddLocationMutation(worldId: string) {
   const qc = useQueryClient()
   return useMutation({
@@ -90,7 +90,7 @@ export function useAddLocationMutation(worldId: string) {
   })
 }
 
-/** 功能：函数 useAddEventMutation，负责 useAddEventMutation 相关处理。 */
+/** 处理 useAddEventMutation 相关逻辑。 */
 export function useAddEventMutation(worldId: string) {
   const qc = useQueryClient()
   return useMutation({
@@ -99,7 +99,7 @@ export function useAddEventMutation(worldId: string) {
   })
 }
 
-/** 功能：函数 useUpdateEntryMutation，负责 useUpdateEntryMutation 相关处理。 */
+/** 处理 useUpdateEntryMutation 相关逻辑。 */
 export function useUpdateEntryMutation() {
   const qc = useQueryClient()
   return useMutation({
@@ -110,7 +110,7 @@ export function useUpdateEntryMutation() {
   })
 }
 
-/** 功能：函数 useDeleteEntryMutation，负责 useDeleteEntryMutation 相关处理。 */
+/** 处理 useDeleteEntryMutation 相关逻辑。 */
 export function useDeleteEntryMutation(worldId?: string) {
   const qc = useQueryClient()
   return useMutation({
@@ -120,7 +120,7 @@ export function useDeleteEntryMutation(worldId?: string) {
   })
 }
 
-/** 功能：函数 useBulkImportMutation，负责 useBulkImportMutation 相关处理。 */
+/** 处理 useBulkImportMutation 相关逻辑。 */
 export function useBulkImportMutation() {
   const qc = useQueryClient()
   return useMutation({

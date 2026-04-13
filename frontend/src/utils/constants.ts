@@ -6,9 +6,9 @@ import { DEFAULT_ROLES } from '@/config/prompts'
 
 // API Configuration
 export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.trim() ?? ''
-// 变量作用：变量 API_VERSION，用于 API VERSION 相关配置或状态。
+// 常量 API_VERSION。
 export const API_VERSION = 'v2'
-// 变量作用：变量 API_PREFIX，用于 API PREFIX 相关配置或状态。
+// 常量 API_PREFIX。
 export const API_PREFIX = API_BASE_URL
   ? `${API_BASE_URL}/api/${API_VERSION}`
   : `/api/${API_VERSION}`

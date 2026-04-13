@@ -5,7 +5,7 @@
 import api from '@/services/api'
 import type { Role } from '@/utils/types'
 
-// 变量作用：变量 roleApi，用于 roleApi 相关配置或状态。
+// roleApi 相关状态。
 export const roleApi = {
   async getRoles(): Promise<Role[]> {
     const response = await api.get<Role[]>('/roles')

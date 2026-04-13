@@ -7,9 +7,9 @@ import { onMounted } from 'vue'
 import { useConfigStore } from '@/stores/config'
 import { useStorySessionStore } from '@/stores/storySession'
 
-// 变量作用：变量 configStore，用于 configStore 相关配置或状态。
+// configStore 状态仓库实例。
 const configStore = useConfigStore()
-// 变量作用：变量 storySessionStore，用于 storySessionStore 相关配置或状态。
+// storySessionStore 状态仓库实例。
 const storySessionStore = useStorySessionStore()
 
 onMounted(async () => {

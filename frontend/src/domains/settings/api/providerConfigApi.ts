@@ -8,7 +8,7 @@ import { testApiConnection, type TestConnectionResult } from '@/services/testApi
 import { getUserHeaders } from '@/domains/user/api/userIdentity'
 import type { ProviderKey } from '@/utils/types'
 
-/** 功能：函数 saveProviderConfig，负责 saveProviderConfig 相关处理。 */
+/** 处理 saveProviderConfig 相关逻辑。 */
 export async function saveProviderConfig(options: {
   provider: ProviderKey
   apiKey?: string
@@ -27,7 +27,7 @@ export async function saveProviderConfig(options: {
   )
 }
 
-/** 功能：函数 fetchDefaultProviderSelection，负责 fetchDefaultProviderSelection 相关处理。 */
+/** 处理 fetchDefaultProviderSelection 相关逻辑。 */
 export async function fetchDefaultProviderSelection(): Promise<{ provider: ProviderKey; model: string }> {
   const response = await api.get<{ provider: ProviderKey; model: string }>('/providers/default-selection', {
     headers: getUserHeaders(),
@@ -35,7 +35,7 @@ export async function fetchDefaultProviderSelection(): Promise<{ provider: Provi
   return response.data
 }
 
-/** 功能：函数 saveDefaultProviderSelection，负责 saveDefaultProviderSelection 相关处理。 */
+/** 处理 saveDefaultProviderSelection 相关逻辑。 */
 export async function saveDefaultProviderSelection(options: {
   provider: ProviderKey
   model: string

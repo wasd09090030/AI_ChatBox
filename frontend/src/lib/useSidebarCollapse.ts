@@ -4,7 +4,7 @@
 
 import { onMounted, ref, watch } from 'vue'
 
-/** 功能：函数 useSidebarCollapse，负责 useSidebarCollapse 相关处理。 */
+/** 处理 useSidebarCollapse 相关逻辑。 */
 export function useSidebarCollapse(storageKey: string, defaultValue = false) {
   const collapsed = ref(defaultValue)
 

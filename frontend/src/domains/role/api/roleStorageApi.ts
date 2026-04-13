@@ -11,13 +11,13 @@ export type RolePersistState = {
   currentRoleId: string
 }
 
-// 变量作用：变量 ROLE_STORAGE_KEYS，用于 ROLE STORAGE KEYS 相关配置或状态。
+// 常量 ROLE_STORAGE_KEYS。
 export const ROLE_STORAGE_KEYS = {
   roles: 'roles',
   currentRoleId: 'currentRoleId',
 } as const
 
-/** 功能：函数 loadRoleState，负责 loadRoleState 相关处理。 */
+/** 处理 loadRoleState 相关逻辑。 */
 export async function loadRoleState(): Promise<RolePersistState> {
   let storedRoles = await storage.getStorage(ROLE_STORAGE_KEYS.roles)
   if (!storedRoles) storedRoles = await storage.pullFromRemote(ROLE_STORAGE_KEYS.roles)
@@ -33,13 +33,13 @@ export async function loadRoleState(): Promise<RolePersistState> {
   return { roles, currentRoleId }
 }
 
-/** 功能：函数 persistRoles，负责 persistRoles 相关处理。 */
+/** 处理 persistRoles 相关逻辑。 */
 export async function persistRoles(roles: Role[]) {
   await storage.setStorage(ROLE_STORAGE_KEYS.roles, JSON.stringify(roles))
   return roles
 }
 
-/** 功能：函数 persistCurrentRoleId，负责 persistCurrentRoleId 相关处理。 */
+/** 处理 persistCurrentRoleId 相关逻辑。 */
 export async function persistCurrentRoleId(roleId: string) {
   await storage.setStorage(ROLE_STORAGE_KEYS.currentRoleId, roleId)
   return roleId

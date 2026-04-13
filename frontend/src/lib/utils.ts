@@ -6,7 +6,7 @@ import type { ClassValue } from "clsx"
 import { clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
 
-/** 功能：函数 cn，负责 cn 相关处理。 */
+/** 处理 cn 相关逻辑。 */
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }

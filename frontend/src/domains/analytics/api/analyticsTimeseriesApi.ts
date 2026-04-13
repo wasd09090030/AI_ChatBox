@@ -5,7 +5,7 @@
 import api from '@/services/api'
 import type { AnalyticsDailyStat, AnalyticsFilters } from '@/domains/analytics/types'
 
-/** 功能：函数 getAnalyticsDaily，负责 getAnalyticsDaily 相关处理。 */
+/** 处理 getAnalyticsDaily 相关逻辑。 */
 export async function getAnalyticsDaily(days = 7, filters: AnalyticsFilters = {}): Promise<AnalyticsDailyStat[]> {
   const response = await api.get<AnalyticsDailyStat[]>('/stats/daily', { params: { days, ...filters } })
   return response.data

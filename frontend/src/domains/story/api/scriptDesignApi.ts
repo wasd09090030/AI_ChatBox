@@ -145,7 +145,7 @@ export interface ScriptDesignUpdateInput {
 
 export interface ScriptDesignSidebarWorld extends Pick<World, 'id' | 'name' | 'genre'> {}
 
-// 变量作用：变量 scriptDesignApi，用于 scriptDesignApi 相关配置或状态。
+// scriptDesignApi 相关状态。
 export const scriptDesignApi = {
   list(worldId?: string, status?: ScriptDesignStatus) {
     return api

@@ -82,9 +82,9 @@ interface StorySegmentDraft {
   operations: StoryAdjustmentOperation[]
 }
 
-// 变量作用：变量 configStore，用于 configStore 相关配置或状态。
+// 全局生成参数与模型配置仓库。
 const configStore = useConfigStore()
-// 变量作用：变量 storySessionStore，用于 storySessionStore 相关配置或状态。
+// 故事会话与记忆快照仓库。
 const storySessionStore = useStorySessionStore()
 const { toast } = useToast()
 
@@ -104,38 +104,38 @@ const {
   syncStory,
 } = useStoryLibrary()
 
-// 变量作用：变量 draftSegments，用于 draftSegments 相关配置或状态。
+// 按段落缓存的正文调整草稿。
 const draftSegments = ref<Record<string, StorySegmentDraft>>({})
-// 变量作用：变量 undoStack，用于 undoStack 相关配置或状态。
+// 正文调整操作撤销栈。
 const undoStack = ref<StoryAdjustmentOperation[]>([])
-// 变量作用：变量 selectionState，用于 selectionState 相关配置或状态。
+// 当前文本选区状态。
 const selectionState = ref<StorySelectionState | null>(null)
-// 变量作用：变量 polishDialogOpen，用于 polishDialogOpen 相关配置或状态。
+// 润色对话框显示开关。
 const polishDialogOpen = ref(false)
-// 变量作用：变量 selectedPresetKey，用于 selectedPresetKey 相关配置或状态。
+// 当前选择的润色预设 key。
 const selectedPresetKey = ref(STORY_ADJUSTMENT_PRESETS[0]?.key ?? '')
-// 变量作用：变量 customInstruction，用于 customInstruction 相关配置或状态。
+// 用户补充润色指令。
 const customInstruction = ref('')
-// 变量作用：变量 polishing，用于 polishing 相关配置或状态。
+// 润色请求进行中状态。
 const polishing = ref(false)
-// 变量作用：变量 saving，用于 saving 相关配置或状态。
+// 保存调整进行中状态。
 const saving = ref(false)
-// 变量作用：变量 segmentContentElements，用于 segmentContentElements 相关配置或状态。
+// 段落内容 DOM 引用映射。
 const segmentContentElements = ref<Record<string, HTMLElement | null>>({})
-// 变量作用：变量 editingSegmentId，用于 editingSegmentId 相关配置或状态。
+// 当前手动编辑段落 ID。
 const editingSegmentId = ref<string | null>(null)
-// 变量作用：变量 editingContent，用于 editingContent 相关配置或状态。
+// 手动编辑文本草稿。
 const editingContent = ref('')
 
-// 变量作用：变量 isDirty，用于 isDirty 相关配置或状态。
+// 布尔状态 isDirty。
 const isDirty = computed(() => Object.keys(draftSegments.value).length > 0)
-// 变量作用：变量 changedSegmentCount，用于 changedSegmentCount 相关配置或状态。
+// 已改动段落数量。
 const changedSegmentCount = computed(() => Object.keys(draftSegments.value).length)
-// 变量作用：变量 selectedPreset，用于 selectedPreset 相关配置或状态。
+// 当前选中的润色预设对象。
 const selectedPreset = computed(() => (
   STORY_ADJUSTMENT_PRESETS.find((item) => item.key === selectedPresetKey.value) ?? STORY_ADJUSTMENT_PRESETS[0]
 ))
-// 变量作用：变量 floatingActionStyle，用于 floatingActionStyle 相关配置或状态。
+// 选区浮动操作条定位样式。
 const floatingActionStyle = computed(() => {
   if (!selectionState.value) return {}
   const top = Math.max(selectionState.value.rect.top - 44, 12)
@@ -159,7 +159,7 @@ watch(polishDialogOpen, (open) => {
   clearSelectionState()
 })
 
-/** 功能：函数 formatTime，负责 formatTime 相关处理。 */
+/** 格式化段落时间显示。*/
 function formatTime(ts: string) {
   try {
     return new Date(ts).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
@@ -168,12 +168,12 @@ function formatTime(ts: string) {
   }
 }
 
-/** 功能：函数 getSegmentContent，负责 getSegmentContent 相关处理。 */
+/** 获取段落当前可编辑内容。*/
 function getSegmentContent(segmentId: string, fallbackContent: string) {
   return draftSegments.value[segmentId]?.currentContent ?? fallbackContent
 }
 
-/** 功能：函数 setSegmentContentRef，负责 setSegmentContentRef 相关处理。 */
+/** 注册段落内容 DOM 引用。*/
 function setSegmentContentRef(segmentId: string, el: Element | ComponentPublicInstance | null) {
   if (el instanceof HTMLElement) {
     segmentContentElements.value[segmentId] = el
@@ -186,12 +186,12 @@ function setSegmentContentRef(segmentId: string, el: Element | ComponentPublicIn
   segmentContentElements.value[segmentId] = null
 }
 
-/** 功能：函数 clearSelectionState，负责 clearSelectionState 相关处理。 */
+/** 清空选区与锚点状态。*/
 function clearSelectionState() {
   selectionState.value = null
 }
 
-/** 功能：函数 clearDraftState，负责 clearDraftState 相关处理。 */
+/** 重置所有正文调整草稿。*/
 function clearDraftState() {
   draftSegments.value = {}
   undoStack.value = []
@@ -203,20 +203,20 @@ function clearDraftState() {
   selectedPresetKey.value = STORY_ADJUSTMENT_PRESETS[0]?.key ?? ''
 }
 
-/** 功能：函数 confirmDiscardChanges，负责 confirmDiscardChanges 相关处理。 */
+/** 确认是否放弃未保存改动。*/
 function confirmDiscardChanges() {
   if (!isDirty.value) return true
   return window.confirm('当前有未保存的故事调整，确认放弃这些改动吗？')
 }
 
-/** 功能：函数 handleBeforeUnload，负责 handleBeforeUnload 相关处理。 */
+/** 拦截页面离开并提示未保存内容。*/
 function handleBeforeUnload(event: BeforeUnloadEvent) {
   if (!isDirty.value) return
   event.preventDefault()
   event.returnValue = ''
 }
 
-/** 功能：函数 handleDocumentMouseDown，负责 handleDocumentMouseDown 相关处理。 */
+/** 处理点击空白关闭浮动工具条。*/
 function handleDocumentMouseDown(event: MouseEvent) {
   if (polishDialogOpen.value) return
 
@@ -232,7 +232,7 @@ function handleDocumentMouseDown(event: MouseEvent) {
   clearSelectionState()
 }
 
-/** 功能：函数 handleWindowScroll，负责 handleWindowScroll 相关处理。 */
+/** 滚动时校正浮动工具条位置。*/
 function handleWindowScroll() {
   clearSelectionState()
 }
@@ -251,13 +251,13 @@ onUnmounted(() => {
 
 onBeforeRouteLeave(() => confirmDiscardChanges())
 
-/** 功能：函数 findSegmentRoot，负责 findSegmentRoot 相关处理。 */
+/** 定位当前选区所属段落容器。*/
 function findSegmentRoot(node: Node): HTMLElement | null {
   const element = node instanceof HTMLElement ? node : node.parentElement
   return element?.closest('[data-segment-id]') as HTMLElement | null
 }
 
-/** 功能：函数 computeTextOffset，负责 computeTextOffset 相关处理。 */
+/** 计算选区在段落文本中的偏移。*/
 function computeTextOffset(root: HTMLElement, container: Node, offset: number) {
   const range = document.createRange()
   range.selectNodeContents(root)
@@ -265,7 +265,7 @@ function computeTextOffset(root: HTMLElement, container: Node, offset: number) {
   return range.toString().length
 }
 
-/** 功能：函数 handleContentMouseUp，负责 handleContentMouseUp 相关处理。 */
+/** 处理段落选区并更新浮动操作条。*/
 function handleContentMouseUp(segmentId: string) {
   window.requestAnimationFrame(() => {
     const selection = window.getSelection()
@@ -315,13 +315,13 @@ function handleContentMouseUp(segmentId: string) {
   })
 }
 
-/** 功能：函数 openPolishDialog，负责 openPolishDialog 相关处理。 */
+/** 打开润色对话框并预填选区文本。*/
 function openPolishDialog() {
   if (!selectionState.value) return
   polishDialogOpen.value = true
 }
 
-/** 功能：函数 openManualEdit，负责 openManualEdit 相关处理。 */
+/** 进入段落手动编辑模式。*/
 function openManualEdit(segmentId: string) {
   const story = currentStory.value
   const segment = story?.segments.find((item) => item.id === segmentId)
@@ -341,20 +341,20 @@ function openManualEdit(segmentId: string) {
   editingContent.value = getSegmentContent(segmentId, segment.content)
 }
 
-/** 功能：函数 cancelManualEdit，负责 cancelManualEdit 相关处理。 */
+/** 取消段落手动编辑。*/
 function cancelManualEdit() {
   editingSegmentId.value = null
   editingContent.value = ''
 }
 
-/** 功能：函数 closePolishDialog，负责 closePolishDialog 相关处理。 */
+/** 关闭润色对话框并清理临时状态。*/
 function closePolishDialog() {
   polishDialogOpen.value = false
   customInstruction.value = ''
   clearSelectionState()
 }
 
-/** 功能：函数 applyDraftOperation，负责 applyDraftOperation 相关处理。 */
+/** 写入一条草稿操作并更新段落内容。*/
 function applyDraftOperation(operation: StoryAdjustmentOperation) {
   const sourceStory = currentStory.value
   if (!sourceStory) return
@@ -377,7 +377,7 @@ function applyDraftOperation(operation: StoryAdjustmentOperation) {
   undoStack.value.push(operation)
 }
 
-/** 功能：函数 applyManualEdit，负责 applyManualEdit 相关处理。 */
+/** 提交手动编辑结果到草稿。*/
 function applyManualEdit() {
   const story = currentStory.value
   const segmentId = editingSegmentId.value
@@ -412,7 +412,7 @@ function applyManualEdit() {
   cancelManualEdit()
 }
 
-/** 功能：函数 applyPolish，负责 applyPolish 相关处理。 */
+/** 调用润色接口并写回草稿。*/
 async function applyPolish() {
   const story = currentStory.value
   const selection = selectionState.value
@@ -479,7 +479,7 @@ async function applyPolish() {
   }
 }
 
-/** 功能：函数 undoLastChange，负责 undoLastChange 相关处理。 */
+/** 撤销最近一次正文调整。*/
 function undoLastChange() {
   const lastOperation = undoStack.value[undoStack.value.length - 1]
   if (!lastOperation) return
@@ -514,7 +514,7 @@ function undoLastChange() {
   toast({ title: '已撤销', description: '最近一次未保存的润色改动已回退。' })
 }
 
-/** 功能：函数 saveChanges，负责 saveChanges 相关处理。 */
+/** 提交所有草稿并刷新故事内容。*/
 async function saveChanges() {
   const story = currentStory.value
   if (!story || !isDirty.value || saving.value) return
@@ -615,7 +615,7 @@ async function saveChanges() {
   }
 }
 
-/** 功能：函数 handleWorldChange，负责 handleWorldChange 相关处理。 */
+/** 切换世界并重置故事选择。*/
 function handleWorldChange(worldId: string) {
   if (worldId === selectedWorldId.value) return
   if (!confirmDiscardChanges()) return
@@ -623,7 +623,7 @@ function handleWorldChange(worldId: string) {
   selectedWorldId.value = worldId
 }
 
-/** 功能：函数 handleSelectStory，负责 handleSelectStory 相关处理。 */
+/** 切换当前故事。*/
 function handleSelectStory(story: StoredStory) {
   if (currentStory.value?.id === story.id) return
   if (!confirmDiscardChanges()) return
@@ -631,13 +631,13 @@ function handleSelectStory(story: StoredStory) {
   selectStory(story)
 }
 
-/** 功能：函数 handleDeleteStory，负责 handleDeleteStory 相关处理。 */
+/** 删除故事并处理本地状态。*/
 async function handleDeleteStory(story: StoredStory) {
   if (currentStory.value?.id === story.id && !confirmDiscardChanges()) return
   await deleteStory(story)
 }
 
-/** 功能：函数 handleCreateStory，负责 handleCreateStory 相关处理。 */
+/** 创建新故事并完成初始化。*/
 function handleCreateStory() {
   if (!confirmDiscardChanges()) return
   showNewStory.value = true

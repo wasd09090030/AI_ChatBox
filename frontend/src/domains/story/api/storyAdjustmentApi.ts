@@ -5,7 +5,7 @@
 import api from '@/services/api'
 import { getUserId } from '@/domains/user/api/userIdentity'
 
-/** 功能：函数 getStoryHeaders，负责 getStoryHeaders 相关处理。 */
+/** 处理 getStoryHeaders 相关逻辑。 */
 function getStoryHeaders(): Record<string, string> {
   return {
     'Content-Type': 'application/json',
@@ -39,7 +39,7 @@ export interface StoryAdjustmentPolishResponse {
   generation_time: number
 }
 
-// 变量作用：变量 storyAdjustmentApi，用于 storyAdjustmentApi 相关配置或状态。
+// storyAdjustmentApi 相关状态。
 export const storyAdjustmentApi = {
   polish(payload: StoryAdjustmentPolishRequest) {
     return api

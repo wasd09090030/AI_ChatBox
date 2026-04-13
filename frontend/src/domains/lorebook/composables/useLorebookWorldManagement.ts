@@ -9,7 +9,7 @@ import { LOREBOOK_KEYS, useWorldsQuery } from '@/domains/lorebook/queries/useLor
 import { lorebookManagementApi } from '@/domains/lorebook/api/lorebookManagementApi'
 import type { World, WorldCreate } from '@/services/lorebookService'
 
-/** 功能：函数 useLorebookWorldManagement，负责 useLorebookWorldManagement 相关处理。 */
+/** 处理 useLorebookWorldManagement 相关逻辑。 */
 export function useLorebookWorldManagement() {
   const { toast } = useToast()
   const queryClient = useQueryClient()

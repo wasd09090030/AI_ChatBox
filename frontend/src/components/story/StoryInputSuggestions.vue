@@ -17,7 +17,7 @@ interface PromptTemplate {
   prompt: string
 }
 
-// 变量作用：变量 props，用于 props 相关配置或状态。
+// 组件输入参数。
 const props = withDefaults(
   defineProps<{
     choices?: string[]
@@ -29,13 +29,13 @@ const props = withDefaults(
   },
 )
 
-// 变量作用：变量 emit，用于 emit 相关配置或状态。
+// 组件事件派发器。
 const emit = defineEmits<{
   (event: 'pick', prompt: string): void
   (event: 'preview-template', payload: PromptTemplate): void
 }>()
 
-// 变量作用：变量 quickSuggestions，用于 quickSuggestions 相关配置或状态。
+// quickSuggestions 相关状态。
 const quickSuggestions = computed(() => [
   '继续推进当前目标，并制造一个新的小阻碍',
   '加入一段环境细节描写，让场景更有临场感',
@@ -54,17 +54,17 @@ const templates: PromptTemplate[] = [
   { id: 'dialogue-focus', label: '对话主导', prompt: '本轮以角色对话推动剧情，减少旁白并强化潜台词。' },
 ]
 
-// 变量作用：变量 selectedTemplateId，用于 selectedTemplateId 相关配置或状态。
+// selectedTemplateId 相关状态。
 const selectedTemplateId = ref('')
 
-/** 功能：函数 emitPrompt，负责 emitPrompt 相关处理。 */
+/** 处理 emitPrompt 相关逻辑。 */
 function emitPrompt(prompt: string) {
   const text = prompt.trim()
   if (!text || props.disabled) return
   emit('pick', text)
 }
 
-/** 功能：函数 applyTemplate，负责 applyTemplate 相关处理。 */
+/** 处理 applyTemplate 相关逻辑。 */
 function applyTemplate() {
   const item = templates.find((tpl) => tpl.id === selectedTemplateId.value)
   if (!item) return

@@ -6,7 +6,7 @@ import { useQuery } from '@tanstack/vue-query'
 import { getAnalyticsFilterOptions } from '@/domains/analytics/api/analyticsFilterOptionsApi'
 import { ANALYTICS_KEYS } from '@/domains/analytics/queries/analyticsKeys'
 
-/** 功能：函数 useAnalyticsFilterOptionsQuery，负责 useAnalyticsFilterOptionsQuery 相关处理。 */
+/** 处理 useAnalyticsFilterOptionsQuery 相关逻辑。 */
 export function useAnalyticsFilterOptionsQuery() {
   return useQuery({
     queryKey: ANALYTICS_KEYS.filterOptions,

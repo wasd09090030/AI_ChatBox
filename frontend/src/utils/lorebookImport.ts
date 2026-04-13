@@ -43,7 +43,7 @@ export interface ImportResult {
   errors: string[]
 }
 
-/** 功能：函数 asRecord，负责 asRecord 相关处理。 */
+/** 处理 asRecord 相关逻辑。 */
 function asRecord(value: unknown): Record<string, unknown> {
   if (value && typeof value === 'object') {
     return value as Record<string, unknown>
@@ -51,7 +51,7 @@ function asRecord(value: unknown): Record<string, unknown> {
   return {}
 }
 
-/** 功能：函数 asString，负责 asString 相关处理。 */
+/** 处理 asString 相关逻辑。 */
 function asString(value: unknown): string {
   if (value === undefined || value === null) {
     return ''
@@ -59,7 +59,7 @@ function asString(value: unknown): string {
   return String(value)
 }
 
-/** 功能：函数 readErrorDetail，负责 readErrorDetail 相关处理。 */
+/** 处理 readErrorDetail 相关逻辑。 */
 function readErrorDetail(value: unknown): string {
   const record = asRecord(value)
   if (typeof record.detail === 'string') {

@@ -7,26 +7,26 @@ import { Button } from '@/components/ui/button'
 import type { AnalyticsEvent } from '@/domains/analytics/types'
 import { formatSeconds, formatTimestamp, resolveWorldLabel } from '@/domains/analytics/utils/formatters'
 
-// 变量作用：变量 props，用于 props 相关配置或状态。
+// 组件输入参数。
 const props = defineProps<{
   events: AnalyticsEvent[]
   loading?: boolean
   worldLabelMap: Record<string, string>
 }>()
 
-/** 功能：函数 getTotalTokens，负责 getTotalTokens 相关处理。 */
+/** 处理 getTotalTokens 相关逻辑。 */
 function getTotalTokens(event: AnalyticsEvent): number {
   return event.total_tokens ?? event.total_tokens_est ?? 0
 }
 
-// 变量作用：变量 PAGE_SIZE，用于 PAGE SIZE 相关配置或状态。
+// 常量 PAGE_SIZE。
 const PAGE_SIZE = 20
-// 变量作用：变量 currentPage，用于 currentPage 相关配置或状态。
+// currentPage 相关状态。
 const currentPage = ref(1)
 
-// 变量作用：变量 totalPages，用于 totalPages 相关配置或状态。
+// totalPages 相关状态。
 const totalPages = computed(() => Math.max(1, Math.ceil(props.events.length / PAGE_SIZE)))
-// 变量作用：变量 pagedEvents，用于 pagedEvents 相关配置或状态。
+// pagedEvents 相关状态。
 const pagedEvents = computed(() => {
   const start = (currentPage.value - 1) * PAGE_SIZE
   return props.events.slice(start, start + PAGE_SIZE)
@@ -39,12 +39,12 @@ watch(
   },
 )
 
-/** 功能：函数 goToPreviousPage，负责 goToPreviousPage 相关处理。 */
+/** 处理 goToPreviousPage 相关逻辑。 */
 function goToPreviousPage() {
   currentPage.value = Math.max(1, currentPage.value - 1)
 }
 
-/** 功能：函数 goToNextPage，负责 goToNextPage 相关处理。 */
+/** 处理 goToNextPage 相关逻辑。 */
 function goToNextPage() {
   currentPage.value = Math.min(totalPages.value, currentPage.value + 1)
 }

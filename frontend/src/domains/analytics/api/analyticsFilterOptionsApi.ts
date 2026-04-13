@@ -5,7 +5,7 @@
 import api from '@/services/api'
 import type { AnalyticsFilterOptions } from '@/domains/analytics/types'
 
-/** 功能：函数 getAnalyticsFilterOptions，负责 getAnalyticsFilterOptions 相关处理。 */
+/** 处理 getAnalyticsFilterOptions 相关逻辑。 */
 export async function getAnalyticsFilterOptions(): Promise<AnalyticsFilterOptions> {
   const response = await api.get<AnalyticsFilterOptions>('/stats/filter-options')
   return response.data

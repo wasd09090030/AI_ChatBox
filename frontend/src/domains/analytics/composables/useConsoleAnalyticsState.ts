@@ -18,7 +18,7 @@ import {
 } from '@/domains/analytics/utils/formatters'
 import { useWorldsQuery } from '@/domains/lorebook/queries/useLorebookQueries'
 
-/** 功能：函数 useConsoleAnalyticsState，负责 useConsoleAnalyticsState 相关处理。 */
+/** 处理 useConsoleAnalyticsState 相关逻辑。 */
 export function useConsoleAnalyticsState() {
   const days = ref('14')
   const eventsLimit = ref(50)

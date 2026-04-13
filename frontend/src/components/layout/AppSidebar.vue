@@ -19,16 +19,16 @@ import { ref } from 'vue'
 import { cn } from '@/lib/utils'
 import { useSidebarCollapse } from '@/lib/useSidebarCollapse'
 
-// 变量作用：变量 route，用于 route 相关配置或状态。
+// 当前路由对象。
 const route = useRoute()
 
-// 变量作用：变量 featureGroupOpen，用于 featureGroupOpen 相关配置或状态。
+// featureGroupOpen 相关状态。
 const featureGroupOpen = ref(true)
-// 变量作用：变量 dashboardGroupOpen，用于 dashboardGroupOpen 相关配置或状态。
+// dashboardGroupOpen 相关状态。
 const dashboardGroupOpen = ref(true)
-// 变量作用：变量 consoleGroupOpen，用于 consoleGroupOpen 相关配置或状态。
+// consoleGroupOpen 相关状态。
 const consoleGroupOpen = ref(true)
-// 变量作用：变量 sidebarCollapsed，用于 sidebarCollapsed 相关配置或状态。
+// sidebarCollapsed 相关状态。
 const sidebarCollapsed = useSidebarCollapse('app-sidebar-collapsed')
 
 interface NavItem {
@@ -56,14 +56,14 @@ const consoleItems: NavItem[] = [
   { path: '/console/models/selection', label: '模型选择', icon: BrainCircuit },
 ]
 
-// 变量作用：变量 navGroups，用于 navGroups 相关配置或状态。
+// navGroups 相关状态。
 const navGroups = [
   { key: 'feature', label: '功能', open: featureGroupOpen, items: featureItems },
   { key: 'dashboard', label: '管理', open: dashboardGroupOpen, items: dashboardItems },
   { key: 'console', label: '控制台', open: consoleGroupOpen, items: consoleItems },
 ]
 
-/** 功能：函数 isActive，负责 isActive 相关处理。 */
+/** 处理 isActive 相关逻辑。 */
 function isActive(path: string): boolean {
   return route.path === path || route.path.startsWith(path + '/')
 }

@@ -8,7 +8,7 @@ import { getAnalyticsDaily } from '@/domains/analytics/api/analyticsTimeseriesAp
 import { ANALYTICS_KEYS } from '@/domains/analytics/queries/analyticsKeys'
 import type { AnalyticsFilters } from '@/domains/analytics/types'
 
-/** 功能：函数 createFiltersKey，负责 createFiltersKey 相关处理。 */
+/** 处理 createFiltersKey 相关逻辑。 */
 function createFiltersKey(filters: AnalyticsFilters) {
   return JSON.stringify({
     model: filters.model ?? '',
@@ -17,7 +17,7 @@ function createFiltersKey(filters: AnalyticsFilters) {
   })
 }
 
-/** 功能：函数 useAnalyticsDailyQuery，负责 useAnalyticsDailyQuery 相关处理。 */
+/** 处理 useAnalyticsDailyQuery 相关逻辑。 */
 export function useAnalyticsDailyQuery(days: MaybeRef<number>, filters: MaybeRef<AnalyticsFilters>) {
   return useQuery({
     queryKey: computed(() => ANALYTICS_KEYS.daily(unref(days), createFiltersKey(unref(filters)))),

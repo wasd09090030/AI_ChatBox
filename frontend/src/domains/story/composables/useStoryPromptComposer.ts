@@ -15,7 +15,7 @@ interface UseStoryPromptComposerArgs {
   selectedFocusTemplateId?: Ref<string>
 }
 
-/** 功能：函数 useStoryPromptComposer，负责 useStoryPromptComposer 相关处理。 */
+/** 处理 useStoryPromptComposer 相关逻辑。 */
 export function useStoryPromptComposer(args: UseStoryPromptComposerArgs) {
   const showPromptComposer = ref(false)
   const selectedContextEntryIds = args.selectedContextEntryIds ?? ref<string[]>([])

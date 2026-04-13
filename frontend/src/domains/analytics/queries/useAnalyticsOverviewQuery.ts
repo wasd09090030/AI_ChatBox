@@ -8,7 +8,7 @@ import { getAnalyticsOverview } from '@/domains/analytics/api/analyticsOverviewA
 import { ANALYTICS_KEYS } from '@/domains/analytics/queries/analyticsKeys'
 import type { AnalyticsFilters } from '@/domains/analytics/types'
 
-/** 功能：函数 createFiltersKey，负责 createFiltersKey 相关处理。 */
+/** 处理 createFiltersKey 相关逻辑。 */
 function createFiltersKey(filters: AnalyticsFilters) {
   return JSON.stringify({
     model: filters.model ?? '',
@@ -17,7 +17,7 @@ function createFiltersKey(filters: AnalyticsFilters) {
   })
 }
 
-/** 功能：函数 useAnalyticsOverviewQuery，负责 useAnalyticsOverviewQuery 相关处理。 */
+/** 处理 useAnalyticsOverviewQuery 相关逻辑。 */
 export function useAnalyticsOverviewQuery(filters: MaybeRef<AnalyticsFilters>) {
   return useQuery({
     queryKey: computed(() => ANALYTICS_KEYS.overview(createFiltersKey(unref(filters)))),

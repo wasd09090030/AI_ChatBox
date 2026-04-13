@@ -13,7 +13,7 @@ import type { PromptFocusTemplate } from '@/config/prompts'
 import type { ComposerTab } from '@/domains/story/composables/useStoryPromptComposer'
 import type { LorebookEntry } from '@/services/lorebookService'
 
-// 变量作用：变量 props，用于 props 相关配置或状态。
+// 组件输入参数。
 const props = defineProps<{
   open: boolean
   generating: boolean
@@ -31,7 +31,7 @@ const props = defineProps<{
   isDraftEntrySelected: (entry: LorebookEntry) => boolean
 }>()
 
-// 变量作用：变量 emit，用于 emit 相关配置或状态。
+// 组件事件派发器。
 const emit = defineEmits<{
   (event: 'update:open', value: boolean): void
   (event: 'update:composerSearchQuery', value: string): void
@@ -45,25 +45,25 @@ const emit = defineEmits<{
   (event: 'apply'): void
 }>()
 
-// 变量作用：变量 searchQueryModel，用于 searchQueryModel 相关配置或状态。
+// searchQueryModel 的双向绑定状态。
 const searchQueryModel = computed({
   get: () => props.composerSearchQuery,
   set: (value: string) => emit('update:composerSearchQuery', value),
 })
 
-// 变量作用：变量 composerTabModel，用于 composerTabModel 相关配置或状态。
+// composerTabModel 的双向绑定状态。
 const composerTabModel = computed({
   get: () => props.currentComposerTab,
   set: (value: ComposerTab) => emit('update:currentComposerTab', value),
 })
 
-// 变量作用：变量 focusTemplateModel，用于 focusTemplateModel 相关配置或状态。
+// focusTemplateModel 的双向绑定状态。
 const focusTemplateModel = computed({
   get: () => props.draftFocusTemplateId,
   set: (value: string) => emit('update:draftFocusTemplateId', value),
 })
 
-// 变量作用：变量 entryGroups，用于 entryGroups 相关配置或状态。
+// entryGroups 相关状态。
 const entryGroups = computed(() => [
   {
     type: 'character' as const,

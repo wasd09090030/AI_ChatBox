@@ -10,7 +10,7 @@ import { storyLibraryApi } from '@/domains/story/api/storyLibraryApi'
 import { useStoryDraftStateStore } from '@/stores/storyDraftState'
 import type { StoredStory } from '@/components/story/types'
 
-// 变量作用：变量 useStoryWorkspaceStore，用于 useStoryWorkspaceStore 相关配置或状态。
+// useStoryWorkspaceStore 状态仓库实例。
 export const useStoryWorkspaceStore = defineStore('storyWorkspace', () => {
   const storyDraftStore = useStoryDraftStateStore()
   const selectedWorldId = ref('')

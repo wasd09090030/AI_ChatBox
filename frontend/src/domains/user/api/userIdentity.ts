@@ -3,10 +3,10 @@
  */
 
 const CURRENT_USER_ID_KEY = 'storybox_user_id'
-// 变量作用：变量 LEGACY_USER_ID_KEY，用于 LEGACY USER ID KEY 相关配置或状态。
+// 常量 LEGACY_USER_ID_KEY。
 const LEGACY_USER_ID_KEY = 'chatbox_user_id'
 
-/** 功能：函数 getUserId，负责 getUserId 相关处理。 */
+/** 处理 getUserId 相关逻辑。 */
 export function getUserId(): string {
   const currentUserId = localStorage.getItem(CURRENT_USER_ID_KEY)
   if (currentUserId) {
@@ -25,7 +25,7 @@ export function getUserId(): string {
   return createdUserId
 }
 
-/** 功能：函数 getUserHeaders，负责 getUserHeaders 相关处理。 */
+/** 处理 getUserHeaders 相关逻辑。 */
 export function getUserHeaders(): Record<string, string> {
   return {
     'X-User-ID': getUserId(),

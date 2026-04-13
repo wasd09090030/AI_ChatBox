@@ -7,16 +7,16 @@ import '@/domains/analytics/lib/registerCharts'
 import AnalyticsChartCard from '@/domains/analytics/components/AnalyticsChartCard.vue'
 import type { AnalyticsDistributionItem } from '@/domains/analytics/types'
 
-// 变量作用：变量 props，用于 props 相关配置或状态。
+// 组件输入参数。
 const props = defineProps<{
   items: AnalyticsDistributionItem[]
   loading?: boolean
 }>()
 
-// 变量作用：变量 hasData，用于 hasData 相关配置或状态。
+// 布尔状态 hasData。
 const hasData = computed(() => props.items.length > 0)
 
-// 变量作用：变量 option，用于 option 相关配置或状态。
+// option 相关状态。
 const option = computed<EChartsOption>(() => ({
   tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
   grid: { top: 16, left: 40, right: 16, bottom: 52 },

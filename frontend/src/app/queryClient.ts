@@ -4,7 +4,7 @@
 
 import { QueryClient } from '@tanstack/vue-query'
 
-// 变量作用：变量 queryClient，用于 queryClient 相关配置或状态。
+// TanStack Query 客户端实例。
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {

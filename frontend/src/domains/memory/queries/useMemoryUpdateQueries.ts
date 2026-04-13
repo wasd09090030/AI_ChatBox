@@ -11,7 +11,7 @@ import {
   type MemoryUpdateQueryFilters,
 } from '@/domains/memory/api/memoryUpdatesApi'
 
-// 变量作用：变量 MEMORY_UPDATE_KEYS，用于 MEMORY UPDATE KEYS 相关配置或状态。
+// 常量 MEMORY_UPDATE_KEYS。
 export const MEMORY_UPDATE_KEYS = {
   all: ['memory-updates'] as const,
   list: (filtersKey: string) => ['memory-updates', 'list', filtersKey] as const,
@@ -21,7 +21,7 @@ export const MEMORY_UPDATE_KEYS = {
     ['memory-updates', 'story-memory', sessionId, page, pageSize, storyId] as const,
 }
 
-/** 功能：函数 createFiltersKey，负责 createFiltersKey 相关处理。 */
+/** 处理 createFiltersKey 相关逻辑。 */
 function createFiltersKey(filters: MemoryUpdateQueryFilters) {
   return JSON.stringify({
     session_id: filters.session_id ?? '',
@@ -37,7 +37,7 @@ function createFiltersKey(filters: MemoryUpdateQueryFilters) {
   })
 }
 
-/** 功能：函数 useMemoryUpdatesQuery，负责 useMemoryUpdatesQuery 相关处理。 */
+/** 处理 useMemoryUpdatesQuery 相关逻辑。 */
 export function useMemoryUpdatesQuery(filters: MaybeRef<MemoryUpdateQueryFilters>) {
   return useQuery({
     queryKey: computed(() => MEMORY_UPDATE_KEYS.list(createFiltersKey(unref(filters)))),
@@ -46,7 +46,7 @@ export function useMemoryUpdatesQuery(filters: MaybeRef<MemoryUpdateQueryFilters
   })
 }
 
-/** 功能：函数 useSessionMemoryTimelineQuery，负责 useSessionMemoryTimelineQuery 相关处理。 */
+/** 处理 useSessionMemoryTimelineQuery 相关逻辑。 */
 export function useSessionMemoryTimelineQuery(
   sessionId: MaybeRef<string | null | undefined>,
   page: MaybeRef<number> = 1,
@@ -60,7 +60,7 @@ export function useSessionMemoryTimelineQuery(
   })
 }
 
-/** 功能：函数 useSessionStoryMemoryQuery，负责 useSessionStoryMemoryQuery 相关处理。 */
+/** 处理 useSessionStoryMemoryQuery 相关逻辑。 */
 export function useSessionStoryMemoryQuery(
   sessionId: MaybeRef<string | null | undefined>,
   page: MaybeRef<number> = 1,

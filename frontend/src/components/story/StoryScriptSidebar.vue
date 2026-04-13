@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/select'
 import type { ScriptDesign, ScriptEventNode, ScriptStage } from '@/domains/story/api/scriptDesignApi'
 
-// 变量作用：变量 props，用于 props 相关配置或状态。
+// 组件输入参数。
 const props = withDefaults(
   defineProps<{
     selectedScriptDesignId: string
@@ -40,7 +40,7 @@ const props = withDefaults(
   },
 )
 
-// 变量作用：变量 emit，用于 emit 相关配置或状态。
+// 组件事件派发器。
 const emit = defineEmits<{
   (event: 'close'): void
   (event: 'update:progressIntent', value: 'hold' | 'advance' | 'complete'): void
@@ -52,38 +52,38 @@ const emit = defineEmits<{
   (event: 'advance-stage'): void
 }>()
 
-// 变量作用：变量 selectedScriptDesignModel，用于 selectedScriptDesignModel 相关配置或状态。
+// selectedScriptDesignModel 的双向绑定状态。
 const selectedScriptDesignModel = computed({
   get: () => props.selectedScriptDesignId,
   set: (value: string) => emit('update:selectedScriptDesignId', value),
 })
 
-// 变量作用：变量 selectedScriptStageModel，用于 selectedScriptStageModel 相关配置或状态。
+// selectedScriptStageModel 的双向绑定状态。
 const selectedScriptStageModel = computed({
   get: () => props.selectedScriptStageId,
   set: (value: string) => emit('update:selectedScriptStageId', value),
 })
 
-// 变量作用：变量 selectedScriptEventModel，用于 selectedScriptEventModel 相关配置或状态。
+// selectedScriptEventModel 的双向绑定状态。
 const selectedScriptEventModel = computed({
   get: () => props.selectedScriptEventId,
   set: (value: string) => emit('update:selectedScriptEventId', value),
 })
 
-// 变量作用：变量 progressIntentModel，用于 progressIntentModel 相关配置或状态。
+// progressIntentModel 的双向绑定状态。
 const progressIntentModel = computed({
   get: () => props.progressIntent,
   set: (value: 'hold' | 'advance' | 'complete') => emit('update:progressIntent', value),
 })
 
-// 变量作用：变量 progressIntentLabel，用于 progressIntentLabel 相关配置或状态。
+// progressIntentLabel 相关状态。
 const progressIntentLabel = computed(() => {
   if (props.progressIntent === 'complete') return '完成事件'
   if (props.progressIntent === 'advance') return '推进事件'
   return '仅描写'
 })
 
-// 变量作用：变量 hasBoundScript，用于 hasBoundScript 相关配置或状态。
+// 布尔状态 hasBoundScript。
 const hasBoundScript = computed(() => props.selectedScriptDesignId !== props.noneOptionValue)
 </script>
 

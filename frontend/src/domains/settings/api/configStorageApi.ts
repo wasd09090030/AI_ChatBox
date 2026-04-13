@@ -10,13 +10,13 @@ export type ConfigPersistState = {
   apiKeys: APIKeys
 }
 
-// 变量作用：变量 CONFIG_STORAGE_KEYS，用于 CONFIG STORAGE KEYS 相关配置或状态。
+// 常量 CONFIG_STORAGE_KEYS。
 export const CONFIG_STORAGE_KEYS = {
   config: 'user_config_v2',
   apiKeys: 'api_keys_v2',
 } as const
 
-/** 功能：函数 loadConfigState，负责 loadConfigState 相关处理。 */
+/** 处理 loadConfigState 相关逻辑。 */
 export async function loadConfigState(
   fallbackConfig: UserConfig,
   fallbackApiKeys: APIKeys
@@ -33,13 +33,13 @@ export async function loadConfigState(
   }
 }
 
-/** 功能：函数 persistConfig，负责 persistConfig 相关处理。 */
+/** 处理 persistConfig 相关逻辑。 */
 export async function persistConfig(config: UserConfig) {
   await storage.setStorage(CONFIG_STORAGE_KEYS.config, JSON.stringify(config))
   return config
 }
 
-/** 功能：函数 persistApiKeys，负责 persistApiKeys 相关处理。 */
+/** 处理 persistApiKeys 相关逻辑。 */
 export async function persistApiKeys(apiKeys: APIKeys) {
   await storage.setStorage(CONFIG_STORAGE_KEYS.apiKeys, JSON.stringify(apiKeys))
   return apiKeys

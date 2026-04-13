@@ -30,7 +30,7 @@ export interface MemoryOperationGroup<TEvent extends MemoryUpdateEvent = MemoryU
   status: 'committed' | 'failed' | 'stale'
 }
 
-// 变量作用：变量 OPERATION_WINDOW_MS，用于 OPERATION WINDOW MS 相关配置或状态。
+// 常量 OPERATION_WINDOW_MS。
 const OPERATION_WINDOW_MS = 5000
 
 const MEMORY_LAYER_LABELS: Record<string, string> = {
@@ -72,7 +72,7 @@ function sortEventsWithinOperation<TEvent extends MemoryUpdateEvent>(events: TEv
   })
 }
 
-/** 功能：函数 deriveSummaryLifecycleState，负责 deriveSummaryLifecycleState 相关处理。 */
+/** 处理 deriveSummaryLifecycleState 相关逻辑。 */
 export function deriveSummaryLifecycleState(
   events: Pick<MemoryUpdateEvent, 'memory_layer' | 'action' | 'status' | 'committed_at'>[],
   currentSummary?: SummaryMemorySnapshot | null,
@@ -92,7 +92,7 @@ export function deriveSummaryLifecycleState(
   return 'absent'
 }
 
-/** 功能：函数 getSummaryLifecycleDescriptor，负责 getSummaryLifecycleDescriptor 相关处理。 */
+/** 处理 getSummaryLifecycleDescriptor 相关逻辑。 */
 export function getSummaryLifecycleDescriptor(
   state: SummaryLifecycleState,
   options?: {
@@ -158,7 +158,7 @@ export function getSummaryLifecycleDescriptor(
   }
 }
 
-/** 功能：函数 getMemorySourceLabel，负责 getMemorySourceLabel 相关处理。 */
+/** 处理 getMemorySourceLabel 相关逻辑。 */
 export function getMemorySourceLabel(source: string): string {
   switch (source) {
     case 'generate':
@@ -174,17 +174,17 @@ export function getMemorySourceLabel(source: string): string {
   }
 }
 
-/** 功能：函数 getMemoryLayerLabel，负责 getMemoryLayerLabel 相关处理。 */
+/** 处理 getMemoryLayerLabel 相关逻辑。 */
 export function getMemoryLayerLabel(layer: string): string {
   return MEMORY_LAYER_LABELS[layer] ?? (layer || '未知层级')
 }
 
-/** 功能：函数 getMemoryActionLabel，负责 getMemoryActionLabel 相关处理。 */
+/** 处理 getMemoryActionLabel 相关逻辑。 */
 export function getMemoryActionLabel(action: string): string {
   return MEMORY_ACTION_LABELS[action] ?? (action || '未知动作')
 }
 
-/** 功能：函数 getMemoryStatusLabel，负责 getMemoryStatusLabel 相关处理。 */
+/** 处理 getMemoryStatusLabel 相关逻辑。 */
 export function getMemoryStatusLabel(status?: string | null): string {
   switch (status) {
     case 'failed':
@@ -197,7 +197,7 @@ export function getMemoryStatusLabel(status?: string | null): string {
   }
 }
 
-/** 功能：函数 formatMemoryPayloadFields，负责 formatMemoryPayloadFields 相关处理。 */
+/** 处理 formatMemoryPayloadFields 相关逻辑。 */
 export function formatMemoryPayloadFields(payload?: Record<string, unknown> | null): MemoryPayloadField[] {
   if (!payload) return []
 

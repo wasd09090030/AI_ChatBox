@@ -32,18 +32,18 @@ interface SimpleOverviewState {
   enforce_foreshadow_tracking: boolean
 }
 
-// 变量作用：变量 props，用于 props 相关配置或状态。
+// 组件输入参数。
 const props = defineProps<{
   design: ScriptDesign
   saving?: boolean
 }>()
 
-// 变量作用：变量 emit，用于 emit 相关配置或状态。
+// 组件事件派发器。
 const emit = defineEmits<{
   save: [payload: ScriptDesignUpdateInput]
 }>()
 
-// 变量作用：变量 form，用于 form 相关配置或状态。
+// form 相关状态。
 const form = reactive<SimpleOverviewState>({
   title: '',
   logline: '',
@@ -82,7 +82,7 @@ watch(
   { immediate: true },
 )
 
-/** 功能：函数 submit，负责 submit 相关处理。 */
+/** 处理 submit 相关逻辑。 */
 function submit() {
   emit('save', {
     title: form.title.trim(),

@@ -100,7 +100,7 @@ export interface CommitStoryAdjustmentsResponse {
   warnings: string[]
 }
 
-// 变量作用：变量 storyLibraryApi，用于 storyLibraryApi 相关配置或状态。
+// storyLibraryApi 相关状态。
 export const storyLibraryApi = {
   listByWorld(worldId: string) {
     return api

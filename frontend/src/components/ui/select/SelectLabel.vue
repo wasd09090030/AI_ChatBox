@@ -5,7 +5,7 @@ import type { HTMLAttributes } from "vue"
 import { SelectLabel } from "reka-ui"
 import { cn } from "@/lib/utils"
 
-// 变量作用：变量 props，用于 props 相关配置或状态。
+// 组件输入参数。
 const props = defineProps<SelectLabelProps & { class?: HTMLAttributes["class"] }>()
 </script>
 

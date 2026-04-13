@@ -16,12 +16,12 @@ const ENTITY_FIELD_LABELS: Record<string, string> = {
   short_goal: '当前目标',
 }
 
-/** 功能：函数 isApiEntityUpdate，负责 isApiEntityUpdate 相关处理。 */
+/** 处理 isApiEntityUpdate 相关逻辑。 */
 function isApiEntityUpdate(update: EntityLikeUpdate): update is EntityStateUpdate {
   return 'entity_name' in update || 'field_name' in update
 }
 
-/** 功能：函数 resolveEntityName，负责 resolveEntityName 相关处理。 */
+/** 处理 resolveEntityName 相关逻辑。 */
 function resolveEntityName(update: EntityLikeUpdate): string {
   if (isApiEntityUpdate(update)) {
     return update.entity_name ?? update.entity_id
@@ -29,7 +29,7 @@ function resolveEntityName(update: EntityLikeUpdate): string {
   return update.entityName ?? update.entityId
 }
 
-/** 功能：函数 resolveFieldName，负责 resolveFieldName 相关处理。 */
+/** 处理 resolveFieldName 相关逻辑。 */
 function resolveFieldName(update: EntityLikeUpdate): string {
   if (isApiEntityUpdate(update)) {
     return update.field_name
@@ -37,12 +37,12 @@ function resolveFieldName(update: EntityLikeUpdate): string {
   return update.fieldName
 }
 
-/** 功能：函数 compactText，负责 compactText 相关处理。 */
+/** 处理 compactText 相关逻辑。 */
 function compactText(value: string, maxLength: number): string {
   return value.length > maxLength ? `${value.slice(0, maxLength - 1)}…` : value
 }
 
-/** 功能：函数 formatEntityPatchValue，负责 formatEntityPatchValue 相关处理。 */
+/** 处理 formatEntityPatchValue 相关逻辑。 */
 export function formatEntityPatchValue(value: unknown): string {
   if (value == null) return '空'
   if (Array.isArray(value)) {
@@ -58,18 +58,18 @@ export function formatEntityPatchValue(value: unknown): string {
   return String(value)
 }
 
-/** 功能：函数 getEntityPatchEntityLabel，负责 getEntityPatchEntityLabel 相关处理。 */
+/** 处理 getEntityPatchEntityLabel 相关逻辑。 */
 export function getEntityPatchEntityLabel(update: EntityLikeUpdate): string {
   return resolveEntityName(update)
 }
 
-/** 功能：函数 getEntityPatchFieldLabel，负责 getEntityPatchFieldLabel 相关处理。 */
+/** 处理 getEntityPatchFieldLabel 相关逻辑。 */
 export function getEntityPatchFieldLabel(update: EntityLikeUpdate): string {
   const fieldName = resolveFieldName(update)
   return ENTITY_FIELD_LABELS[fieldName] ?? fieldName
 }
 
-/** 功能：函数 getEntityPatchOperationLabel，负责 getEntityPatchOperationLabel 相关处理。 */
+/** 处理 getEntityPatchOperationLabel 相关逻辑。 */
 export function getEntityPatchOperationLabel(op: string): string {
   switch (op) {
     case 'set':
@@ -87,12 +87,12 @@ export function getEntityPatchOperationLabel(op: string): string {
   }
 }
 
-/** 功能：函数 getEntityPatchHeadline，负责 getEntityPatchHeadline 相关处理。 */
+/** 处理 getEntityPatchHeadline 相关逻辑。 */
 export function getEntityPatchHeadline(update: EntityLikeUpdate): string {
   return `${resolveEntityName(update)} · ${resolveFieldName(update)} · ${update.op}`
 }
 
-/** 功能：函数 getEntityPatchDetail，负责 getEntityPatchDetail 相关处理。 */
+/** 处理 getEntityPatchDetail 相关逻辑。 */
 export function getEntityPatchDetail(update: EntityLikeUpdate): string {
   const before = 'before' in update ? update.before : null
   const after = 'after' in update ? update.after : null
@@ -103,7 +103,7 @@ export function getEntityPatchDetail(update: EntityLikeUpdate): string {
   return formatEntityPatchValue(value)
 }
 
-/** 功能：函数 getEntityPatchChangeSummary，负责 getEntityPatchChangeSummary 相关处理。 */
+/** 处理 getEntityPatchChangeSummary 相关逻辑。 */
 export function getEntityPatchChangeSummary(update: EntityLikeUpdate, maxLength = 80): string {
   const fieldLabel = getEntityPatchFieldLabel(update)
   const before = 'before' in update ? update.before : null
@@ -126,27 +126,27 @@ export function getEntityPatchChangeSummary(update: EntityLikeUpdate, maxLength 
   return `${fieldLabel}：${getEntityPatchOperationLabel(update.op)}`
 }
 
-/** 功能：函数 getEntityPatchEventId，负责 getEntityPatchEventId 相关处理。 */
+/** 处理 getEntityPatchEventId 相关逻辑。 */
 export function getEntityPatchEventId(update: EntityLikeUpdate): string {
   return 'event_id' in update ? update.event_id : update.eventId
 }
 
-/** 功能：函数 getEntityPatchSourceTurn，负责 getEntityPatchSourceTurn 相关处理。 */
+/** 处理 getEntityPatchSourceTurn 相关逻辑。 */
 export function getEntityPatchSourceTurn(update: EntityLikeUpdate): number | null {
   return isApiEntityUpdate(update) ? (update.source_turn ?? null) : (update.sourceTurn ?? null)
 }
 
-/** 功能：函数 getEntityPatchCommittedAt，负责 getEntityPatchCommittedAt 相关处理。 */
+/** 处理 getEntityPatchCommittedAt 相关逻辑。 */
 export function getEntityPatchCommittedAt(update: EntityLikeUpdate): string {
   return 'committed_at' in update ? update.committed_at : update.committedAt
 }
 
-/** 功能：函数 getEntityPatchEvidenceText，负责 getEntityPatchEvidenceText 相关处理。 */
+/** 处理 getEntityPatchEvidenceText 相关逻辑。 */
 export function getEntityPatchEvidenceText(update: EntityLikeUpdate): string | null {
   return isApiEntityUpdate(update) ? (update.evidence_text ?? null) : (update.evidenceText ?? null)
 }
 
-/** 功能：函数 extractWorldUpdateHighlights，负责 extractWorldUpdateHighlights 相关处理。 */
+/** 处理 extractWorldUpdateHighlights 相关逻辑。 */
 export function extractWorldUpdateHighlights(worldUpdate: Record<string, unknown> | StoryWorldUpdateRecord | null | undefined): string[] {
   const payload: Record<string, unknown> | null = worldUpdate
     ? ('payload' in worldUpdate

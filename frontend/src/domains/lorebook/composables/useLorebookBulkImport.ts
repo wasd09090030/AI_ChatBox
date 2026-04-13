@@ -10,7 +10,7 @@ import { LOREBOOK_KEYS } from '@/domains/lorebook/queries/useLorebookQueries'
 import type { BulkImportEntry } from '@/services/lorebookService'
 import type { BulkImportResult } from '@/domains/lorebook/types'
 
-/** 功能：函数 useLorebookBulkImport，负责 useLorebookBulkImport 相关处理。 */
+/** 处理 useLorebookBulkImport 相关逻辑。 */
 export function useLorebookBulkImport(selectedWorldId: Ref<string>) {
   const { toast } = useToast()
   const queryClient = useQueryClient()

@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
 import type { StoryMode } from '@/components/story/types'
 
-// 变量作用：变量 props，用于 props 相关配置或状态。
+// 组件输入参数。
 const props = defineProps<{
   show: boolean
   collapsible?: boolean
@@ -19,7 +19,7 @@ const props = defineProps<{
   modeLabels: Record<StoryMode, string>
 }>()
 
-// 变量作用：变量 emit，用于 emit 相关配置或状态。
+// 组件事件派发器。
 const emit = defineEmits<{
   (event: 'update:show', value: boolean): void
   (event: 'update:storyMode', value: StoryMode): void
@@ -29,31 +29,31 @@ const emit = defineEmits<{
 
 const modeOptions: StoryMode[] = ['narrative', 'choices', 'instruction']
 
-// 变量作用：变量 showModel，用于 showModel 相关配置或状态。
+// showModel 的双向绑定状态。
 const showModel = computed({
   get: () => props.show,
   set: (value: boolean) => emit('update:show', value),
 })
 
-// 变量作用：变量 storyModeModel，用于 storyModeModel 相关配置或状态。
+// storyModeModel 的双向绑定状态。
 const storyModeModel = computed({
   get: () => props.storyMode,
   set: (value: StoryMode) => emit('update:storyMode', value),
 })
 
-// 变量作用：变量 instructionModel，用于 instructionModel 相关配置或状态。
+// instructionModel 的双向绑定状态。
 const instructionModel = computed({
   get: () => props.instruction,
   set: (value: string) => emit('update:instruction', value),
 })
 
-// 变量作用：变量 authorsNoteModel，用于 authorsNoteModel 相关配置或状态。
+// authorsNoteModel 的双向绑定状态。
 const authorsNoteModel = computed({
   get: () => props.authorsNote,
   set: (value: string) => emit('update:authorsNote', value),
 })
 
-/** 功能：函数 selectMode，负责 selectMode 相关处理。 */
+/** 处理 selectMode 相关逻辑。 */
 function selectMode(mode: StoryMode) {
   storyModeModel.value = mode
 }

@@ -89,21 +89,21 @@ const {
 } = useLorebookBulkImport(selectedWorldId)
 
 const { data: personas, isLoading: personasLoading } = usePersonasQuery()
-// 变量作用：变量 createPersonaMut，用于 createPersonaMut 相关配置或状态。
+// createPersonaMut 相关状态。
 const createPersonaMut = useCreatePersonaMutation()
-// 变量作用：变量 updatePersonaMut，用于 updatePersonaMut 相关配置或状态。
+// updatePersonaMut 相关状态。
 const updatePersonaMut = useUpdatePersonaMutation()
-// 变量作用：变量 deletePersonaMut，用于 deletePersonaMut 相关配置或状态。
+// deletePersonaMut 相关状态。
 const deletePersonaMut = useDeletePersonaMutation()
 
-// 变量作用：变量 expandedIds，用于 expandedIds 相关配置或状态。
+// expandedIds 相关状态。
 const expandedIds = ref<Set<string>>(new Set())
-// 变量作用：变量 activeTab，用于 activeTab 相关配置或状态。
+// activeTab 相关状态。
 const activeTab = ref<'principal' | EntrySheetType | 'persona'>('principal')
-// 变量作用：变量 defaultCharacterRoleTier，用于 defaultCharacterRoleTier 相关配置或状态。
+// defaultCharacterRoleTier 相关状态。
 const defaultCharacterRoleTier = ref<'npc' | 'principal'>('npc')
 
-/** 功能：函数 toggleExpand，负责 toggleExpand 相关处理。 */
+/** 处理 toggleExpand 相关逻辑。 */
 function toggleExpand(id: string) {
   if (expandedIds.value.has(id)) expandedIds.value.delete(id)
   else expandedIds.value.add(id)
@@ -120,33 +120,33 @@ const ENTRY_LABELS: Record<EntrySheetType, string> = {
   event: '事件',
 }
 
-/** 功能：函数 isPrincipalCharacter，负责 isPrincipalCharacter 相关处理。 */
+/** 处理 isPrincipalCharacter 相关逻辑。 */
 function isPrincipalCharacter(entry: LorebookEntry): boolean {
   return entry.type === 'character' && entry.metadata?.role_tier === 'principal'
 }
 
-/** 功能：函数 isDialogueEnabled，负责 isDialogueEnabled 相关处理。 */
+/** 处理 isDialogueEnabled 相关逻辑。 */
 function isDialogueEnabled(entry: LorebookEntry): boolean {
   return entry.type === 'character' && entry.metadata?.dialogue_enabled === true
 }
 
-// 变量作用：变量 principalCharacters，用于 principalCharacters 相关配置或状态。
+// principalCharacters 相关状态。
 const principalCharacters = computed(() =>
   filteredByType('character').filter((entry) => isPrincipalCharacter(entry as LorebookEntry)),
 )
 
-// 变量作用：变量 npcCharacters，用于 npcCharacters 相关配置或状态。
+// npcCharacters 相关状态。
 const npcCharacters = computed(() =>
   filteredByType('character').filter((entry) => !isPrincipalCharacter(entry as LorebookEntry)),
 )
 
-/** 功能：函数 openAddCharacterSheet，负责 openAddCharacterSheet 相关处理。 */
+/** 处理 openAddCharacterSheet 相关逻辑。 */
 function openAddCharacterSheet() {
   defaultCharacterRoleTier.value = 'npc'
   openAddSheet('character')
 }
 
-/** 功能：函数 openAddPrincipalSheet，负责 openAddPrincipalSheet 相关处理。 */
+/** 处理 openAddPrincipalSheet 相关逻辑。 */
 function openAddPrincipalSheet() {
   defaultCharacterRoleTier.value = 'principal'
   openAddSheet('character')
@@ -160,15 +160,15 @@ interface PersonaForm {
   metadata: Record<string, unknown>
 }
 
-// 变量作用：变量 showPersonaDialog，用于 showPersonaDialog 相关配置或状态。
+// showPersonaDialog 相关状态。
 const showPersonaDialog = ref(false)
-// 变量作用：变量 editingPersona，用于 editingPersona 相关配置或状态。
+// editingPersona 相关状态。
 const editingPersona = ref<PersonaProfile | null>(null)
-// 变量作用：变量 newTrait，用于 newTrait 相关配置或状态。
+// newTrait 相关状态。
 const newTrait = ref('')
-// 变量作用：变量 personaSaving，用于 personaSaving 相关配置或状态。
+// personaSaving 相关状态。
 const personaSaving = ref(false)
-// 变量作用：变量 personaForm，用于 personaForm 相关配置或状态。
+// personaForm 相关状态。
 const personaForm = ref<PersonaForm>({
   name: '',
   description: '',
@@ -177,7 +177,7 @@ const personaForm = ref<PersonaForm>({
   metadata: {},
 })
 
-/** 功能：函数 openNewPersona，负责 openNewPersona 相关处理。 */
+/** 处理 openNewPersona 相关逻辑。 */
 function openNewPersona() {
   editingPersona.value = null
   personaForm.value = { name: '', description: '', title: '', traits: [], metadata: {} }
@@ -185,7 +185,7 @@ function openNewPersona() {
   showPersonaDialog.value = true
 }
 
-/** 功能：函数 openEditPersona，负责 openEditPersona 相关处理。 */
+/** 处理 openEditPersona 相关逻辑。 */
 function openEditPersona(persona: PersonaProfile) {
   editingPersona.value = persona
   personaForm.value = {
@@ -199,7 +199,7 @@ function openEditPersona(persona: PersonaProfile) {
   showPersonaDialog.value = true
 }
 
-/** 功能：函数 addTrait，负责 addTrait 相关处理。 */
+/** 处理 addTrait 相关逻辑。 */
 function addTrait() {
   const trait = newTrait.value.trim()
   if (trait && !personaForm.value.traits.includes(trait)) {
@@ -208,12 +208,12 @@ function addTrait() {
   newTrait.value = ''
 }
 
-/** 功能：函数 removeTrait，负责 removeTrait 相关处理。 */
+/** 处理 removeTrait 相关逻辑。 */
 function removeTrait(trait: string) {
   personaForm.value.traits = personaForm.value.traits.filter((item) => item !== trait)
 }
 
-/** 功能：函数 savePersona，负责 savePersona 相关处理。 */
+/** 处理 savePersona 相关逻辑。 */
 async function savePersona() {
   if (!personaForm.value.name.trim()) return
   personaSaving.value = true
@@ -240,7 +240,7 @@ async function savePersona() {
   }
 }
 
-/** 功能：函数 deletePersona，负责 deletePersona 相关处理。 */
+/** 处理 deletePersona 相关逻辑。 */
 async function deletePersona(persona: PersonaProfile) {
   try {
     await deletePersonaMut.mutateAsync(persona.id)

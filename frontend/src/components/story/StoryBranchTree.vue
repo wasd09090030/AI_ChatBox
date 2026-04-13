@@ -19,18 +19,18 @@ import { useStorySessionStore } from '@/stores/storySession'
 
 use([CanvasRenderer, TreeChart, TooltipComponent, TitleComponent])
 
-// 变量作用：变量 props，用于 props 相关配置或状态。
+// 组件输入参数。
 const props = defineProps<{
   storyId: string
   storyTitle?: string
 }>()
 
-// 变量作用：变量 emit，用于 emit 相关配置或状态。
+// 组件事件派发器。
 const emit = defineEmits<{
   (e: 'close'): void
 }>()
 
-// 变量作用：变量 store，用于 store 相关配置或状态。
+// 状态仓库实例。
 const store = useStorySessionStore()
 
 // ── Selected node (click-based, NOT hover) ────────────────────────────────────
@@ -116,7 +116,7 @@ const chartOption = computed(() => {
   }
 })
 
-// 变量作用：变量 hasData，用于 hasData 相关配置或状态。
+// 布尔状态 hasData。
 const hasData = computed(() => {
   const tree = store.getBranchTree(props.storyId)
   return tree && tree.rootNodeId !== null

@@ -65,7 +65,7 @@ interface UseStoryGenerationArgs {
   onFocusInput?: () => void
 }
 
-/** 功能：函数 parseChoices，负责 parseChoices 相关处理。 */
+/** 处理 parseChoices 相关逻辑。 */
 function parseChoices(text: string): string[] {
   const re = /\[(?:选项\s*\d+|[A-Z])\]\s*([^\[\n]+)/g
   const results: string[] = []
@@ -77,7 +77,7 @@ function parseChoices(text: string): string[] {
   return results
 }
 
-/** 功能：函数 formatActivationHits，负责 formatActivationHits 相关处理。 */
+/** 处理 formatActivationHits 相关逻辑。 */
 function formatActivationHits(logs: StoryActivationLog[]): StoryContextHit[] {
   return logs
     .filter((log) => {
@@ -104,7 +104,7 @@ function formatActivationHits(logs: StoryActivationLog[]): StoryContextHit[] {
     })
 }
 
-/** 功能：函数 buildSummaryDiff，负责 buildSummaryDiff 相关处理。 */
+/** 处理 buildSummaryDiff 相关逻辑。 */
 function buildSummaryDiff(
   previous: SummaryMemorySnapshot | null | undefined,
   next: SummaryMemorySnapshot | null | undefined,
@@ -125,7 +125,7 @@ function buildSummaryDiff(
   }
 }
 
-/** 功能：函数 hydrateSummarySnapshotFromStore，负责 hydrateSummarySnapshotFromStore 相关处理。 */
+/** 处理 hydrateSummarySnapshotFromStore 相关逻辑。 */
 function hydrateSummarySnapshotFromStore(
   summaryRecord:
     | {
@@ -146,7 +146,7 @@ function hydrateSummarySnapshotFromStore(
   }
 }
 
-/** 功能：函数 extractContextHitsFromUpdates，负责 extractContextHitsFromUpdates 相关处理。 */
+/** 处理 extractContextHitsFromUpdates 相关逻辑。 */
 function extractContextHitsFromUpdates(events: MemoryUpdateEvent[]): StoryContextHit[] {
   return events
     .filter((event) => event.memory_layer === 'episodic' && event.memory_key === 'conversation_history_index')
@@ -157,7 +157,7 @@ function extractContextHitsFromUpdates(events: MemoryUpdateEvent[]): StoryContex
     }))
 }
 
-/** 功能：函数 useStoryGeneration，负责 useStoryGeneration 相关处理。 */
+/** 处理 useStoryGeneration 相关逻辑。 */
 export function useStoryGeneration(args: UseStoryGenerationArgs) {
   const { toast } = useToast()
 

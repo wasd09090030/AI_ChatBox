@@ -6,14 +6,14 @@ import { Badge } from '@/components/ui/badge'
 import type { AnalyticsOverview } from '@/domains/analytics/types'
 import { formatPercent } from '@/domains/analytics/utils/formatters'
 
-// 变量作用：变量 props，用于 props 相关配置或状态。
+// 组件输入参数。
 const props = defineProps<{
   overview: AnalyticsOverview | undefined
   topModelLabel: string
   topWorldLabel: string
 }>()
 
-// 变量作用：变量 tokenDirectionHint，用于 tokenDirectionHint 相关配置或状态。
+// tokenDirectionHint 相关状态。
 const tokenDirectionHint = computed(() => {
   if (!props.overview) return 'Token 结构会告诉你问题更像是上下文膨胀，还是生成阶段失控。'
   const { avg_input_tokens, avg_output_tokens } = props.overview
@@ -26,7 +26,7 @@ const tokenDirectionHint = computed(() => {
   return '输入输出比例比较均衡，当前更应关注模型选择和上下文命中质量，而不是盲目压长度。'
 })
 
-// 变量作用：变量 retrievalHint，用于 retrievalHint 相关配置或状态。
+// retrievalHint 相关状态。
 const retrievalHint = computed(() => {
   if (!props.overview) return '检索命中会影响故事是否稳定贴合世界设定。'
   if (props.overview.avg_retrieved_context_count >= 4) {
@@ -38,7 +38,7 @@ const retrievalHint = computed(() => {
   return '上下文命中处于中位区间，适合继续用事件表定位到底是哪个模型或世界在拉高波动。'
 })
 
-// 变量作用：变量 coverageHint，用于 coverageHint 相关配置或状态。
+// coverageHint 相关状态。
 const coverageHint = computed(() => {
   if (!props.overview) return 'Provider usage 覆盖率越高，token 统计越接近真实成本。'
   return `当前 provider usage 覆盖率 ${formatPercent(props.overview.provider_usage_rate)}，主力模型是 ${props.topModelLabel}，主力世界是 ${props.topWorldLabel}。`

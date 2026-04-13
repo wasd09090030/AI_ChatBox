@@ -3,12 +3,12 @@
 import type { TooltipRootEmits, TooltipRootProps } from "reka-ui"
 import { TooltipRoot, useForwardPropsEmits } from "reka-ui"
 
-// 变量作用：变量 props，用于 props 相关配置或状态。
+// 组件输入参数。
 const props = defineProps<TooltipRootProps>()
-// 变量作用：变量 emits，用于 emits 相关配置或状态。
+// 组件事件声明。
 const emits = defineEmits<TooltipRootEmits>()
 
-// 变量作用：变量 forwarded，用于 forwarded 相关配置或状态。
+// 透传到基础组件的参数与事件。
 const forwarded = useForwardPropsEmits(props, emits)
 </script>
 

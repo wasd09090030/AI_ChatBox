@@ -16,12 +16,12 @@ import { useConfigStore } from '@/stores/config'
 import { useRagStoryStore } from '@/stores/ragStory'
 import type { ProviderKey } from '@/utils/types'
 
-// 变量作用：变量 LS_REMOTE_MODELS_KEY，用于 LS REMOTE MODELS KEY 相关配置或状态。
+// 常量 LS_REMOTE_MODELS_KEY。
 const LS_REMOTE_MODELS_KEY = 'provider_remote_models_v1'
-// 变量作用：变量 LS_SELECTED_MODELS_KEY，用于 LS SELECTED MODELS KEY 相关配置或状态。
+// 常量 LS_SELECTED_MODELS_KEY。
 const LS_SELECTED_MODELS_KEY = 'provider_selected_models_v1'
 
-/** 功能：函数 useDashboardConfig，负责 useDashboardConfig 相关处理。 */
+/** 处理 useDashboardConfig 相关逻辑。 */
 export function useDashboardConfig() {
   const { toast } = useToast()
   const configStore = useConfigStore()

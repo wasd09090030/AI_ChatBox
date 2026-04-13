@@ -18,7 +18,7 @@ defineProps<{
   creatingDisabled?: boolean
 }>()
 
-// 变量作用：变量 emit，用于 emit 相关配置或状态。
+// 组件事件派发器。
 const emit = defineEmits<{
   'select-world': [worldId: string]
   'select-script': [scriptDesignId: string]
@@ -26,7 +26,7 @@ const emit = defineEmits<{
   'delete-script': [scriptDesign: ScriptDesign]
 }>()
 
-// 变量作用：变量 collapsed，用于 collapsed 相关配置或状态。
+// collapsed 相关状态。
 const collapsed = useSidebarCollapse('script-design-sidebar-collapsed')
 </script>
 

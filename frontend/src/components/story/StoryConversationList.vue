@@ -6,32 +6,32 @@ import { Button } from '@/components/ui/button'
 import BranchChoiceCard from '@/components/story/BranchChoiceCard.vue'
 import type { StoredStory, StorySegment } from '@/components/story/types'
 
-// 变量作用：变量 props，用于 props 相关配置或状态。
+// 组件输入参数。
 const props = defineProps<{
   currentStory: StoredStory | null
   generating: boolean
   formatTime: (timestamp: string) => string
 }>()
 
-// 变量作用：变量 emit，用于 emit 相关配置或状态。
+// 组件事件派发器。
 const emit = defineEmits<{
   (event: 'branch-send', payload: { prompt: string; chosenIdx: number }): void
   (event: 'rollback-last'): void
   (event: 'regenerate-last'): void
 }>()
 
-/** 功能：函数 isLastSeg，负责 isLastSeg 相关处理。 */
+/** 处理 isLastSeg 相关逻辑。 */
 function isLastSeg(seg: StorySegment) {
   const segments = props.currentStory?.segments ?? []
   return segments[segments.length - 1]?.id === seg.id
 }
 
-/** 功能：函数 handleBranchSend，负责 handleBranchSend 相关处理。 */
+/** 处理 handleBranchSend 相关逻辑。 */
 function handleBranchSend(payload: { prompt: string; chosenIdx: number }) {
   emit('branch-send', payload)
 }
 
-/** 功能：函数 getSegmentModeLabel，负责 getSegmentModeLabel 相关处理。 */
+/** 处理 getSegmentModeLabel 相关逻辑。 */
 function getSegmentModeLabel(seg: StorySegment) {
   if (seg.creation_mode === 'scripted') return '严格剧本输入'
   if (seg.creation_mode === 'improv') return '渐进式输入'

@@ -7,13 +7,13 @@ import { ChevronDown } from "lucide-vue-next"
 import { SelectIcon, SelectTrigger, useForwardProps } from "reka-ui"
 import { cn } from "@/lib/utils"
 
-// 变量作用：变量 props，用于 props 相关配置或状态。
+// 组件输入参数。
 const props = defineProps<SelectTriggerProps & { class?: HTMLAttributes["class"] }>()
 
-// 变量作用：变量 delegatedProps，用于 delegatedProps 相关配置或状态。
+// 去除扩展字段后的透传参数。
 const delegatedProps = reactiveOmit(props, "class")
 
-// 变量作用：变量 forwardedProps，用于 forwardedProps 相关配置或状态。
+// 透传到基础组件的参数。
 const forwardedProps = useForwardProps(delegatedProps)
 </script>
 

@@ -59,13 +59,13 @@ export interface StoryMemorySnapshotResponse {
   story_memory: StoryMemoryPayload
 }
 
-/** 功能：函数 getMemoryUpdates，负责 getMemoryUpdates 相关处理。 */
+/** 处理 getMemoryUpdates 相关逻辑。 */
 export async function getMemoryUpdates(filters: MemoryUpdateQueryFilters = {}): Promise<MemoryUpdateQueryResponse> {
   const response = await api.get<MemoryUpdateQueryResponse>('/memory-updates', { params: filters })
   return response.data
 }
 
-/** 功能：函数 getSessionMemoryTimeline，负责 getSessionMemoryTimeline 相关处理。 */
+/** 处理 getSessionMemoryTimeline 相关逻辑。 */
 export async function getSessionMemoryTimeline(
   sessionId: string,
   page = 1,
@@ -78,7 +78,7 @@ export async function getSessionMemoryTimeline(
   return response.data
 }
 
-/** 功能：函数 getSessionStoryMemory，负责 getSessionStoryMemory 相关处理。 */
+/** 处理 getSessionStoryMemory 相关逻辑。 */
 export async function getSessionStoryMemory(
   sessionId: string,
   page = 1,

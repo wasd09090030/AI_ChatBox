@@ -7,7 +7,7 @@ import { ref } from 'vue'
 
 export type FeedbackType = 'success' | 'error' | 'info'
 
-// 变量作用：变量 useFeedbackStore，用于 useFeedbackStore 相关配置或状态。
+// useFeedbackStore 状态仓库实例。
 export const useFeedbackStore = defineStore('feedback', () => {
   const visible = ref(false)
   const message = ref('')

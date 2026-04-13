@@ -18,14 +18,14 @@ import type { World } from '@/services/lorebookService'
 import { cn } from '@/lib/utils'
 import { useSidebarCollapse } from '@/lib/useSidebarCollapse'
 
-// 变量作用：变量 props，用于 props 相关配置或状态。
+// 组件输入参数。
 const props = defineProps<{
   worlds: World[] | undefined
   loading: boolean
   selectedId: string
 }>()
 
-// 变量作用：变量 emit，用于 emit 相关配置或状态。
+// 组件事件派发器。
 const emit = defineEmits<{
   select: [id: string]
   add: []
@@ -33,7 +33,7 @@ const emit = defineEmits<{
   delete: [world: World]
 }>()
 
-// 变量作用：变量 collapsed，用于 collapsed 相关配置或状态。
+// collapsed 相关状态。
 const collapsed = useSidebarCollapse('world-sidebar-collapsed')
 </script>
 

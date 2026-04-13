@@ -10,7 +10,7 @@ import { useStorySessionStore } from '@/stores/storySession'
 export type ApiKeyProvider = 'openai' | 'anthropic' | 'deepseek'
 export type ThemeMode = 'light' | 'dark' | 'system'
 
-/** 功能：函数 useSetThemeMutation，负责 useSetThemeMutation 相关处理。 */
+/** 处理 useSetThemeMutation 相关逻辑。 */
 export function useSetThemeMutation() {
   const configStore = useConfigStore()
   return useMutation({
@@ -18,7 +18,7 @@ export function useSetThemeMutation() {
   })
 }
 
-/** 功能：函数 useSetDefaultModelMutation，负责 useSetDefaultModelMutation 相关处理。 */
+/** 处理 useSetDefaultModelMutation 相关逻辑。 */
 export function useSetDefaultModelMutation() {
   const configStore = useConfigStore()
   return useMutation({
@@ -26,7 +26,7 @@ export function useSetDefaultModelMutation() {
   })
 }
 
-/** 功能：函数 useSetTemperatureMutation，负责 useSetTemperatureMutation 相关处理。 */
+/** 处理 useSetTemperatureMutation 相关逻辑。 */
 export function useSetTemperatureMutation() {
   const configStore = useConfigStore()
   return useMutation({
@@ -34,7 +34,7 @@ export function useSetTemperatureMutation() {
   })
 }
 
-/** 功能：函数 useSetMaxTokensMutation，负责 useSetMaxTokensMutation 相关处理。 */
+/** 处理 useSetMaxTokensMutation 相关逻辑。 */
 export function useSetMaxTokensMutation() {
   const configStore = useConfigStore()
   return useMutation({
@@ -42,7 +42,7 @@ export function useSetMaxTokensMutation() {
   })
 }
 
-/** 功能：函数 useSaveApiKeyMutation，负责 useSaveApiKeyMutation 相关处理。 */
+/** 处理 useSaveApiKeyMutation 相关逻辑。 */
 export function useSaveApiKeyMutation() {
   const configStore = useConfigStore()
   return useMutation({
@@ -51,7 +51,7 @@ export function useSaveApiKeyMutation() {
   })
 }
 
-/** 功能：函数 useDeleteApiKeyMutation，负责 useDeleteApiKeyMutation 相关处理。 */
+/** 处理 useDeleteApiKeyMutation 相关逻辑。 */
 export function useDeleteApiKeyMutation() {
   const configStore = useConfigStore()
   return useMutation({
@@ -59,7 +59,7 @@ export function useDeleteApiKeyMutation() {
   })
 }
 
-/** 功能：函数 useClearAllDataMutation，负责 useClearAllDataMutation 相关处理。 */
+/** 处理 useClearAllDataMutation 相关逻辑。 */
 export function useClearAllDataMutation() {
   const roleStore = useRoleStore()
   const storySessionStore = useStorySessionStore()
@@ -72,7 +72,7 @@ export function useClearAllDataMutation() {
   })
 }
 
-/** 功能：函数 useExportDataMutation，负责 useExportDataMutation 相关处理。 */
+/** 处理 useExportDataMutation 相关逻辑。 */
 export function useExportDataMutation() {
   const configStore = useConfigStore()
   return useMutation({

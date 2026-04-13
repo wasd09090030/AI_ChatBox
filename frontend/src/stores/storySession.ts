@@ -125,7 +125,7 @@ export interface StoryBranchTree {
   activeNodeId: string | null
 }
 
-// 变量作用：变量 useStorySessionStore，用于 useStorySessionStore 相关配置或状态。
+// useStorySessionStore 状态仓库实例。
 export const useStorySessionStore = defineStore('storySession', () => {
   // ── Storage keys ─────────────────────────────────────────────────────────
   const STORAGE_KEYS = {

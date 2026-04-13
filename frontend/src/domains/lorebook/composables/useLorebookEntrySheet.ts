@@ -10,7 +10,7 @@ import { LOREBOOK_KEYS, useLorebookEntriesQuery } from '@/domains/lorebook/queri
 import type { EntrySheetSubmitPayload, EntrySheetType } from '@/domains/lorebook/types'
 import type { LorebookEntry } from '@/services/lorebookService'
 
-/** 功能：函数 useLorebookEntrySheet，负责 useLorebookEntrySheet 相关处理。 */
+/** 处理 useLorebookEntrySheet 相关逻辑。 */
 export function useLorebookEntrySheet(selectedWorldId: Ref<string>) {
   const { toast } = useToast()
   const queryClient = useQueryClient()
