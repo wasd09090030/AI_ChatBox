@@ -1,5 +1,7 @@
-"""
-故事生成所需的 LLM 创建与 token 工具函数。
+"""故事生成 LLM 工厂与 token 工具。
+
+统一处理 provider 推断、模型与 API Key 解析、base_url 选择，以及
+LangChain 客户端实例化细节，避免上层业务重复分支判断。
 """
 
 from __future__ import annotations
@@ -14,7 +16,7 @@ from services.ai_proxy_service import PROVIDER_REGISTRY, _resolve_base_url
 
 
 def detect_provider(model: str) -> str:
-    """根据模型名推断 provider。"""
+    """根据模型名推断 provider，未知前缀时回退默认 provider。"""
     model_name = (model or "").strip().lower()
     if model_name.startswith("gpt") or model_name.startswith("o1") or model_name.startswith("o3"):
         return "openai"
@@ -45,7 +47,7 @@ def get_env_api_key(provider: str) -> Optional[str]:
 
 
 def normalize_usage(usage_obj: Any) -> Optional[Dict[str, int]]:
-    """统一 usage 结构为 input/output/total 三字段。"""
+    """将不同 provider 的 usage 字段归一为 input/output/total。"""
     if not usage_obj or not isinstance(usage_obj, dict):
         return None
     input_tokens = int(usage_obj.get("input_tokens", usage_obj.get("prompt_tokens", 0)) or 0)
@@ -61,7 +63,7 @@ def normalize_usage(usage_obj: Any) -> Optional[Dict[str, int]]:
 
 
 def estimate_tokens(text: str) -> int:
-    """按中英文混合文本估算 token。"""
+    """按中英文混合文本估算 token（用于预算与日志，不用于计费精算）。"""
     cjk = sum(1 for char in text if "\u4e00" <= char <= "\u9fff" or "\u3000" <= char <= "\u30ff")
     return max(1, int(cjk * 1.7 + (len(text) - cjk) * 0.25))
 
@@ -98,6 +100,7 @@ def create_llm(
         raise ValueError("Model is required for story generation.")
     effective_max_tokens = max_tokens or settings.default_max_tokens
 
+    # provider 决议优先级：请求显式值 > 用户默认 provider > model 前缀推断。
     resolved_provider = (provider or user_default_provider or detect_provider(model_name)).strip().lower()
     if resolved_provider not in PROVIDER_REGISTRY:
         raise ValueError(
@@ -107,6 +110,7 @@ def create_llm(
     provider_cfg = PROVIDER_REGISTRY[resolved_provider]
 
     api_key: Optional[str] = None
+    # API Key 决议优先级：用户密钥 > 服务端环境密钥。
     if user_id and user_manager:
         api_key = user_manager.get_decrypted_api_key(user_id, resolved_provider)
     if not api_key:
@@ -121,9 +125,11 @@ def create_llm(
     user_base_url: Optional[str] = None
     if user_id and user_manager:
         user_base_url = user_manager.get_base_url(user_id, resolved_provider)
+    # base_url 统一由 _resolve_base_url 处理（provider 默认 + 用户覆盖 + 请求覆盖）。
     resolved_base_url = _resolve_base_url(provider_cfg, user_base_url, base_url)
 
     stream_kwargs: Dict[str, Any] = {}
+    # openai_compat 流式场景补充 usage 返回，便于后续统计 token。
     if for_streaming and provider_cfg.protocol == "openai_compat":
         stream_kwargs = {"stream_options": {"include_usage": True}}
 

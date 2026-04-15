@@ -1,4 +1,8 @@
-"""文件说明：后端应用层用例编排。"""
+"""application.memory 包导出入口。
+
+聚合记忆分层模型、编排器、更新服务与事件工具函数，
+为 story 生成链路提供统一 import 面。
+"""
 
 from .models import (
     EpisodeRecord,

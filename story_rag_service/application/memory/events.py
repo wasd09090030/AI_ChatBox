@@ -1,4 +1,8 @@
-"""文件说明：后端应用层用例编排。"""
+"""记忆事件辅助函数。
+
+负责统一构造、补全与归一化 memory_update_journal 事件，
+确保前端时间线和后端审计都基于一致的数据语义。
+"""
 
 from __future__ import annotations
 
@@ -10,7 +14,7 @@ from .models import MemoryUpdateEvent
 
 
 def build_memory_operation_id(source: str) -> str:
-    """功能：构建记忆操作 ID。"""
+    """生成一次记忆操作的 operation_id。"""
     normalized = (source or "memory").strip() or "memory"
     return f"{normalized}:{uuid.uuid4()}"
 
@@ -21,7 +25,10 @@ def infer_memory_display_kind(
     action: str,
     status: str = "committed",
 ) -> str:
-    """功能：推断记忆 display 类型。"""
+    """推断展示层 display_kind。
+
+    display_kind 用于前端时间线分组与样式映射，和存储层 memory_layer/action 区分开。
+    """
     if status == "failed":
         return "failed"
     if memory_layer == "semantic":
@@ -45,7 +52,7 @@ def finalize_memory_update_events(
     operation_id: Optional[str] = None,
     sequence_start: int = 1,
 ) -> list[MemoryUpdateEvent]:
-    """功能：收敛并完成记忆 update 事件。"""
+    """补全事件批次的 operation_id/sequence/display_kind。"""
     event_list = list(events)
     if not event_list:
         return event_list
@@ -54,11 +61,14 @@ def finalize_memory_update_events(
     next_sequence = max(1, int(sequence_start))
 
     for event in event_list:
+        # 同一批事件共享 operation_id，便于前端按一次操作聚合展示。
         if not event.get("operation_id"):
             event["operation_id"] = normalized_operation_id
+        # sequence 维持批内顺序；若调用方未指定，则按递增自动补齐。
         if event.get("sequence") is None:
             event["sequence"] = next_sequence
         next_sequence = int(event["sequence"]) + 1
+        # display_kind 缺失时根据 layer/action/status 推断，保持旧调用兼容。
         if not event.get("display_kind"):
             event["display_kind"] = infer_memory_display_kind(
                 memory_layer=event.get("memory_layer") or "unknown",
@@ -86,7 +96,7 @@ def build_memory_update_event(
     sequence: Optional[int] = None,
     display_kind: Optional[str] = None,
 ) -> MemoryUpdateEvent:
-    """功能：构建记忆 update 事件。"""
+    """构建单条 memory update 事件骨架。"""
     return {
         "event_id": str(uuid.uuid4()),
         "session_id": session_id,
@@ -108,7 +118,7 @@ def build_memory_update_event(
 
 
 def summarize_summary_snapshot(snapshot: Optional[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
-    """提炼摘要快照关键字段，生成用于日志/事件记录的精简视图。"""
+    """提炼摘要快照关键字段，生成事件日志友好的精简视图。"""
     if not snapshot:
         return None
 

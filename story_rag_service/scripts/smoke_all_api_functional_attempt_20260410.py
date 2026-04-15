@@ -1,4 +1,4 @@
-"""
+﻿"""
 Dependency-aware all-endpoint functional attempt runner.
 
 Goal:
@@ -32,37 +32,37 @@ from typing import Any, Optional
 
 import httpx
 
-# 变量作用：变量 BASE_URL，用于保存 base url 相关模块级状态。
+# 服务基础地址（可通过环境变量覆盖）。
 BASE_URL = os.getenv("SMOKE_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
-# 变量作用：变量 TIMEOUT，用于保存 timeout 相关模块级状态。
+# HTTP 请求超时时间（秒）。
 TIMEOUT = float(os.getenv("SMOKE_TIMEOUT", "40"))
-# 变量作用：变量 USER_ID，用于保存用户 ID 相关模块级状态。
+# 请求头用户标识。
 USER_ID = os.getenv("SMOKE_USER_ID", "user_1773820783085_bk1gzshza")
-# 变量作用：变量 PROVIDER，用于保存模型提供商相关模块级状态。
+# 冒烟测试默认模型提供商。
 PROVIDER = os.getenv("SMOKE_PROVIDER", "deepseek")
-# 变量作用：变量 MODEL，用于保存模型相关模块级状态。
+# 冒烟测试默认模型名称。
 MODEL = os.getenv("SMOKE_MODEL", "deepseek-chat")
-# 变量作用：变量 INCLUDE_OPTIONAL_QUERY，用于保存 include 可选查询参数相关模块级状态。
+# 是否填充可选查询参数。
 INCLUDE_OPTIONAL_QUERY = os.getenv("SMOKE_INCLUDE_OPTIONAL_QUERY", "false").lower() in {"1", "true", "yes"}
 
-# 变量作用：变量 DATE_TAG，用于保存 date tag 相关模块级状态。
+# 报告日期标签。
 DATE_TAG = time.strftime("%Y-%m-%d")
-# 变量作用：路径变量 REPORT_DIR，用于定位文件系统资源。
+# 报告输出目录。
 REPORT_DIR = Path(__file__).resolve().parents[1] / "docs" / "TestResult"
-# 变量作用：变量 REPORT_JSON，用于保存 report JSON 相关模块级状态。
+# JSON 报告文件路径。
 REPORT_JSON = REPORT_DIR / f"AllApiFunctional_Attempt_Run_{DATE_TAG}.json"
-# 变量作用：变量 REPORT_MD，用于保存 report md 相关模块级状态。
+# Markdown 报告文件路径。
 REPORT_MD = REPORT_DIR / f"AllApiFunctional_Attempt_Report_{DATE_TAG}.md"
 
-# 变量作用：变量 HTTP_METHODS，用于保存 HTTP methods 相关模块级状态。
+# 需要遍历探测的 HTTP 方法。
 HTTP_METHODS = ["get", "post", "put", "patch", "delete"]
-# 变量作用：正则规则 PATH_PARAM_PATTERN，用于文本模式匹配。
+# 路径参数匹配正则。
 PATH_PARAM_PATTERN = re.compile(r"\{([^{}]+)\}")
 
 
 @dataclass
 class FixtureContext:
-    """作用：定义 FixtureContext 类型，承载本模块核心状态与行为。"""
+    """运行期夹具上下文，用于路径替换与资源清理。"""
     world_id: Optional[str] = None
     story_id: Optional[str] = None
     session_id: Optional[str] = None
@@ -77,7 +77,7 @@ class FixtureContext:
 
 @dataclass
 class EndpointResult:
-    """作用：定义 EndpointResult 数据结构，用于约束字段语义与序列化格式。"""
+    """记录单个端点探测结果及请求响应摘要。"""
     method: str
     path: str
     probe_url_path: str
@@ -95,12 +95,12 @@ class EndpointResult:
 
 
 def _headers() -> dict[str, str]:
-    """功能：处理 headers。"""
+    """构造请求头并注入用户标识。"""
     return {"X-User-ID": USER_ID}
 
 
 def _safe_json_response(response: httpx.Response) -> Any:
-    """功能：处理 safe JSON 响应。"""
+    """安全解析 JSON 响应，失败时回退到原始文本预览。"""
     if not response.text:
         return {}
     try:
@@ -110,7 +110,7 @@ def _safe_json_response(response: httpx.Response) -> Any:
 
 
 def _shorten(value: Any, limit: int = 350) -> Any:
-    """功能：处理 shorten。"""
+    """将大对象压缩为短预览，避免报告体积膨胀。"""
     try:
         text = json.dumps(value, ensure_ascii=False)
     except Exception:
@@ -121,7 +121,7 @@ def _shorten(value: Any, limit: int = 350) -> Any:
 
 
 def _pick_first_id(payload: Any, candidates: list[str]) -> Optional[str]:
-    """功能：提取 first ID。"""
+    """按候选键顺序提取第一个有效 ID。"""
     if not isinstance(payload, dict):
         return None
     for key in candidates:
@@ -132,7 +132,7 @@ def _pick_first_id(payload: Any, candidates: list[str]) -> Optional[str]:
 
 
 def _pick_latest_segment_id(payload: Any) -> Optional[str]:
-    """功能：提取 latest segment ID。"""
+    """从段落列表中提取最后一个有效 segment_id。"""
     if not isinstance(payload, dict):
         return None
     segments = payload.get("segments")
@@ -148,7 +148,7 @@ def _pick_latest_segment_id(payload: Any) -> Optional[str]:
 
 
 def _create_world(client: httpx.Client, *, label: str = "AllApiProbe-World") -> Optional[str]:
-    """功能：创建世界观。"""
+    """创建测试世界并返回 world_id。"""
     status, body, _, _ = _request(
         client,
         "POST",
@@ -171,7 +171,7 @@ def _create_story(
     world_id: Optional[str] = None,
     label: str = "AllApiProbe-Story",
 ) -> Optional[str]:
-    """功能：创建故事。"""
+    """基于 world_id 创建测试故事并返回 story_id。"""
     effective_world_id = world_id or ctx.world_id
     if not effective_world_id:
         return None
@@ -192,7 +192,7 @@ def _create_story(
 
 
 def _create_persona(client: httpx.Client, *, label: str = "Probe Persona") -> Optional[str]:
-    """功能：创建人格卡。"""
+    """创建测试人格卡并返回 persona_id。"""
     status, body, _, _ = _request(
         client,
         "POST",
@@ -215,7 +215,7 @@ def _create_script_design(
     world_id: Optional[str] = None,
     label: str = "Probe Script Design",
 ) -> Optional[str]:
-    """功能：创建剧本设计。"""
+    """创建测试剧本设计并返回 script_design_id。"""
     effective_world_id = world_id or ctx.world_id
     if not effective_world_id:
         return None
@@ -239,7 +239,7 @@ def _create_story_segment(
     client: httpx.Client,
     story_id: str,
 ) -> Optional[str]:
-    """功能：创建故事 segment。"""
+    """创建测试故事段落并返回 segment_id。"""
     status, body, _, _ = _request(
         client,
         "POST",
@@ -264,7 +264,7 @@ def _request(
     json_body: Optional[dict[str, Any]] = None,
     stream_mode: bool = False,
 ) -> tuple[int, Any, Optional[str], int]:
-    """功能：处理请求。"""
+    """统一发起请求并返回状态、响应体、错误信息与耗时。"""
     start = time.time()
     try:
         if stream_mode:
@@ -299,7 +299,7 @@ def _request(
 
 
 def _classify(status: int, error: Optional[str]) -> tuple[str, bool]:
-    """功能：处理 classify。"""
+    """按策略将探测结果归类为 PASS、WARN 或 FAIL。"""
     if error:
         return "FAIL", False
     if status >= 500 or status == 0:
@@ -311,7 +311,7 @@ def _classify(status: int, error: Optional[str]) -> tuple[str, bool]:
 
 
 def _resolve_ref(schema: dict[str, Any], components: dict[str, Any]) -> dict[str, Any]:
-    """功能：解析并返回 ref。"""
+    """解析 schema 中的 $ref 并返回对应组件定义。"""
     ref = schema.get("$ref")
     if not isinstance(ref, str):
         return schema
@@ -325,7 +325,7 @@ def _resolve_ref(schema: dict[str, Any], components: dict[str, Any]) -> dict[str
 
 
 def _sample_from_schema(schema: Optional[dict[str, Any]], components: dict[str, Any], depth: int = 0) -> Any:
-    """功能：处理 sample from 模式。"""
+    """根据 OpenAPI schema 递归生成可提交的示例值。"""
     if not isinstance(schema, dict):
         return None
     if depth > 5:
@@ -402,7 +402,7 @@ def _sample_from_schema(schema: Optional[dict[str, Any]], components: dict[str, 
 
 
 def _route_override(method: str, path: str, ctx: FixtureContext) -> Optional[dict[str, Any]]:
-    """功能：处理路由 override。"""
+    """为关键业务路由提供更可靠的定制请求体。"""
     method = method.upper()
 
     if method == "POST" and path == "/api/v2/worlds":
@@ -579,7 +579,7 @@ def _route_override(method: str, path: str, ctx: FixtureContext) -> Optional[dic
 
 
 def _resolve_path(path_template: str, ctx: FixtureContext) -> str:
-    """功能：解析并返回路径。"""
+    """用夹具上下文替换路径模板参数并返回可请求路径。"""
     mapping = {
         "world_id": ctx.world_id,
         "story_id": ctx.story_id,
@@ -593,7 +593,7 @@ def _resolve_path(path_template: str, ctx: FixtureContext) -> str:
     }
 
     def repl(match: re.Match[str]) -> str:
-        """功能：处理 repl。"""
+        """将路径模板参数替换为夹具上下文中的真实值。"""
         key = match.group(1)
         value = mapping.get(key)
         if value:
@@ -611,7 +611,7 @@ def _prepare_probe_target(
     path: str,
     ctx: FixtureContext,
 ) -> tuple[str, list[tuple[str, str]]]:
-    """功能：准备 probe target。"""
+    """为当前端点准备可探测路径与临时清理动作。"""
     cleanup_calls: list[tuple[str, str]] = []
 
     if method == "DELETE" and path == "/api/v2/worlds/{world_id}":
@@ -672,7 +672,7 @@ def _build_query_params(
     components: dict[str, Any],
     ctx: FixtureContext,
 ) -> dict[str, Any]:
-    """功能：构建 query params。"""
+    """按 OpenAPI 参数定义构造查询参数。"""
     params: dict[str, Any] = {}
     for item in operation.get("parameters") or []:
         if not isinstance(item, dict):
@@ -710,7 +710,7 @@ def _build_body(
     components: dict[str, Any],
     ctx: FixtureContext,
 ) -> tuple[Optional[dict[str, Any]], bool]:
-    """功能：构建 body。"""
+    """构造请求体，并返回该端点是否声明了 body。"""
     override = _route_override(method, path, ctx)
     if override is not None:
         return override, True
@@ -736,11 +736,11 @@ def _build_body(
 
 
 def _prepare_fixtures(client: httpx.Client, ctx: FixtureContext) -> list[dict[str, Any]]:
-    """功能：准备 fixtures。"""
+    """创建端点探测所需的基础业务夹具。"""
     logs: list[dict[str, Any]] = []
 
     def call(method: str, path: str, body: Optional[dict[str, Any]] = None) -> tuple[int, Any]:
-        """功能：处理 call。"""
+        """执行夹具调用并记录状态与响应摘要。"""
         status, payload, error, _ = _request(client, method, path, json_body=body)
         logs.append({
             "step": f"{method.upper()} {path}",
@@ -882,11 +882,11 @@ def _prepare_fixtures(client: httpx.Client, ctx: FixtureContext) -> list[dict[st
 
 
 def _cleanup_fixtures(client: httpx.Client, ctx: FixtureContext) -> list[dict[str, Any]]:
-    """功能：处理 cleanup fixtures。"""
+    """清理运行期间创建的世界、故事与人格夹具。"""
     logs: list[dict[str, Any]] = []
 
     def call(method: str, path: str) -> None:
-        """功能：处理 call。"""
+        """执行清理请求并记录返回结果。"""
         status, body, error, _ = _request(client, method, path)
         logs.append({
             "step": f"{method.upper()} {path}",
@@ -906,7 +906,7 @@ def _cleanup_fixtures(client: httpx.Client, ctx: FixtureContext) -> list[dict[st
 
 
 def _collect_endpoints(openapi: dict[str, Any]) -> list[tuple[str, str, dict[str, Any]]]:
-    """功能：收集 endpoints。"""
+    """从 OpenAPI 文档收集可遍历的端点定义。"""
     endpoints: list[tuple[str, str, dict[str, Any]]] = []
     paths = openapi.get("paths")
     if not isinstance(paths, dict):
@@ -924,7 +924,7 @@ def _collect_endpoints(openapi: dict[str, Any]) -> list[tuple[str, str, dict[str
 
 
 def _render_markdown(report: dict[str, Any]) -> str:
-    """功能：处理 render markdown。"""
+    """将 JSON 探测结果渲染为结构化 Markdown 报告。"""
     lines: list[str] = []
     summary = report["summary"]
 
@@ -997,7 +997,7 @@ def _render_markdown(report: dict[str, Any]) -> str:
 
 
 def run() -> dict[str, Any]:
-    """功能：执行目标对象。"""
+    """执行 OpenAPI 全路由探测并生成 JSON/Markdown 报告。"""
     REPORT_DIR.mkdir(parents=True, exist_ok=True)
 
     ctx = FixtureContext()
@@ -1121,7 +1121,7 @@ def run() -> dict[str, Any]:
 
 
 def main() -> None:
-    """功能：处理 main。"""
+    """运行全量端点探测并输出报告文件位置。"""
     report = run()
     print(json.dumps(report["summary"], ensure_ascii=False, indent=2))
     print(f"JSON report: {REPORT_JSON}")
@@ -1130,3 +1130,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+

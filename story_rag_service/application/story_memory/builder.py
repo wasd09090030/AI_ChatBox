@@ -1,4 +1,8 @@
-"""文件说明：后端应用层用例编排。"""
+"""story_memory 载荷构建器。
+
+将 summary/runtime/entity/timeline 四类输入拼装为统一 StoryMemoryPayload，
+并基于多来源事件推导 operation 元信息（operation_id、status、sequence 范围等）。
+"""
 
 from __future__ import annotations
 
@@ -13,7 +17,10 @@ def _pick_operation_id(
     entity_state_updates: List[Dict[str, Any]],
     world_update: Optional[Dict[str, Any]],
 ) -> Optional[str]:
-    """功能：提取操作 ID。"""
+    """从多来源候选中挑选 operation_id。
+
+    优先级：entity_state_updates > memory_updates > world_update。
+    """
     candidates = [
         *((item.get("operation_id") for item in entity_state_updates if item.get("operation_id"))),
         *((item.get("operation_id") for item in memory_updates if item.get("operation_id"))),
@@ -30,7 +37,7 @@ def _pick_operation_source(
     memory_updates: List[Dict[str, Any]],
     entity_state_updates: List[Dict[str, Any]],
 ) -> Optional[str]:
-    """功能：提取操作 source。"""
+    """推断 operation.source。"""
     for item in entity_state_updates:
         source = item.get("source")
         if source:
@@ -47,7 +54,10 @@ def _pick_operation_status(
     memory_updates: List[Dict[str, Any]],
     entity_state_updates: List[Dict[str, Any]],
 ) -> str:
-    """功能：提取操作 status。"""
+    """聚合 operation.status。
+
+    规则：failed 优先于 stale，若都不存在则视为 committed。
+    """
     statuses = [
         *(str(item.get("status") or "") for item in memory_updates),
         *(str(item.get("status") or "") for item in entity_state_updates),
@@ -66,7 +76,7 @@ def _pick_operation_time(
     entity_state_updates: List[Dict[str, Any]],
     world_update: Optional[Dict[str, Any]],
 ) -> Optional[str]:
-    """功能：提取操作 time。"""
+    """推断 operation.committed_at。"""
     candidates = [
         *((item.get("committed_at") for item in entity_state_updates if item.get("committed_at"))),
         *((item.get("committed_at") for item in memory_updates if item.get("committed_at"))),
@@ -82,7 +92,7 @@ def _pick_sequence_range(
     memory_updates: List[Dict[str, Any]],
     entity_state_updates: List[Dict[str, Any]],
 ) -> tuple[Optional[int], Optional[int]]:
-    """功能：提取序号 range。"""
+    """提取 sequence 最小/最大值，用于时间线批次定位。"""
     sequences: List[int] = []
     for item in [*memory_updates, *entity_state_updates]:
         value = item.get("sequence")
@@ -105,7 +115,10 @@ def build_story_memory_payload(
     world_update: Optional[Dict[str, Any]] = None,
     memory_updates: Optional[List[Dict[str, Any]]] = None,
 ) -> StoryMemoryPayload:
-    """功能：构建故事记忆载荷。"""
+    """构建 story_memory 聚合载荷。
+
+    返回结构与前端 story memory 面板消费字段保持一致。
+    """
     normalized_memory_updates = list(memory_updates or [])
     normalized_entity_updates = list(entity_state_updates or [])
     sequence_min, sequence_max = _pick_sequence_range(

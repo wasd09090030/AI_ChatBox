@@ -1,4 +1,8 @@
-"""文件说明：后端应用层用例编排。"""
+"""记忆更新日志仓储。
+
+负责将 memory update 事件落到 SQLite 的 memory_update_journal，
+并提供分页检索能力，供后端 API 与前端时间线消费。
+"""
 
 from __future__ import annotations
 
@@ -15,12 +19,12 @@ from .models import MemoryUpdateEvent
 # 模块日志记录器，用于输出运行诊断信息。
 logger = logging.getLogger(__name__)
 
-# 变量 _MAX_PAYLOAD_LENGTH，用于保存 max 载荷 length 相关模块级状态。
+# 单条 before/after 载荷的序列化长度上限，超过后会以预览形式截断。
 _MAX_PAYLOAD_LENGTH = 4000
 
 
 def _serialize_payload(payload: Optional[dict[str, Any]]) -> Optional[str]:
-    """功能：序列化载荷。"""
+    """将 before/after 结构序列化为可持久化 JSON 文本。"""
     if payload is None:
         return None
 
@@ -44,7 +48,7 @@ def _serialize_payload(payload: Optional[dict[str, Any]]) -> Optional[str]:
 
 
 def _ensure_memory_update_journal_columns(conn: sqlite3.Connection) -> None:
-    """功能：确保记忆 update 日志 columns。"""
+    """为旧库补齐 operation_id/sequence/display_kind 列与索引。"""
     try:
         rows = conn.execute("PRAGMA table_info(memory_update_journal)").fetchall()
     except Exception:
@@ -74,7 +78,8 @@ def persist_memory_update_events(
     operation_id: Optional[str] = None,
     sequence_start: int = 1,
 ) -> None:
-    """功能：持久化记忆 update 事件。"""
+    """批量持久化记忆事件到 memory_update_journal。"""
+    # event_id/session_id 是最小可写条件，缺失则丢弃该条，避免污染日志表。
     event_list = [event for event in events if event.get("event_id") and event.get("session_id")]
     if not event_list:
         return
@@ -178,7 +183,7 @@ def persist_memory_update_events(
 
 
 def _deserialize_payload(payload: Optional[str]) -> Optional[dict[str, Any]]:
-    """功能：反序列化载荷。"""
+    """将持久化文本还原为结构化对象，失败时保底返回可展示字典。"""
     if not payload:
         return None
     try:
@@ -202,7 +207,7 @@ def list_memory_update_events(
     page_size: int = 50,
     db_path: Optional[str] = None,
 ) -> dict[str, Any]:
-    """功能：查询并返回记忆 update 事件列表。"""
+    """按筛选条件分页查询记忆事件时间线。"""
     target_path = db_path or settings.database_path
     safe_page = max(1, int(page))
     safe_page_size = max(1, min(int(page_size), 200))

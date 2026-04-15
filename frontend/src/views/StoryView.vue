@@ -1,5 +1,9 @@
 ﻿<script setup lang="ts">
-// 文件说明：前端页面级视图编排。
+// 文件说明：故事主工作台页面（StoryView）。
+// 路由归属：
+// - /story/improv：渐进式创作，强调自由 Prompt 与上下文扩展；
+// - /story/scripted：严格剧本创作，强调主线运行态推进。
+// 页面职责：统一编排“会话、生成、剧本推进、Prompt 编排、记忆侧栏”等子组件与状态流。
 import { ref, computed, watch, nextTick, onActivated } from 'vue'
 import {
   Send, Square, Sparkles, ListOrdered, ChevronRight, Wand2, LoaderCircle, CircleHelp, PenLine, Route,
@@ -108,6 +112,8 @@ function sharedDraftRef<K extends keyof SharedStoryDraftState>(
   key: K,
   fallback: SharedStoryDraftState[K],
 ) {
+  // 共享草稿引用：跨页面模式共用（如 persona、对白约束、Prompt 编排选择）。
+  // 意义：切换 improv/scripted 路由时，保留同一故事的跨模式创作意图。
   return computed<SharedStoryDraftState[K]>({
     get: () => {
       const storyId = currentStoryId.value
@@ -126,6 +132,8 @@ function routeDraftRef<K extends keyof RouteStoryDraftState>(
   key: K,
   fallback: RouteStoryDraftState[K],
 ) {
+  // 路由草稿引用：按页面模式隔离（improv 与 scripted 各自维护输入与推进状态）。
+  // 意义：避免两种创作范式互相污染，减少模式切换后的“状态串味”。
   return computed<RouteStoryDraftState[K]>({
     get: () => {
       const storyId = currentStoryId.value
@@ -418,6 +426,9 @@ const selectedPersonaSelectValue = computed({
 })
 
 watch(() => props.pageMode, (mode) => {
+  // 页面模式切换时同步默认策略：
+  // - scripted 强制结构化创作基线；
+  // - improv 恢复可自由控制的推进意图。
   creationMode.value = mode
   if (mode === 'scripted') {
     storyMode.value = 'narrative'
@@ -583,6 +594,10 @@ function handleKeydown(e: KeyboardEvent) {
 }
 
 watch(() => currentStory.value?.id, async () => {
+  // 切换故事时重建页面运行上下文：
+  // 1) 从 metadata 恢复本地指针；
+  // 2) 补拉后端 runtime/entity 快照；
+  // 3) 复位当前故事对应的生成与编排草稿。
   const story = currentStory.value
   const metadata = story?.metadata ?? {}
   selectedScriptDesignId.value = typeof metadata.script_design_id === 'string' ? metadata.script_design_id : null
@@ -603,6 +618,7 @@ watch(() => currentStory.value?.id, async () => {
 }, { immediate: true })
 
 onActivated(async () => {
+  // keep-alive 回到页面时二次校准运行态，防止后台切换故事后前台状态滞后。
   const story = currentStory.value
   if (!story) return
 
@@ -621,6 +637,7 @@ onActivated(async () => {
 })
 
 watch(selectedScriptDesign, (design) => {
+  // 剧本设计变化时，自动修正阶段/事件到当前设计的合法范围。
   if (!design) {
     selectedScriptStageId.value = null
     selectedScriptEventId.value = null
@@ -641,6 +658,7 @@ watch(selectedScriptDesign, (design) => {
 })
 
 watch(selectedScriptStageId, (stageId) => {
+  // 阶段变化后兜底修正事件，保证“当前事件”始终属于“当前阶段”。
   if (!selectedScriptDesign.value) return
   const availableEvents = selectedScriptDesign.value.event_nodes.filter((item) => !stageId || item.stage_id === stageId)
   const eventExists = availableEvents.some((item) => item.id === selectedScriptEventId.value)
@@ -650,6 +668,7 @@ watch(selectedScriptStageId, (stageId) => {
 })
 
 watch(creationMode, (mode) => {
+  // 双向兜底：防止子组件误改 creationMode，确保其与当前路由模式一致。
   if (mode === 'scripted') {
     followScriptDesign.value = true
   }

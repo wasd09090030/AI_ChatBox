@@ -17,16 +17,16 @@ import uuid
 
 import httpx
 
-# 变量作用：变量 BASE_URL，用于保存 base url 相关模块级状态。
+# 统一服务地址，允许通过环境变量切换到远端或本地实例。
 BASE_URL = os.getenv("SMOKE_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
-# 变量作用：变量 RUN_LLM_SMOKE，用于保存 run LLM smoke 相关模块级状态。
+# 控制是否执行依赖模型推理的流式冒烟测试。
 RUN_LLM_SMOKE = os.getenv("RUN_LLM_SMOKE", "true").lower() == "true"
-# 变量作用：变量 TIMEOUT，用于保存 timeout 相关模块级状态。
+# 为 HTTP 请求设置统一超时时间，避免脚本无限阻塞。
 TIMEOUT = 60.0
 
 
 def _assert(cond: bool, msg: str) -> None:
-    """功能：处理 assert。"""
+    """统一断言输出格式，失败时附带可读的 smoke 错误上下文。"""
     if not cond:
         raise AssertionError(f"[FAIL] {msg}")
 
@@ -137,7 +137,7 @@ def test_delete_last_message_empty_session(client: httpx.Client) -> None:
 
 
 def main() -> None:
-    """功能：处理 main。"""
+    """执行会话管理、SSE 持久化与删除回滚等 P0 关键链路检查。"""
     print(f"[SMOKE-P0] base_url={BASE_URL}  llm={RUN_LLM_SMOKE}")
 
     with httpx.Client(timeout=TIMEOUT) as client:

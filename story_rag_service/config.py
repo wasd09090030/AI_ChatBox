@@ -5,9 +5,9 @@ from pydantic import field_validator
 from pathlib import Path
 from typing import Optional
 
-# 路径变量 BASE_DIR，用于定位文件系统资源。
+# 项目后端目录（story_rag_service）绝对路径。
 BASE_DIR = Path(__file__).resolve().parent
-# 路径变量 DATA_DIR，用于定位文件系统资源。
+# 默认数据根目录（数据库、向量库、缓存等）。
 DATA_DIR = BASE_DIR / "data"
 
 
@@ -94,7 +94,10 @@ class Settings(BaseSettings):
     )
     @classmethod
     def resolve_data_paths(cls, value: Optional[str]) -> Optional[str]:
-        """功能：解析并返回数据路径。"""
+        """规范化配置中的路径字段。
+
+        规则：绝对路径保持不变；相对路径按 BASE_DIR 解析为绝对路径。
+        """
         if value is None:
             return None
         path = Path(value)
@@ -108,5 +111,5 @@ class Settings(BaseSettings):
         case_sensitive = False
 
 
-# 全局配置单例
+# 全局配置单例：模块导入即完成 `.env` + 默认值装配。
 settings = Settings()

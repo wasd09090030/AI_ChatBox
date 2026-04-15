@@ -12,7 +12,10 @@ router = APIRouter()
 
 
 def _normalize_optional_query(value: str | None) -> str | None:
-    """功能：标准化可选查询参数。"""
+    """标准化可选查询参数。
+
+    把空白字符串视为未传值，避免下游把 "" 当有效筛选条件。
+    """
     if value is None:
         return None
     stripped = value.strip()

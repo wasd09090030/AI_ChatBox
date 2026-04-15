@@ -1,4 +1,8 @@
-"""文件说明：后端应用层用例编排。"""
+"""application.story_memory 包导出入口。
+
+聚合 story_memory 读模型所需的 builder、service 与 TypedDict 契约，
+对外提供统一 import 面。
+"""
 
 from .builder import build_story_memory_payload
 from .models import (

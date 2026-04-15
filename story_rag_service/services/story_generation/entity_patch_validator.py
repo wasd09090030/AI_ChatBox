@@ -1,4 +1,8 @@
-"""实体 patch 校验与归一化服务。"""
+"""实体 patch 校验与归一化服务。
+
+职责：对 LLM 抽取结果做“引用合法性 + 字段操作合法性 + 值归一化”，
+输出可安全落库/投影的 patch 集合。
+"""
 
 from __future__ import annotations
 
@@ -8,7 +12,7 @@ from models.entity_state_event import EntityPatchExtractionResult, EntityStatePa
 
 
 class EntityPatchValidator:
-    """校验 patch 的引用合法性与字段操作合法性。"""
+    """实体 patch 语义校验器。"""
 
     _LIST_FIELDS = {"inventory", "status_tags", "companions"}
     _SCALAR_FIELDS = {"current_location", "short_goal", "state_summary"}
@@ -20,7 +24,13 @@ class EntityPatchValidator:
         character_lookup: Dict[str, Dict],
         location_lookup: Dict[str, Dict],
     ) -> EntityPatchExtractionResult:
-        """功能：校验目标对象。"""
+        """校验并归一化抽取结果。
+
+        处理策略：
+        - 无法解析的实体或地点会被跳过并写入 warnings；
+        - 非法字段操作组合会被丢弃；
+        - companions 会统一归一到角色 ID 列表。
+        """
         warnings = list(extraction.warnings)
         valid_patches: list[EntityStatePatch] = []
 
@@ -33,6 +43,7 @@ class EntityPatchValidator:
 
         for patch in extraction.patches:
             normalized_patch = patch.model_copy(deep=True)
+            # 先把 entity_id/entity_name 解析到系统已知角色，避免后续写入脏引用。
             normalized_entity = self._resolve_character_entry(
                 entity_id=normalized_patch.entity_id,
                 entity_name=normalized_patch.entity_name,
@@ -47,10 +58,12 @@ class EntityPatchValidator:
                 str(normalized_entity.get("name") or "").strip() or normalized_patch.entity_name
             )
 
+            # list 字段只允许 set/add/remove/clear/reset。
             if normalized_patch.field_name in self._LIST_FIELDS and normalized_patch.op not in {"set", "add", "remove", "clear", "reset"}:
                 warnings.append(f"invalid list op skipped: {normalized_patch.field_name}/{normalized_patch.op}")
                 continue
 
+            # scalar 字段只允许 set/clear/reset，避免产生语义不明的 add/remove。
             if normalized_patch.field_name in self._SCALAR_FIELDS and normalized_patch.op not in {"set", "clear", "reset"}:
                 warnings.append(f"invalid scalar op skipped: {normalized_patch.field_name}/{normalized_patch.op}")
                 continue
@@ -64,6 +77,7 @@ class EntityPatchValidator:
 
             if normalized_patch.field_name == "current_location" and normalized_patch.op == "set":
                 location_name = str(normalized_patch.value or "").strip()
+                # location_lookup 非空时启用白名单校验，拒绝未知地点名称。
                 if valid_location_names and location_name and location_name not in valid_location_names:
                     warnings.append(f"unknown location skipped: {location_name}")
                     continue
@@ -83,7 +97,7 @@ class EntityPatchValidator:
         character_lookup: Dict[str, Dict],
         character_id_lookup: Dict[str, Dict],
     ) -> Dict[str, Any] | None:
-        """功能：解析并返回角色条目。"""
+        """按“ID 优先、名称回退”解析角色条目。"""
         normalized_id = str(entity_id or "").strip()
         if normalized_id and normalized_id in character_id_lookup:
             return character_id_lookup[normalized_id]
@@ -100,7 +114,7 @@ class EntityPatchValidator:
         character_lookup: Dict[str, Dict],
         character_id_lookup: Dict[str, Dict],
     ) -> list[str]:
-        """功能：标准化 companions。"""
+        """将 companions 规范化为去重后的角色 ID 列表。"""
         raw_values = value if isinstance(value, list) else [value]
         normalized: list[str] = []
         for item in raw_values:

@@ -11,7 +11,7 @@ from pathlib import Path
 
 from fastapi.testclient import TestClient
 
-# 变量作用：路径变量 PROJECT_ROOT，用于定位文件系统资源。
+# 将仓库根目录加入导入路径，确保脚本可直接以 `python scripts/...` 方式运行。
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
@@ -21,7 +21,7 @@ from api.v2.story import generation_routes
 
 
 async def _fake_run_story_graph(state):
-    """功能：处理 fake run 故事 graph。"""
+    """替代真实图执行，稳定返回可断言的关键角色激活日志。"""
     payload = state["request_payload"]
     return {
         "v2_response": {
@@ -57,7 +57,7 @@ async def _fake_run_story_graph(state):
 
 
 def main() -> None:
-    """功能：处理 main。"""
+    """验证关键角色相关请求字段能正确透传到 v2 生成接口响应。"""
     original = generation_routes.run_story_graph
     generation_routes.run_story_graph = _fake_run_story_graph
 

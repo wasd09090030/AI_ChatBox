@@ -1,5 +1,9 @@
 <script setup lang="ts">
-// 文件说明：前端可复用界面组件。
+// 文件说明：StoryView 右侧控制抽屉。
+// 页面归属：
+// - 渐进式创作页（/story/improv）：承担创作控制、主角人设、可选剧本参考与关键角色对白约束。
+// - 严格剧本创作页（/story/scripted）：承担角色与对白相关控制，不直接负责主线推进（主线由 StoryScriptSidebar 处理）。
+// 设计意义：将“生成参数编辑”从主输入区解耦，避免输入区承担过多配置操作。
 import { computed, ref, watch } from 'vue'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -21,6 +25,7 @@ import type { PersonaProfile } from '@/services/roleplayService'
 import type { ScriptDesign, ScriptEventNode, ScriptStage } from '@/domains/story/api/scriptDesignApi'
 
 // 组件输入参数。
+// 数据来源：全部由 StoryView 持有并下发，当前组件只做展示与局部交互，不维护业务真源。
 const props = defineProps<{
   open: boolean
   panelTitle: string
@@ -52,7 +57,8 @@ const props = defineProps<{
   generating: boolean
 }>()
 
-// 组件事件派发器。
+// 向 StoryView 回传更新事件。
+// 语义约束：所有“update:*”事件都对应父层的单一数据源，避免抽屉与页面状态分叉。
 const emit = defineEmits<{
   (event: 'update:open', value: boolean): void
   (event: 'update:showControlPanel', value: boolean): void
@@ -71,72 +77,75 @@ const emit = defineEmits<{
   (event: 'update:dialogueStyleHint', value: string): void
 }>()
 
-// selectedPersonaModel 的双向绑定状态。
+// 主角 persona 下拉框代理。
+// 意义：让模板可直接使用 v-model，同时保持父层单向数据流 + 事件回传。
 const selectedPersonaModel = computed({
   get: () => props.selectedPersonaSelectValue,
   set: (value: string) => emit('update:selectedPersonaSelectValue', value),
 })
 
-// selectedPrincipalCharacterModel 的双向绑定状态。
+// 关键角色下拉框代理（用于对白约束）。
 const selectedPrincipalCharacterModel = computed({
   get: () => props.selectedPrincipalCharacterId,
   set: (value: string) => emit('update:selectedPrincipalCharacterId', value),
 })
 
-// selectedScriptDesignModel 的双向绑定状态。
+// 剧本设计选择器代理（仅用于即兴页的“可选剧本参考”）。
 const selectedScriptDesignModel = computed({
   get: () => props.selectedScriptDesignId,
   set: (value: string) => emit('update:selectedScriptDesignId', value),
 })
 
-// selectedScriptStageModel 的双向绑定状态。
+// 参考阶段选择器代理。
 const selectedScriptStageModel = computed({
   get: () => props.selectedScriptStageId,
   set: (value: string) => emit('update:selectedScriptStageId', value),
 })
 
-// selectedScriptEventModel 的双向绑定状态。
+// 参考事件选择器代理。
 const selectedScriptEventModel = computed({
   get: () => props.selectedScriptEventId,
   set: (value: string) => emit('update:selectedScriptEventId', value),
 })
 
-// followScriptDesignModel 的双向绑定状态。
+// 是否跟随剧本设计开关代理。
 const followScriptDesignModel = computed({
   get: () => props.followScriptDesign,
   set: (value: boolean) => emit('update:followScriptDesign', value),
 })
 
-// dialogueModeModel 的双向绑定状态。
+// 对白模式选择器代理。
 const dialogueModeModel = computed({
   get: () => props.dialogueMode,
   set: (value: 'auto' | 'focused' | 'required') => emit('update:dialogueMode', value),
 })
 
-// dialogueTargetModel 的双向绑定状态。
+// 对白目标输入框代理。
 const dialogueTargetModel = computed({
   get: () => props.dialogueTarget,
   set: (value: string) => emit('update:dialogueTarget', value),
 })
 
-// dialogueIntentModel 的双向绑定状态。
+// 对白意图输入框代理。
 const dialogueIntentModel = computed({
   get: () => props.dialogueIntent,
   set: (value: string) => emit('update:dialogueIntent', value),
 })
 
-// dialogueStyleHintModel 的双向绑定状态。
+// 对白风格提示输入框代理。
 const dialogueStyleHintModel = computed({
   get: () => props.dialogueStyleHint,
   set: (value: string) => emit('update:dialogueStyleHint', value),
 })
 
-// improvScriptSectionOpen 相关状态。
+// 即兴模式下“剧本参考”折叠开关。
+// 初始策略：若已存在剧本选择，则默认展开，帮助用户理解当前参考约束来源。
 const improvScriptSectionOpen = ref(props.selectedScriptDesignId !== props.noneOptionValue)
 
 watch(
   () => props.selectedScriptDesignId,
   (value) => {
+    // 当父层在其他入口（如剧本推进面板）更新了剧本选择时，自动展开此区域，避免状态“已生效但不可见”。
     if (value !== props.noneOptionValue) {
       improvScriptSectionOpen.value = true
     }

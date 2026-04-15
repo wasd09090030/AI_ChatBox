@@ -13,7 +13,7 @@ from services.summary_memory_manager import SummaryMemoryManager
 
 
 def main() -> None:
-    """功能：处理 main。"""
+    """验证摘要记忆的更新阈值、合并策略与读取一致性。"""
     manager = SummaryMemoryManager()
     session_id = f"summary_smoke_{uuid.uuid4().hex[:8]}"
     world_id = "global"

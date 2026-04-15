@@ -1,8 +1,8 @@
-"""
-兼容层：导出故事生成应用层通用函数。
+"""兼容层：导出故事生成应用层通用函数。
 
-真实实现已拆分到 `application.story_generation.*` 子模块。
-保留本模块用于兼容旧导入路径，避免一次性改动调用方。
+背景：历史代码大量依赖 `application.story_generation_common` 导入路径。
+现已将真实实现拆分到 `application.story_generation.*` 子模块，
+本文件仅作为“稳定转发层”，避免迁移期出现大规模连锁改动。
 """
 
 from application.story_generation import (
@@ -13,9 +13,9 @@ from application.story_generation import (
     retrieve_rag_context,
 )
 
-# 控制 import * 时可导出的公共符号。
+# 控制 import * 时可导出的公共符号（仅暴露稳定兼容 API）。
 __all__ = [
-    # 仅暴露稳定兼容 API；内部实现细节由子模块维护。
+    # 内部实现细节由 `application.story_generation.*` 维护。
     "build_retrieval_query",
     "retrieve_rag_context",
     "load_world_config",

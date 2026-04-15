@@ -1,7 +1,7 @@
 """
 用户管理服务。
 
-通过仓储抽象统一管理用户数据与设置。
+通过仓储抽象统一管理用户资料、API Key、模型偏好与场景级模型配置。
 """
 
 import base64
@@ -15,14 +15,14 @@ from services.database import Database
 # 模块日志记录器，用于输出运行诊断信息。
 logger = logging.getLogger(__name__)
 
-# 变量 SCENE_MODEL_COLUMN_MAP，用于保存 scene 模型 column map 相关模块级状态。
+# 场景名称到数据库字段对映：每个场景对应 provider/model 两列。
 SCENE_MODEL_COLUMN_MAP = {
     "story_generation": ("story_generation_provider", "story_generation_model"),
     "input_enhancement": ("input_enhancement_provider", "input_enhancement_model"),
     "story_adjustment": ("story_adjustment_provider", "story_adjustment_model"),
 }
 
-# 变量 SUPPORTED_PROVIDERS，用于保存 supported providers 相关模块级状态。
+# 当前允许写入的模型提供商白名单。
 SUPPORTED_PROVIDERS = {
     "openai",
     "anthropic",
@@ -34,7 +34,7 @@ SUPPORTED_PROVIDERS = {
 
 
 def _normalize_provider(provider: Optional[str]) -> Optional[str]:
-    """功能：标准化模型提供商。"""
+    """标准化提供商字段：去空白、转小写、空值归一为 None。"""
     value = (provider or "").strip().lower()
     return value or None
 
@@ -259,7 +259,10 @@ class UserManager:
         return self.get_user(user_id)
 
     def get_scene_model_preferences(self, user_id: str) -> dict[str, dict[str, Optional[str]]]:
-        """功能：获取 scene 模型 preferences。"""
+        """读取场景级模型偏好。
+
+        返回结构：{scene: {provider, model}}。
+        """
         user = self.get_or_create_user(user_id)
         result: dict[str, dict[str, Optional[str]]] = {}
         for scene, (provider_attr, model_attr) in SCENE_MODEL_COLUMN_MAP.items():
@@ -274,7 +277,13 @@ class UserManager:
         user_id: str,
         preferences: dict[str, dict[str, Optional[str]]],
     ) -> User:
-        """功能：更新 scene 模型 preferences。"""
+        """更新场景级模型偏好。
+
+        校验规则：
+        - scene 必须在 SCENE_MODEL_COLUMN_MAP 中；
+        - provider 与 model 必须成对出现或同时为空；
+        - provider 必须在 SUPPORTED_PROVIDERS 白名单中。
+        """
         self.get_or_create_user(user_id)
 
         for scene, value in preferences.items():
@@ -302,7 +311,7 @@ class UserManager:
         return self.get_user(user_id)
 
     def get_default_provider_selection(self, user_id: str) -> dict[str, Optional[str]]:
-        """功能：获取 default 模型提供商 selection。"""
+        """返回默认提供商与默认模型（为空时给出系统兜底值）。"""
         user = self.get_or_create_user(user_id)
         return {
             "provider": _normalize_provider(user.settings.default_provider) or "deepseek",

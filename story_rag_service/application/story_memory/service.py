@@ -1,6 +1,7 @@
 """故事记忆读模型服务。
 
-聚合摘要、运行时、实体状态与记忆时间线，返回统一 story_memory 快照。
+面向 API 读取侧，聚合摘要、运行时、实体状态与记忆时间线，
+返回统一 story_memory 快照，供前端“设定/记忆”面板直接消费。
 """
 
 from __future__ import annotations
@@ -13,7 +14,7 @@ from .builder import build_story_memory_payload
 
 
 class StoryMemoryService:
-    """统一聚合故事记忆读模型。"""
+    """story_memory 快照聚合入口。"""
 
     def __init__(
         self,
@@ -38,7 +39,14 @@ class StoryMemoryService:
         timeline_page: int = 1,
         timeline_page_size: int = 50,
     ) -> Dict[str, Any]:
-        """组装并返回故事记忆快照（含时间线分页）。"""
+        """组装并返回故事记忆快照（含时间线分页）。
+
+        数据来源：
+        - summary_memory_manager: semantic 摘要层；
+        - story_runtime_manager: runtime 层；
+        - entity_state_event_replay_service: entity 层；
+        - memory_update_journal: timeline 层。
+        """
         resolved_story_id = self._resolve_story_id(session_id=session_id, explicit_story_id=story_id)
         session_metadata = self._load_session_metadata(session_id)
         summary_snapshot = self._load_summary_snapshot(session_id)

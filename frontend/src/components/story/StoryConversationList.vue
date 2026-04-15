@@ -1,5 +1,10 @@
 <script setup lang="ts">
-// 文件说明：前端可复用界面组件。
+// 文件说明：StoryView 主内容区的会话列表。
+// 页面归属：/story/improv 与 /story/scripted 共用。
+// 核心职责：
+// - 渲染“用户输入 -> AI 输出”段落链；
+// - 在最后一段提供撤销/重生成；
+// - 承接分支卡片的分支续写事件。
 import { Bot, BookOpen, Sparkles, RefreshCw, RotateCcw } from 'lucide-vue-next'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -7,31 +12,32 @@ import BranchChoiceCard from '@/components/story/BranchChoiceCard.vue'
 import type { StoredStory, StorySegment } from '@/components/story/types'
 
 // 组件输入参数。
+// 其中 currentStory 由 StoryView 维护，formatTime 由页面注入统一格式化策略。
 const props = defineProps<{
   currentStory: StoredStory | null
   generating: boolean
   formatTime: (timestamp: string) => string
 }>()
 
-// 组件事件派发器。
+// 组件事件派发器：把段落级交互上抛给 StoryView 统一处理。
 const emit = defineEmits<{
   (event: 'branch-send', payload: { prompt: string; chosenIdx: number }): void
   (event: 'rollback-last'): void
   (event: 'regenerate-last'): void
 }>()
 
-/** 处理 isLastSeg 相关逻辑。 */
+/** 判断给定段落是否为最后一段。最后一段才允许撤销/重生成。 */
 function isLastSeg(seg: StorySegment) {
   const segments = props.currentStory?.segments ?? []
   return segments[segments.length - 1]?.id === seg.id
 }
 
-/** 处理 handleBranchSend 相关逻辑。 */
+/** 转发分支续写请求（选择分支后继续生成）。 */
 function handleBranchSend(payload: { prompt: string; chosenIdx: number }) {
   emit('branch-send', payload)
 }
 
-/** 处理 getSegmentModeLabel 相关逻辑。 */
+/** 生成段落来源标签，帮助用户区分该段是在哪种创作模式下产生。 */
 function getSegmentModeLabel(seg: StorySegment) {
   if (seg.creation_mode === 'scripted') return '严格剧本输入'
   if (seg.creation_mode === 'improv') return '渐进式输入'

@@ -31,32 +31,32 @@ from typing import Any, Optional
 
 import httpx
 
-# 变量作用：变量 BASE_URL，用于保存 base url 相关模块级状态。
+# 统一服务地址，允许通过环境变量切换到远端或本地实例。
 BASE_URL = os.getenv("SMOKE_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
-# 变量作用：变量 USER_ID，用于保存用户 ID 相关模块级状态。
+# 为请求统一附带用户头，确保命中用户级配置读取路径。
 USER_ID = os.getenv("SMOKE_USER_ID", "user_1773820783085_bk1gzshza")
-# 变量作用：变量 PROVIDER，用于保存模型提供商相关模块级状态。
+# 指定冒烟运行使用的模型提供商。
 PROVIDER = os.getenv("SMOKE_PROVIDER", "deepseek")
-# 变量作用：变量 MODEL，用于保存模型相关模块级状态。
+# 指定冒烟运行使用的模型名称。
 MODEL = os.getenv("SMOKE_MODEL", "deepseek-chat")
-# 变量作用：变量 TIMEOUT，用于保存 timeout 相关模块级状态。
+# 为 HTTP 请求设置统一超时时间，避免脚本无限阻塞。
 TIMEOUT = 180.0
-# 变量作用：路径变量 REPORT_DIR，用于定位文件系统资源。
+# 报告输出目录，用于沉淀本次验证结果。
 REPORT_DIR = Path(__file__).resolve().parents[1] / "docs" / "TestResult"
-# 变量作用：变量 REPORT_JSON，用于保存 report JSON 相关模块级状态。
+# 本次冒烟结果的 JSON 报告路径。
 REPORT_JSON = REPORT_DIR / "Plan0331_EntityState_Validation_Run.json"
 
 
 @dataclass
 class Check:
-    """作用：定义 Check 类型，承载本模块核心状态与行为。"""
+    """单项检查结果，包含名称、是否通过与证据细节。"""
     name: str
     passed: bool
     detail: dict[str, Any]
 
 
 def _headers() -> dict[str, str]:
-    """功能：处理 headers。"""
+    """构造统一请求头。"""
     return {"X-User-ID": USER_ID}
 
 
@@ -67,7 +67,7 @@ def _request(
     payload: Optional[dict[str, Any]] = None,
     with_user: bool = False,
 ) -> tuple[int, dict[str, Any]]:
-    """功能：处理请求。"""
+    """统一封装 HTTP 请求并容错解析 JSON 响应体。"""
     headers = _headers() if with_user else {}
     response = client.request(method.upper(), f"{BASE_URL}{path}", json=payload, headers=headers)
     try:
@@ -83,7 +83,7 @@ def _stream_generate(
     *,
     with_user: bool,
 ) -> tuple[int, dict[str, Any], int]:
-    """功能：处理 stream generate。"""
+    """执行 SSE 生成请求并提取 done 事件与分片计数。"""
     headers = _headers() if with_user else {}
     final_event: dict[str, Any] = {}
     chunk_count = 0
@@ -121,12 +121,12 @@ def _stream_generate(
 
 
 def _add(checks: list[Check], cond: bool, name: str, detail: dict[str, Any]) -> None:
-    """功能：处理 add。"""
+    """追加单项检查结果。"""
     checks.append(Check(name=name, passed=bool(cond), detail=detail))
 
 
 def _find_entity(items: list[dict[str, Any]], display_name: str) -> Optional[dict[str, Any]]:
-    """功能：处理 find 实体。"""
+    """按展示名在实体列表中查找目标实体。"""
     for item in items:
         if str(item.get("display_name") or "").strip() == display_name:
             return item
@@ -134,7 +134,7 @@ def _find_entity(items: list[dict[str, Any]], display_name: str) -> Optional[dic
 
 
 def _extract_items_from_snapshot(snapshot: Any) -> list[dict[str, Any]]:
-    """功能：处理 extract items from 快照。"""
+    """从实体快照中提取合法的 items 列表。"""
     if not isinstance(snapshot, dict):
         return []
     raw_items = snapshot.get("items")
@@ -148,7 +148,7 @@ def _has_entity_update(
     *,
     source: Optional[str] = None,
 ) -> bool:
-    """功能：处理 has 实体 update。"""
+    """检查 memory_updates 中是否包含指定来源的 entity_state 事件。"""
     for item in memory_updates:
         if item.get("memory_layer") != "entity_state":
             continue
@@ -159,7 +159,7 @@ def _has_entity_update(
 
 
 def _operation_ids(memory_updates: list[dict[str, Any]], memory_layer: str) -> set[str]:
-    """功能：处理操作 ID列表。"""
+    """提取指定 memory_layer 的 operation_id 集合。"""
     return {
         str(item.get("operation_id"))
         for item in memory_updates
@@ -168,7 +168,7 @@ def _operation_ids(memory_updates: list[dict[str, Any]], memory_layer: str) -> s
 
 
 def _timeline_entity_sources(items: list[dict[str, Any]]) -> set[str]:
-    """功能：处理 timeline 实体 sources。"""
+    """收集时间线中 entity_state 事件来源集合。"""
     return {
         str(item.get("source"))
         for item in items
@@ -177,7 +177,7 @@ def _timeline_entity_sources(items: list[dict[str, Any]]) -> set[str]:
 
 
 def _preflight(client: httpx.Client, checks: list[Check]) -> None:
-    """功能：处理 preflight。"""
+    """执行健康检查、Provider 可用性与连通性前置验证。"""
     status, body = _request(client, "GET", "/api/v2/health")
     _add(checks, status == 200 and body.get("status") == "healthy", "health", {"status": status, "body": body})
 
@@ -202,7 +202,7 @@ def _preflight(client: httpx.Client, checks: list[Check]) -> None:
 
 
 def run_smoke() -> dict[str, Any]:
-    """功能：执行 smoke。"""
+    """执行实体状态全链路冒烟并输出证据报告。"""
     checks: list[Check] = []
     evidence: dict[str, Any] = {}
 
@@ -767,7 +767,7 @@ def run_smoke() -> dict[str, Any]:
 
 
 def main() -> None:
-    """功能：处理 main。"""
+    """运行冒烟验证并打印结构化结果与报告路径。"""
     result = run_smoke()
     print(json.dumps(result, ensure_ascii=False, indent=2))
     print(f"\nReport written: {REPORT_JSON}")

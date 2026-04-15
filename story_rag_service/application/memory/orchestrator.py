@@ -1,7 +1,12 @@
 """记忆编排器。
 
-将 RAG 检索结果、角色画像、摘要记忆、剧本约束与实体状态快照
-组装为统一的 MemoryBundle，供生成主流程直接消费。
+职责：在“单次生成请求”范围内，把多来源上下文收敛为 MemoryBundle 分层结构。
+
+来源包括：
+- RAG 检索（世界设定与历史回忆）；
+- profile 快照（persona/story_state）；
+- procedural 控制（authors_note、dialogue controls、script guidance）；
+- runtime/entity 快照（主线运行态与角色实体态势）。
 """
 
 from __future__ import annotations
@@ -17,7 +22,7 @@ from .providers import build_dialogue_controls, load_profile_snapshot, load_scri
 
 
 class MemoryOrchestrator:
-    """聚合多来源上下文，构建分层记忆包。"""
+    """生成阶段的记忆聚合入口。"""
     def __init__(
         self,
         *,
@@ -31,7 +36,12 @@ class MemoryOrchestrator:
         entity_state_event_replay_service=None,
         recent_message_count: int = 5,
     ):
-        """注入记忆编排依赖，并设置最近消息窗口大小。"""
+        """注入编排依赖。
+
+        参数说明：
+        - *_manager / *_service: 各层数据源适配器；
+        - recent_message_count: episodic recent_messages 的基础窗口（按轮次折算）。
+        """
         self.lorebook_manager = lorebook_manager
         self.history_manager = history_manager
         self.world_manager = world_manager
@@ -59,6 +69,7 @@ class MemoryOrchestrator:
         2) 当前 world_id；
         3) 本轮激活日志 activation_logs。
         """
+        # 第一步：统一拉取 RAG 上下文，得到 lore 命中、历史召回与 world_id。
         retrieved_contexts, retrieved_history, world_id, activation_logs = retrieve_rag_context(
             request=request,
             context=context,
@@ -71,6 +82,7 @@ class MemoryOrchestrator:
             log_prefix=log_prefix,
         )
 
+        # 第二步：按层加载可选快照。各层缺失不抛错，保持 bundle 结构稳定。
         world_config = load_world_config(self.world_manager, world_id, log_prefix=log_prefix)
         profile_snapshot = self._load_profile_snapshot(request)
         dialogue_controls = self._build_dialogue_controls(request)
@@ -84,6 +96,7 @@ class MemoryOrchestrator:
             activation_logs=activation_logs,
         )
 
+        # 第三步：组装分层记忆包。每层字段都尽量保持“可直接消费”。
         bundle: MemoryBundle = {
             "episodic": {
                 "recent_messages": [
@@ -150,7 +163,7 @@ class MemoryOrchestrator:
         }
 
     def _load_profile_snapshot(self, request: StoryGenerationRequest) -> Dict[str, Any]:
-        """加载角色画像快照（persona/character card/story state）。"""
+        """加载 profile 层快照（persona/character_card/story_state）。"""
         try:
             return load_profile_snapshot(self.roleplay_manager, request)
         except Exception:
@@ -158,7 +171,7 @@ class MemoryOrchestrator:
 
     @staticmethod
     def _build_dialogue_controls(request: StoryGenerationRequest) -> Dict[str, Any]:
-        """从请求中抽取关键角色对话控制参数。"""
+        """抽取 procedural 层对白控制参数。"""
         return build_dialogue_controls(request)
 
     def _load_script_guidance(
@@ -166,7 +179,7 @@ class MemoryOrchestrator:
         request: StoryGenerationRequest,
         activation_logs: List[Dict[str, Any]],
     ) -> Dict[str, Any]:
-        """加载剧本指导信息，并记录激活日志。"""
+        """加载 script guidance，并在命中时写 activation_logs。"""
         try:
             script_guidance = load_script_guidance(self.script_design_app, request)
         except Exception:
@@ -190,7 +203,7 @@ class MemoryOrchestrator:
         session_id: str,
         activation_logs: List[Dict[str, Any]],
     ) -> Optional[Dict[str, Any]]:
-        """按开关读取摘要记忆，并在命中时记录激活日志。"""
+        """按配置读取 semantic 摘要层，并写入激活日志。"""
         if not self.summary_memory_manager or not settings.rp_summary_memory_enabled:
             return None
 
@@ -226,7 +239,7 @@ class MemoryOrchestrator:
         story_id: Optional[str],
         activation_logs: List[Dict[str, Any]],
     ) -> Optional[Dict[str, Any]]:
-        """加载剧本运行时快照，并将关键信息写入激活日志。"""
+        """加载 runtime 层快照，并将主线定位信息写入激活日志。"""
         if not story_id or not self.story_runtime_manager:
             return None
         runtime_state = self.story_runtime_manager.get_runtime_state(story_id)
@@ -250,7 +263,7 @@ class MemoryOrchestrator:
         session_id: str,
         activation_logs: List[Dict[str, Any]],
     ) -> Optional[Dict[str, Any]]:
-        """回放实体事件流并构建实体记忆快照。"""
+        """回放实体事件流，构建 entity 层快照。"""
         if not story_id or not self.entity_state_event_replay_service:
             return None
         replay_result = self.entity_state_event_replay_service.replay_story_state(

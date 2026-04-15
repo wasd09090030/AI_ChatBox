@@ -1,4 +1,9 @@
-"""实体 patch 抽取提示词构建。"""
+"""实体 patch 抽取提示词构建器。
+
+在 entity patch 流水线中负责“提示词模板化”：
+将当前实体快照 + 本轮输入/输出拼接为结构化抽取指令，
+约束 LLM 仅返回可解析 JSON。
+"""
 
 from __future__ import annotations
 
@@ -7,7 +12,7 @@ from typing import Any, Iterable
 
 
 def _serialize_state_snapshot(items: Iterable[dict[str, Any]]) -> str:
-    """功能：序列化状态快照。"""
+    """将实体状态快照序列化为可读 JSON 片段。"""
     return json.dumps(list(items), ensure_ascii=False, indent=2)
 
 
@@ -17,7 +22,10 @@ def build_entity_patch_extraction_prompt(
     generated_text: str,
     current_entity_states: Iterable[dict[str, Any]],
 ) -> str:
-    """构建结构化实体 patch 抽取提示词。"""
+    """构建结构化实体 patch 抽取提示词。
+
+    目标：最大化“可验证变化”召回率，同时降低模型臆测。
+    """
     snapshot_json = _serialize_state_snapshot(current_entity_states)
     return f"""
 你是一个“故事实体状态变化提取器”。你的任务不是续写故事，而是只根据本轮输入和本轮生成结果，提取人物实体状态变化。

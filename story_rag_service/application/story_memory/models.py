@@ -1,4 +1,7 @@
-"""story_memory 读模型结构定义。"""
+"""story_memory 读模型契约定义。
+
+这些 TypedDict 用于约束后端返回载荷结构，减少前后端字段语义漂移。
+"""
 
 from __future__ import annotations
 
@@ -40,7 +43,10 @@ class StoryMemoryTimelineView(TypedDict, total=False):
 
 
 class StoryMemoryPayload(TypedDict, total=False):
-    """聚合后的 story_memory 返回载荷。"""
+    """聚合后的 story_memory 返回载荷。
+
+    对应前端结构分组：operation / semantic / runtime / entity / timeline。
+    """
     session_id: str
     story_id: Optional[str]
     world_id: Optional[str]

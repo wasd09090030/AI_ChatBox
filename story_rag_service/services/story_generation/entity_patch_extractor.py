@@ -1,4 +1,8 @@
-"""实体 patch 结构化抽取服务。"""
+"""实体 patch 结构化抽取服务。
+
+位于 entity patch 流水线的“模型调用”阶段：
+负责构建提示词、调用 LLM、解析 JSON，并产出统一 ExtractionResult。
+"""
 
 from __future__ import annotations
 
@@ -11,7 +15,7 @@ from .entity_patch_prompt import build_entity_patch_extraction_prompt
 
 
 class EntityPatchExtractor:
-    """负责调用 LLM 抽取结构化实体 patch。"""
+    """实体 patch 抽取器。"""
 
     def build_prompt(
         self,
@@ -35,7 +39,7 @@ class EntityPatchExtractor:
         generated_text: str,
         current_states: Iterable[EntityStateSnapshot],
     ) -> EntityPatchExtractionResult:
-        """异步调用 LLM 执行抽取，并返回统一的结构化结果。"""
+        """异步调用 LLM 执行抽取，并返回统一结构化结果。"""
         prompt = self.build_prompt(
             user_input=user_input,
             generated_text=generated_text,
@@ -52,7 +56,7 @@ class EntityPatchExtractor:
         generated_text: str,
         current_states: Iterable[EntityStateSnapshot],
     ) -> EntityPatchExtractionResult:
-        """同步调用 LLM 执行抽取，并返回统一的结构化结果。"""
+        """同步调用 LLM 执行抽取，并返回统一结构化结果。"""
         prompt = self.build_prompt(
             user_input=user_input,
             generated_text=generated_text,

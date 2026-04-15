@@ -1,5 +1,9 @@
 <script setup lang="ts">
-// 文件说明：前端可复用界面组件。
+// 文件说明：StoryView 的 Prompt 编排抽屉。
+// 页面归属：
+// - /story/improv：用于显式挑选人物/地点/事件，覆盖默认检索焦点；
+// - /story/scripted：作为“本轮微调”辅助，不改动主线推进节点。
+// 设计意义：把“上下文筛选 + 重点模板选择”前置为可视化操作，降低用户写 Prompt 的心智负担。
 import { computed } from 'vue'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -14,6 +18,7 @@ import type { ComposerTab } from '@/domains/story/composables/useStoryPromptComp
 import type { LorebookEntry } from '@/services/lorebookService'
 
 // 组件输入参数。
+// 数据所有权：由 StoryView 与 useStoryPromptComposer 组合提供，本组件只负责交互与展示。
 const props = defineProps<{
   open: boolean
   generating: boolean
@@ -32,6 +37,7 @@ const props = defineProps<{
 }>()
 
 // 组件事件派发器。
+// 事件语义：区分“草稿态编辑”（update:*）与“提交态动作”（apply / clear），避免交互误解。
 const emit = defineEmits<{
   (event: 'update:open', value: boolean): void
   (event: 'update:composerSearchQuery', value: string): void
@@ -45,25 +51,27 @@ const emit = defineEmits<{
   (event: 'apply'): void
 }>()
 
-// searchQueryModel 的双向绑定状态。
+// 搜索关键词代理。
 const searchQueryModel = computed({
   get: () => props.composerSearchQuery,
   set: (value: string) => emit('update:composerSearchQuery', value),
 })
 
-// composerTabModel 的双向绑定状态。
+// 当前标签页代理（人物/地点/事件）。
 const composerTabModel = computed({
   get: () => props.currentComposerTab,
   set: (value: ComposerTab) => emit('update:currentComposerTab', value),
 })
 
-// focusTemplateModel 的双向绑定状态。
+// 本轮重点模板代理。
+// 意义：将“叙事偏好”抽象成可切换模板，减少重复输入。
 const focusTemplateModel = computed({
   get: () => props.draftFocusTemplateId,
   set: (value: string) => emit('update:draftFocusTemplateId', value),
 })
 
-// entryGroups 相关状态。
+// 按条目类型组织的展示组。
+// 作用：复用同一套列表 + 预览布局，保证三类设定的交互一致性。
 const entryGroups = computed(() => [
   {
     type: 'character' as const,

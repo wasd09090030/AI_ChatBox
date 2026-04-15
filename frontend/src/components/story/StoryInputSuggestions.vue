@@ -1,5 +1,10 @@
 <script setup lang="ts">
-// 文件说明：前端可复用界面组件。
+// 文件说明：StoryView 输入区的“建议与模板”面板。
+// 页面归属：主要服务 /story/improv（严格剧本页通常展示微调说明提示）。
+// 核心职责：
+// - 呈现模型给出的建议分支（choices）；
+// - 提供快捷建议按钮；
+// - 提供可预览的指令模板。
 import { computed, ref } from 'vue'
 import { Lightbulb, Sparkles, Wand2 } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
@@ -18,6 +23,7 @@ interface PromptTemplate {
 }
 
 // 组件输入参数。
+// choices 来源于最近一轮生成结果，disabled 由 StoryView 统一控制（生成中或无故事时禁用）。
 const props = withDefaults(
   defineProps<{
     choices?: string[]
@@ -30,12 +36,14 @@ const props = withDefaults(
 )
 
 // 组件事件派发器。
+// - pick：直接将文本写回输入框；
+// - preview-template：先预览模板，再由页面决定是否应用。
 const emit = defineEmits<{
   (event: 'pick', prompt: string): void
   (event: 'preview-template', payload: PromptTemplate): void
 }>()
 
-// quickSuggestions 相关状态。
+// 固定快捷建议集合：覆盖推进、描写、线索和情绪张力等常见创作意图。
 const quickSuggestions = computed(() => [
   '继续推进当前目标，并制造一个新的小阻碍',
   '加入一段环境细节描写，让场景更有临场感',
@@ -54,17 +62,17 @@ const templates: PromptTemplate[] = [
   { id: 'dialogue-focus', label: '对话主导', prompt: '本轮以角色对话推动剧情，减少旁白并强化潜台词。' },
 ]
 
-// selectedTemplateId 相关状态。
+// 当前选中的模板 ID（仅用于本地 UI 状态）。
 const selectedTemplateId = ref('')
 
-/** 处理 emitPrompt 相关逻辑。 */
+/** 发出“写入输入框”事件。空文本或禁用状态下不触发。 */
 function emitPrompt(prompt: string) {
   const text = prompt.trim()
   if (!text || props.disabled) return
   emit('pick', text)
 }
 
-/** 处理 applyTemplate 相关逻辑。 */
+/** 按选中模板发出预览事件，由页面层决定是否最终应用。 */
 function applyTemplate() {
   const item = templates.find((tpl) => tpl.id === selectedTemplateId.value)
   if (!item) return

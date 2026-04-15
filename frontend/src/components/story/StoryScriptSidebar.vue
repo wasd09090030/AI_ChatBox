@@ -1,5 +1,10 @@
 <script setup lang="ts">
-// 文件说明：前端可复用界面组件。
+// 文件说明：StoryView 严格剧本创作页的“剧本推进侧栏”。
+// 页面归属：/story/scripted（仅在严格剧本模式显示）。
+// 核心职责：
+// - 管理剧本绑定、阶段定位、事件定位与推进意图；
+// - 将用户推进操作上抛给 StoryView，由页面统一持久化到后端运行态。
+// 非职责边界：不直接发起故事生成，也不直接写入运行态存储。
 import { computed } from 'vue'
 import { FlagTriangleRight, Milestone, Route, ScrollText, X } from 'lucide-vue-next'
 import { Badge } from '@/components/ui/badge'
@@ -16,6 +21,7 @@ import {
 import type { ScriptDesign, ScriptEventNode, ScriptStage } from '@/domains/story/api/scriptDesignApi'
 
 // 组件输入参数。
+// 这些参数由 StoryView 统一计算后传入，确保“推进状态”和“生成状态”来自同一页面真源。
 const props = withDefaults(
   defineProps<{
     selectedScriptDesignId: string
@@ -41,6 +47,7 @@ const props = withDefaults(
 )
 
 // 组件事件派发器。
+// 约定：本组件仅表达用户意图（选择/推进/保存），不在内部处理业务副作用。
 const emit = defineEmits<{
   (event: 'close'): void
   (event: 'update:progressIntent', value: 'hold' | 'advance' | 'complete'): void
@@ -52,38 +59,40 @@ const emit = defineEmits<{
   (event: 'advance-stage'): void
 }>()
 
-// selectedScriptDesignModel 的双向绑定状态。
+// 当前剧本选择代理。
 const selectedScriptDesignModel = computed({
   get: () => props.selectedScriptDesignId,
   set: (value: string) => emit('update:selectedScriptDesignId', value),
 })
 
-// selectedScriptStageModel 的双向绑定状态。
+// 当前阶段选择代理。
 const selectedScriptStageModel = computed({
   get: () => props.selectedScriptStageId,
   set: (value: string) => emit('update:selectedScriptStageId', value),
 })
 
-// selectedScriptEventModel 的双向绑定状态。
+// 当前事件选择代理。
 const selectedScriptEventModel = computed({
   get: () => props.selectedScriptEventId,
   set: (value: string) => emit('update:selectedScriptEventId', value),
 })
 
-// progressIntentModel 的双向绑定状态。
+// 推进意图选择代理（仅描写 / 推进事件 / 完成事件）。
 const progressIntentModel = computed({
   get: () => props.progressIntent,
   set: (value: 'hold' | 'advance' | 'complete') => emit('update:progressIntent', value),
 })
 
-// progressIntentLabel 相关状态。
+// 推进意图角标文案。
+// 作用：在侧栏顶部快速提示当前轮次的推进语义，减少误操作。
 const progressIntentLabel = computed(() => {
   if (props.progressIntent === 'complete') return '完成事件'
   if (props.progressIntent === 'advance') return '推进事件'
   return '仅描写'
 })
 
-// 布尔状态 hasBoundScript。
+// 是否已绑定剧本。
+// 作用：控制阶段/事件与推进按钮可用性，避免在无主线上下文下推进。
 const hasBoundScript = computed(() => props.selectedScriptDesignId !== props.noneOptionValue)
 </script>
 

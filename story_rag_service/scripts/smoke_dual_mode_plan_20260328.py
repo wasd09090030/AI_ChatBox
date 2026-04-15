@@ -28,32 +28,32 @@ from typing import Any
 
 import httpx
 
-# 变量作用：变量 BASE_URL，用于保存 base url 相关模块级状态。
+# 统一服务地址，允许通过环境变量切换到远端或本地实例。
 BASE_URL = os.getenv("SMOKE_BASE_URL", "http://127.0.0.1:8012").rstrip("/")
-# 变量作用：变量 USER_ID，用于保存用户 ID 相关模块级状态。
+# 为请求统一附带用户头，确保命中用户级配置读取路径。
 USER_ID = os.getenv("SMOKE_USER_ID", "user_1773820783085_bk1gzshza")
-# 变量作用：变量 PROVIDER，用于保存模型提供商相关模块级状态。
+# 指定冒烟运行使用的模型提供商。
 PROVIDER = os.getenv("SMOKE_PROVIDER", "deepseek")
-# 变量作用：变量 MODEL，用于保存模型相关模块级状态。
+# 指定冒烟运行使用的模型名称。
 MODEL = os.getenv("SMOKE_MODEL", "deepseek-chat")
-# 变量作用：变量 TIMEOUT，用于保存 timeout 相关模块级状态。
+# 为 HTTP 请求设置统一超时时间，避免脚本无限阻塞。
 TIMEOUT = 180.0
-# 变量作用：路径变量 REPORT_DIR，用于定位文件系统资源。
+# 报告输出目录，用于沉淀本次验证结果。
 REPORT_DIR = Path(__file__).resolve().parents[1] / "docs" / "TestResult"
-# 变量作用：变量 REPORT_JSON，用于保存 report JSON 相关模块级状态。
+# 本次冒烟结果的 JSON 报告路径。
 REPORT_JSON = REPORT_DIR / "Plan0328_DualMode_Validation_Run.json"
 
 
 @dataclass
 class Check:
-    """作用：定义 Check 类型，承载本模块核心状态与行为。"""
+    """单项检查结果，包含名称、是否通过与证据细节。"""
     name: str
     passed: bool
     detail: dict[str, Any]
 
 
 def _headers() -> dict[str, str]:
-    """功能：处理 headers。"""
+    """构造统一请求头。"""
     return {"X-User-ID": USER_ID}
 
 
@@ -64,7 +64,7 @@ def _request(
     payload: dict[str, Any] | None = None,
     with_user: bool = False,
 ) -> tuple[int, dict[str, Any]]:
-    """功能：处理请求。"""
+    """统一封装 HTTP 请求并容错解析 JSON 响应体。"""
     headers = _headers() if with_user else {}
     response = client.request(method.upper(), f"{BASE_URL}{path}", json=payload, headers=headers)
     try:
@@ -75,18 +75,18 @@ def _request(
 
 
 def _add(checks: list[Check], cond: bool, name: str, detail: dict[str, Any]) -> None:
-    """功能：处理 add。"""
+    """追加单项检查结果。"""
     checks.append(Check(name=name, passed=bool(cond), detail=detail))
 
 
 def _extract_runtime(response: dict[str, Any]) -> dict[str, Any]:
-    """功能：处理 extract 运行时。"""
+    """从生成响应中提取运行态快照，缺失时返回空字典。"""
     runtime = response.get("runtime_state_snapshot")
     return runtime if isinstance(runtime, dict) else {}
 
 
 def _keyword_score(text: str, keywords: list[str]) -> int:
-    """功能：处理 keyword score。"""
+    """统计文本命中的关键词数量，用于比较 focus 指令偏移效果。"""
     lower_text = (text or "").lower()
     seen = 0
     for item in keywords:
@@ -96,7 +96,7 @@ def _keyword_score(text: str, keywords: list[str]) -> int:
 
 
 def _preflight(client: httpx.Client, checks: list[Check]) -> None:
-    """功能：处理 preflight。"""
+    """执行健康检查、Provider 可用性与连通性前置验证。"""
     status, body = _request(client, "GET", "/api/v2/health")
     _add(checks, status == 200 and body.get("status") == "healthy", "health", {"status": status, "body": body})
 
@@ -121,7 +121,7 @@ def _preflight(client: httpx.Client, checks: list[Check]) -> None:
 
 
 def run_smoke() -> dict[str, Any]:
-    """功能：执行 smoke。"""
+    """执行双模式验证主流程并输出可追溯证据。"""
     checks: list[Check] = []
     evidence: dict[str, Any] = {}
 
@@ -759,7 +759,7 @@ def run_smoke() -> dict[str, Any]:
 
 
 def main() -> None:
-    """功能：处理 main。"""
+    """运行冒烟验证并打印结构化结果与报告路径。"""
     result = run_smoke()
     print(json.dumps(result, ensure_ascii=False, indent=2))
     print(f"\nReport written: {REPORT_JSON}")

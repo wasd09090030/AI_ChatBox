@@ -21,17 +21,17 @@ from typing import Any
 
 import httpx
 
-# 变量作用：变量 BASE_URL，用于保存 base url 相关模块级状态。
+# 统一服务地址，允许通过环境变量切换到远端或本地实例。
 BASE_URL = os.getenv("SMOKE_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
-# 变量作用：变量 USER_ID，用于保存用户 ID 相关模块级状态。
+# 为控制台相关 API 统一附带用户头，便于隔离配置与偏好读取。
 USER_ID = os.getenv("SMOKE_USER_ID", "smoke-console-user")
-# 变量作用：变量 TARGET_PROVIDER，用于保存 target 模型提供商相关模块级状态。
+# 目标提供商名称，用于验证默认模型与场景模型配置链路。
 TARGET_PROVIDER = os.getenv("SMOKE_PROVIDER", "deepseek").strip().lower()
-# 变量作用：变量 TARGET_MODEL，用于保存 target 模型相关模块级状态。
+# 目标模型名称，用于验证控制台配置后的读写一致性。
 TARGET_MODEL = os.getenv("SMOKE_MODEL", "deepseek-chat").strip()
-# 变量作用：变量 RUN_LLM_SMOKE，用于保存 run LLM smoke 相关模块级状态。
+# 控制是否执行依赖模型推理的场景链路冒烟测试。
 RUN_LLM_SMOKE = os.getenv("RUN_LLM_SMOKE", "true").lower() == "true"
-# 变量作用：变量 TIMEOUT，用于保存 timeout 相关模块级状态。
+# 为 HTTP 请求设置统一超时时间，避免脚本无限阻塞。
 TIMEOUT = 90.0
 
 
@@ -44,18 +44,18 @@ class StepResult:
 
 
 def _headers() -> dict[str, str]:
-    """功能：处理 headers。"""
+    """为请求附带控制台用户标识，命中用户级配置读取路径。"""
     return {"X-User-ID": USER_ID}
 
 
 def _assert(cond: bool, message: str) -> None:
-    """功能：处理 assert。"""
+    """统一断言行为，失败时抛出可读错误信息。"""
     if not cond:
         raise AssertionError(message)
 
 
 def _expect_status(resp: httpx.Response, status: int, name: str) -> None:
-    """功能：处理 expect status。"""
+    """校验响应状态码并在失败时保留调用名与响应片段。"""
     if resp.status_code != status:
         raise AssertionError(
             f"{name} failed: expected {status}, got {resp.status_code}, body={resp.text[:500]}"
@@ -63,7 +63,7 @@ def _expect_status(resp: httpx.Response, status: int, name: str) -> None:
 
 
 def run_smoke() -> list[StepResult]:
-    """功能：执行 smoke。"""
+    """串行验证控制台改版涉及的 provider、统计与生成链路。"""
     results: list[StepResult] = []
     with httpx.Client(timeout=TIMEOUT) as client:
         # 1) basic health + provider status
@@ -296,7 +296,7 @@ def run_smoke() -> list[StepResult]:
 
 
 def main() -> None:
-    """功能：处理 main。"""
+    """执行控制台场景模型冒烟并打印逐步结果摘要。"""
     print(
         f"[SMOKE-CONSOLE] base_url={BASE_URL} user_id={USER_ID} provider={TARGET_PROVIDER} model={TARGET_MODEL} llm={RUN_LLM_SMOKE}"
     )

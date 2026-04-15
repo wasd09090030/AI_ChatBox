@@ -1,8 +1,11 @@
-"""
-故事生成服务（编排层）。
+"""故事生成服务（编排层）。
 
-本文件保留 StoryGenerator 对外接口，
-将 LLM 创建、提示词构建、摘要与上下文格式化等职责拆分到子模块。
+定位：作为 story 生成主链路的总编排器，维持稳定对外接口。
+
+核心职责：
+1) 协调 memory bundle、prompt 构建与 LLM 调用；
+2) 在生成后落盘消息、更新摘要/实体状态并产出 story_memory；
+3) 同时支持异步非流式、同步、SSE 流式三种生成模式。
 """
 
 from __future__ import annotations
@@ -52,7 +55,7 @@ logger = logging.getLogger(__name__)
 
 
 class StoryGenerator:
-    """使用 RAG + LLM 生成故事。"""
+    """故事生成编排器。"""
 
     def __init__(
         self,
@@ -104,7 +107,7 @@ class StoryGenerator:
             recent_message_count=self.recent_message_count,
         )
 
-        # 流式生成后供 metadata 接口复用的缓存
+        # 流式生成后供 metadata 接口复用的缓存（同一次流式会话内有效）。
         self._last_retrieved_contexts: List[Dict[str, Any]] = []
         self._last_retrieved_history: List[Dict[str, Any]] = []
         self._last_activation_logs: List[Dict[str, Any]] = []
@@ -434,6 +437,7 @@ class StoryGenerator:
             return request, None, None, None
 
         story_id = self._resolve_story_id(request)
+        # 缺 story_id 无法定位 runtime，直接回退即兴模式。
         if not story_id:
             activation_logs.append(
                 {
@@ -446,6 +450,7 @@ class StoryGenerator:
             return request, None, None, None
 
         script_design_id = getattr(request, "script_design_id", None)
+        # 缺 script_design_id 无法构建 round contract，直接回退。
         if not script_design_id:
             activation_logs.append(
                 {
@@ -458,6 +463,7 @@ class StoryGenerator:
             return request, None, None, None
 
         script_design = self.script_design_app.get_script_design(script_design_id)
+        # 请求给出的剧本不存在时回退，避免硬失败中断生成。
         if script_design is None:
             activation_logs.append(
                 {
@@ -547,7 +553,7 @@ class StoryGenerator:
         source: str,
         activation_logs: List[Dict[str, Any]],
     ) -> tuple[Optional[Dict[str, Any]], List[Dict[str, Any]]]:
-        """在 patch 失败时通过 fallback 服务重建实体状态。"""
+        """在 patch 路径不可用时，通过 fallback 服务重建实体状态。"""
         if self.entity_state_fallback_service is None:
             return None, []
 
@@ -598,7 +604,7 @@ class StoryGenerator:
     ) -> Dict[str, Any]:
         """异步更新实体状态。
 
-        优先走 patch 流程；patch 失败时回退到 fallback 全量重建。
+        优先走 patch 流程；patch 失败时回退 fallback 全量重建。
         """
         operation_id = getattr(request, "memory_operation_id", None)
         sequence_start = int(getattr(request, "memory_operation_sequence_start", 1) or 1) + memory_update_count
@@ -659,7 +665,7 @@ class StoryGenerator:
     ) -> Dict[str, Any]:
         """同步更新实体状态。
 
-        优先走 patch 流程；patch 失败时回退到 fallback 全量重建。
+        优先走 patch 流程；patch 失败时回退 fallback 全量重建。
         """
         operation_id = getattr(request, "memory_operation_id", None)
         sequence_start = int(getattr(request, "memory_operation_sequence_start", 1) or 1) + memory_update_count
@@ -715,7 +721,10 @@ class StoryGenerator:
         contract: Optional[ScriptRoundContract],
         script_design: Optional[Any],
     ) -> tuple[Optional[ScriptRuntimeState], Optional[ScriptConsistencyCheckResult]]:
-        """应用严格剧本后处理：一致性检查、状态推进、元数据同步。"""
+        """应用严格剧本后处理。
+
+        顺序：一致性检查 -> runtime 状态推进 -> story 元数据同步。
+        """
         if (
             request.creation_mode != "scripted"
             or not self.story_runtime_manager
@@ -758,7 +767,14 @@ class StoryGenerator:
         request: StoryGenerationRequest,
         user_id: Optional[str] = None,
     ) -> StoryGenerationResponse:
-        """异步故事生成（非流式）。"""
+        """异步故事生成（非流式）。
+
+        主流程：
+        1) 预处理请求（必要时进入 strict scripted 约束）；
+        2) 构建 memory bundle 与 system prompt；
+        3) 调用 LLM 生成正文；
+        4) 生成后更新（消息/摘要/实体）并返回完整响应。
+        """
         start_time = time.time()
 
         context = request.context or StoryContext(session_id=request.session_id, messages=[])
@@ -768,6 +784,7 @@ class StoryGenerator:
             activation_logs,
         )
 
+        # 组装分层记忆并展开主流程常用字段。
         memory_state = self._build_memory_bundle(
             request=request,
             context=context,
@@ -809,6 +826,7 @@ class StoryGenerator:
         if self._detect_input_loop(request.user_input, context.messages):
             effective_user_input += "\n[叙事提示：请推进新的情节，不要重复已发生的动作或场景]"
 
+        # 由 prompt_builder 统一拼装系统提示词（含预算裁剪）。
         system_prompt = self._build_system_prompt(
             style=request.style or "narrative",
             language=request.language,
@@ -839,6 +857,7 @@ class StoryGenerator:
             script_design=script_design,
         )
 
+        # 先写 episodic/semantic，再基于生成结果更新 entity 层。
         update_result = self.memory_update_service.run_post_generation_updates(
             session_id=request.session_id,
             world_id=world_id,
@@ -958,7 +977,10 @@ class StoryGenerator:
         request: StoryGenerationRequest,
         user_id: Optional[str] = None,
     ) -> StoryGenerationResponse:
-        """同步故事生成。"""
+        """同步故事生成。
+
+        与 `generate_story` 流程等价，差异在于 LLM/压缩/实体更新路径均为同步调用。
+        """
         start_time = time.time()
 
         context = request.context or StoryContext(session_id=request.session_id, messages=[])
@@ -1113,7 +1135,10 @@ class StoryGenerator:
         request: StoryGenerationRequest,
         user_id: Optional[str] = None,
     ) -> AsyncGenerator[str, None]:
-        """异步流式故事生成。"""
+        """异步流式故事生成。
+
+        SSE 协议：先连续输出 chunk 事件，最后输出一条 done 事件携带完整元数据。
+        """
         context = request.context or StoryContext(session_id=request.session_id, messages=[])
         activation_logs: List[Dict[str, Any]] = []
         request, runtime_state, round_contract, script_design = self._prepare_scripted_request(
@@ -1162,7 +1187,7 @@ class StoryGenerator:
             len(self._last_retrieved_history),
         )
 
-        # 非流式前处理专用 LLM：输入增强 / lorebook 压缩 / patch 抽取
+        # 前处理专用 LLM：输入增强 / lorebook 压缩 / patch 抽取。
         preprocess_llm = self._get_llm(
             model=request.model,
             temperature=self._resolve_temperature(request.temperature, world_config),
@@ -1173,7 +1198,7 @@ class StoryGenerator:
             base_url=getattr(request, "base_url", None),
         )
 
-        # 正文流式输出专用 LLM：仅用于 astream
+        # 正文流式输出专用 LLM：仅用于 astream。
         llm = self._get_llm(
             model=request.model,
             temperature=self._resolve_temperature(request.temperature, world_config),
@@ -1332,6 +1357,7 @@ class StoryGenerator:
         }
 
         runtime_snapshot = updated_runtime_state.model_dump(mode="json") if updated_runtime_state else None
+        # done 事件返回最终文本、记忆更新与统计信息，供前端一次性落库。
         done_payload = {
             "done": True,
             "session_id": request.session_id,
@@ -1375,7 +1401,10 @@ class StoryGenerator:
         request: StoryGenerationRequest,
         generated_text: str,
     ) -> StoryGenerationResponse:
-        """流式生成结束后返回结构化元数据。"""
+        """流式生成结束后返回结构化元数据。
+
+        该接口复用流式阶段缓存的检索结果，避免重复触发 RAG 查询。
+        """
         context = request.context or StoryContext(session_id=request.session_id, messages=[])
 
         logger.info(

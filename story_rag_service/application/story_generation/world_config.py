@@ -1,5 +1,7 @@
-"""
-世界配置读取逻辑。
+"""世界配置读取逻辑。
+
+负责读取世界层风格参数并转为 prompt 可消费字典；
+读取失败或 world 缺失时返回 None，由上游走默认风格策略。
 """
 
 from __future__ import annotations
@@ -28,6 +30,7 @@ def load_world_config(
         if log_prefix:
             logger.info("%sLoaded world config: %s", log_prefix, world_id)
 
+        # 返回字段与 prompt_builder 的 world_config 消费字段保持一致。
         return {
             "style_preset": world.style_preset,
             "narrative_tone": world.narrative_tone,

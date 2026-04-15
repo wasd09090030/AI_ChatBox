@@ -1,4 +1,7 @@
-"""文件说明：项目文件 env.py 的核心逻辑实现。"""
+"""Alembic 迁移入口。
+
+职责：对齐项目数据库配置并驱动 offline/online 两种迁移执行模式。
+"""
 
 from __future__ import annotations
 
@@ -8,7 +11,7 @@ import sys
 from sqlalchemy import create_engine
 from alembic import context
 
-# 变量 config，用于保存配置相关模块级状态。
+# Alembic 运行时配置对象。
 config = context.config
 
 if config.config_file_name is not None:
@@ -22,13 +25,13 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from config import settings  # noqa: E402
 
-# 路径变量 db_path，用于定位文件系统资源。
+# 迁移目标数据库绝对路径（由应用配置统一给出）。
 db_path = Path(settings.database_path).resolve()
 config.set_main_option("sqlalchemy.url", f"sqlite:///{db_path.as_posix()}")
 
 
 def run_migrations_offline() -> None:
-    """功能：执行 migrations offline。"""
+    """离线模式执行迁移（不建立数据库连接，输出 SQL 语句）。"""
     url = config.get_main_option("sqlalchemy.url")
     context.configure(
         url=url,
@@ -42,7 +45,7 @@ def run_migrations_offline() -> None:
 
 
 def run_migrations_online() -> None:
-    """功能：执行 migrations online。"""
+    """在线模式执行迁移（建立数据库连接并直接应用变更）。"""
     connectable = create_engine(
         config.get_main_option("sqlalchemy.url"),
         pool_pre_ping=True,
@@ -59,6 +62,8 @@ def run_migrations_online() -> None:
 
 
 if context.is_offline_mode():
+    # `alembic upgrade --sql` 等命令会走离线路径。
     run_migrations_offline()
 else:
+    # 常规 `alembic upgrade head` 走在线路径。
     run_migrations_online()

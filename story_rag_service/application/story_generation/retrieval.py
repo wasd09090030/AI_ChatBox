@@ -1,5 +1,7 @@
-"""
-故事生成中的 RAG 检索编排逻辑。
+"""故事生成中的 RAG 检索编排逻辑。
+
+本模块实现“显式选择 + 规则命中 + 向量/BM25 混合 + 可选历史召回”的
+多阶段检索管线，并输出 activation_logs 供可观测性与调试。
 """
 
 from __future__ import annotations
@@ -26,7 +28,7 @@ _cross_encoder_instance = None
 
 
 def _get_cross_encoder():
-    """惰性加载 Cross-Encoder 模型（首次调用约 1–2s，后续 ~0ms）。"""
+    """惰性加载 Cross-Encoder 模型（首次慢、后续复用）。"""
     global _cross_encoder_instance
     if _cross_encoder_instance is None:
         try:
@@ -51,7 +53,10 @@ def _rerank_candidates(
     entry_lookup: Dict[str, Dict[str, Any]],
     top_n: int,
 ) -> List[Tuple[str, float]]:
-    """用 Cross-Encoder 对候选重评分，返回 top_n 结果。"""
+    """用 Cross-Encoder 对候选重评分，返回 top_n 结果。
+
+    为控制耗时，仅对前若干候选做重排。
+    """
     encoder = _get_cross_encoder()
     if not encoder or not candidates:
         return candidates[:top_n]
@@ -79,7 +84,7 @@ def _parse_int(value: Any, default: int = 0) -> int:
 
 
 def _entry_identity(entry: Dict[str, Any]) -> str:
-    """构建条目唯一身份键，用于规则命中与向量命中去重。"""
+    """构建条目唯一身份键，用于多路检索结果去重。"""
     metadata = entry.get("metadata") or {}
     return (
         str(metadata.get("_chroma_id") or metadata.get("id") or "")
@@ -199,7 +204,10 @@ def _select_rule_contexts(
     query: str,
     retrieval_budget: int,
 ) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]], set]:
-    """执行规则命中选择，返回命中上下文、日志和已选 ID 集合。"""
+    """执行规则命中选择。
+
+    返回：命中上下文、命中日志、已选条目 ID 集合。
+    """
     query_lower = query.lower()
     rule_candidates = []
     for entry in all_entries:
@@ -220,7 +228,9 @@ def _select_rule_contexts(
         priority = _parse_int(metadata.get("priority"), default=_parse_int(metadata.get("importance"), default=0))
         rule_candidates.append((priority, max(len(item) for item in matched_keywords), entry, matched_keywords))
 
+    # 规则候选按优先级与关键词长度排序，尽量让强匹配先入选。
     rule_candidates.sort(key=lambda item: (item[0], item[1]), reverse=True)
+    # 规则分支最多占总预算一半，避免规则命中挤占全部向量召回空间。
     rule_budget = min(max(1, retrieval_budget // 2), len(rule_candidates)) if retrieval_budget > 0 else 0
 
     selected_entry_ids = set()
@@ -328,7 +338,7 @@ def _select_vector_contexts(
     all_entries: Optional[List[Dict[str, Any]]] = None,
     allowed_entry_ids: Optional[set[str]] = None,
 ) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
-    """混合检索：向量 + BM25 → RRF 融合，填充剩余预算。"""
+    """混合检索：向量 + BM25 + RRF 融合，填充剩余预算。"""
     remaining_budget = max(0, retrieval_budget - len(selected_entry_ids))
     if remaining_budget <= 0:
         return [], []
@@ -431,6 +441,7 @@ def retrieve_rag_context(
     4. 可选历史对话检索。
     """
     world_id = getattr(request, "world_id", None)
+    # 关闭 RAG 时直接返回空检索结果，但保留 world_id 透传。
     if not request.use_rag:
         return [], [], world_id, []
     allowed_entry_ids = {
@@ -440,6 +451,7 @@ def retrieve_rag_context(
     }
     allowed_entry_ids = allowed_entry_ids or None
 
+    # 检索 query 会融合用户输入 + 短期上下文（地点/人物）。
     query = build_retrieval_query(
         user_input=request.user_input,
         current_location=getattr(context, "current_location", None),
@@ -495,6 +507,7 @@ def retrieve_rag_context(
     retrieved_contexts = explicit_selected_contexts + rule_selected_contexts + vector_selected_contexts
 
     retrieved_history: List[Dict[str, Any]] = []
+    # 仅当消息规模超过短期窗口时才触发历史检索，避免重复召回近期片段。
     if history_manager and len(context.messages) > recent_message_count:
         current_turn = len(context.messages)
         max_historical_turn = current_turn - recent_message_count

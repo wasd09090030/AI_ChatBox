@@ -1,5 +1,10 @@
 <script setup lang="ts">
-// 文件说明：前端可复用界面组件。
+// 文件说明：StoryView 左侧“世界/故事”导航栏。
+// 页面归属：/story/improv 与 /story/scripted 共用。
+// 核心职责：
+// - 选择世界（影响后续 Lorebook、剧本与故事范围）；
+// - 列出并切换当前世界下的故事；
+// - 提供新建/删除故事入口与侧栏收起能力。
 import { computed } from 'vue'
 import { BookOpen, Plus, Trash2, Globe, FileText, ChevronsLeft, ChevronsRight } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
@@ -28,6 +33,7 @@ import type { World } from '@/services/lorebookService'
 import type { StoredStory } from '@/components/story/types'
 
 // 组件输入参数。
+// 这些数据由 StoryView 的 useStoryLibrary 提供，本组件只负责列表展示与交互上抛。
 const props = withDefaults(
   defineProps<{
     selectedWorldId: string
@@ -47,6 +53,7 @@ const props = withDefaults(
 )
 
 // 组件事件派发器。
+// 约束：本组件不直接操作远端 API，统一交由页面层完成副作用。
 const emit = defineEmits<{
   (event: 'update:selectedWorldId', value: string): void
   (event: 'create-story'): void
@@ -54,13 +61,13 @@ const emit = defineEmits<{
   (event: 'delete-story', story: StoredStory): void
 }>()
 
-// selectedWorldModel 的双向绑定状态。
+// 世界选择框代理，用于 v-model 与父层 selectedWorldId 对齐。
 const selectedWorldModel = computed({
   get: () => props.selectedWorldId,
   set: (value: string) => emit('update:selectedWorldId', value),
 })
 
-// collapsed 相关状态。
+// 侧栏折叠状态（带本地持久化 key，刷新后可保留用户偏好）。
 const collapsed = useSidebarCollapse('story-library-sidebar-collapsed')
 </script>
 

@@ -1,7 +1,12 @@
 """故事系统提示词构建器。
 
-按组件拆分世界观、历史、摘要、角色设定等信息，
-并在 token 预算内裁剪后拼装最终 system prompt。
+将多来源上下文拆分为可组合组件（世界观、历史、摘要、角色、程序约束等），
+按优先级渲染并在预算内裁剪，最终输出供 LLM 使用的 system prompt。
+
+设计目标：
+1) 组件化扩展，便于新增约束而不破坏现有结构；
+2) 预算可控，在超长上下文下优先保留关键约束；
+3) 对外接口兼容旧调用（bundle 缺失时仍可工作）。
 """
 
 from __future__ import annotations
@@ -16,7 +21,7 @@ from prompting import render_prompt
 # 模块日志记录器，用于输出运行诊断信息。
 logger = logging.getLogger(__name__)
 
-# 为“近期历史 + 用户输入”预留 token，限制 system prompt 体积
+# system prompt 预算上限；需给“近期历史 + 用户输入 + 模型输出”留出余量。
 SYSTEM_PROMPT_TOKEN_BUDGET = 3200
 
 
@@ -31,7 +36,8 @@ def _estimate_tokens_fast(text: str) -> int:
 class PromptComponent:
     """提示词组件抽象基类。
 
-    所有组件都遵循统一的渲染接口，并可独立估算 token 开销。
+    所有组件都遵循统一渲染接口，并可独立估算 token 开销。
+    priority 越小越先渲染；裁剪时会优先剔除可选低优先级组件。
     """
 
     name: str = "base"
@@ -52,7 +58,7 @@ class PromptComponent:
 class RenderedComponent:
     """组件渲染结果。
 
-    记录组件实例、渲染文本及 token 数，供裁剪逻辑决策使用。
+    记录组件实例、渲染文本及 token 数，用于预算裁剪决策。
     """
     component: PromptComponent
     text: str
@@ -245,7 +251,10 @@ class CoreInstructionComponent(PromptComponent):
 
 
 def _trim_to_budget(rendered: List[RenderedComponent], budget: int) -> List[RenderedComponent]:
-    """按组件优先级裁剪可选组件，直到满足预算。"""
+    """按优先级裁剪可选组件，直到满足预算。
+
+    算法：保留 required 组件，按 priority 由低到高（重要性由低到高）移除候选。
+    """
     if not rendered:
         return []
 
@@ -280,7 +289,10 @@ def _trim_to_budget(rendered: List[RenderedComponent], budget: int) -> List[Rend
 
 
 def _build_components() -> List[PromptComponent]:
-    """返回默认组件集合，最终顺序由 priority 决定。"""
+    """返回默认组件集合。
+
+    注意：此处顺序仅表达“注册集合”，实际渲染顺序由 priority 排序决定。
+    """
     return [
         HistoryContextComponent(),
         AtmosphereComponent(),
@@ -315,7 +327,8 @@ def _normalize_prompt_context(
 ) -> Dict[str, Any]:
     """归一化提示词上下文。
 
-    优先使用 bundle 中的分层记忆；若 bundle 缺失则回退到兼容参数。
+    优先使用 bundle 中分层记忆；若 bundle 缺失则回退到兼容参数。
+    该函数是新旧调用路径的兼容桥，避免上游迁移期间出现字段断层。
     """
     if not bundle:
         normalized_dialogue_controls = dialogue_controls
@@ -396,7 +409,10 @@ def build_system_prompt(
     script_design_context: Optional[Dict[str, Any]] = None,
     bundle: Optional[MemoryBundle] = None,
 ) -> str:
-    """构建故事生成系统提示词（对外签名保持兼容）。"""
+    """构建故事生成 system prompt（对外签名保持兼容）。
+
+    流程：上下文化归一化 -> 组件渲染 -> 预算裁剪 -> 文本拼接。
+    """
     context = _normalize_prompt_context(
         bundle=bundle,
         retrieved_contexts=retrieved_contexts,
@@ -417,6 +433,7 @@ def build_system_prompt(
     )
 
     rendered: List[RenderedComponent] = []
+    # 统一渲染所有启用组件，先得到“完整候选集”。
     for component in sorted(_build_components(), key=lambda comp: comp.priority):
         if not component.enabled:
             continue
@@ -431,6 +448,7 @@ def build_system_prompt(
             )
         )
 
+    # 在预算内保留尽可能多的高价值组件。
     trimmed = _trim_to_budget(rendered, SYSTEM_PROMPT_TOKEN_BUDGET)
     prompt = "\n\n".join(item.text for item in trimmed).strip()
     return prompt

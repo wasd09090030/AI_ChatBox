@@ -38,25 +38,25 @@ from typing import Any, Optional
 
 import httpx
 
-# 变量作用：变量 BASE_URL，用于保存 base url 相关模块级状态。
+# 统一服务地址，允许通过环境变量切换到远端或本地实例。
 BASE_URL = os.getenv("SMOKE_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
-# 变量作用：变量 USER_ID，用于保存用户 ID 相关模块级状态。
+# 为请求统一附带用户头，确保命中用户级配置读取路径。
 USER_ID = os.getenv("SMOKE_USER_ID", "user_1773820783085_bk1gzshza")
-# 变量作用：变量 PROVIDER，用于保存模型提供商相关模块级状态。
+# 指定冒烟运行使用的模型提供商。
 PROVIDER = os.getenv("SMOKE_PROVIDER", "deepseek")
-# 变量作用：变量 MODEL，用于保存模型相关模块级状态。
+# 指定冒烟运行使用的模型名称。
 MODEL = os.getenv("SMOKE_MODEL", "deepseek-chat")
-# 变量作用：变量 TIMEOUT，用于保存 timeout 相关模块级状态。
+# 为 HTTP 请求设置统一超时时间，避免脚本无限阻塞。
 TIMEOUT = float(os.getenv("SMOKE_TIMEOUT", "180"))
 
-# 变量作用：路径变量 REPORT_DIR，用于定位文件系统资源。
+# 报告输出目录，用于沉淀本次验证结果。
 REPORT_DIR = Path(__file__).resolve().parents[1] / "docs" / "TestResult"
-# 变量作用：变量 REPORT_JSON，用于保存 report JSON 相关模块级状态。
+# 本次冒烟结果的 JSON 报告路径。
 REPORT_JSON = REPORT_DIR / "Plan0410_StoryMemoryMerge_Validation_Run.json"
 
-# 变量作用：变量 STORY_MEMORY_VIEWS，用于保存故事记忆 views 相关模块级状态。
+# Story memory 聚合视图的必备键集合。
 STORY_MEMORY_VIEWS = {"operation", "semantic", "runtime", "entity", "timeline"}
-# 变量作用：变量 COMPAT_FIELDS，用于保存 compat fields 相关模块级状态。
+# 历史兼容字段集合，用于校验桥接字段未丢失。
 COMPAT_FIELDS = {
     "summary_memory_snapshot",
     "runtime_state_snapshot",
@@ -68,14 +68,14 @@ COMPAT_FIELDS = {
 
 @dataclass
 class Check:
-    """作用：定义 Check 类型，承载本模块核心状态与行为。"""
+    """单项检查结果，包含名称、是否通过与证据细节。"""
     name: str
     passed: bool
     detail: dict[str, Any]
 
 
 def _headers() -> dict[str, str]:
-    """功能：处理 headers。"""
+    """构造统一请求头。"""
     return {"X-User-ID": USER_ID}
 
 
@@ -87,7 +87,7 @@ def _request(
     *,
     with_user: bool = False,
 ) -> tuple[int, dict[str, Any]]:
-    """功能：处理请求。"""
+    """统一封装 HTTP 请求并容错解析 JSON 响应体。"""
     headers = _headers() if with_user else {}
     try:
         response = client.request(method.upper(), f"{BASE_URL}{path}", json=payload, headers=headers)
@@ -111,7 +111,7 @@ def _stream_generate(
     *,
     with_user: bool,
 ) -> tuple[int, dict[str, Any], int]:
-    """功能：处理 stream generate。"""
+    """执行 SSE 生成请求并提取 done 事件与分片计数。"""
     headers = _headers() if with_user else {}
     final_event: dict[str, Any] = {}
     chunk_count = 0
@@ -157,12 +157,12 @@ def _stream_generate(
 
 
 def _add(checks: list[Check], cond: bool, name: str, detail: dict[str, Any]) -> None:
-    """功能：处理 add。"""
+    """追加单项检查结果。"""
     checks.append(Check(name=name, passed=bool(cond), detail=detail))
 
 
 def _operation_ids(events: Any) -> set[str]:
-    """功能：处理操作 ID列表。"""
+    """从事件列表中提取 operation_id 集合。"""
     if not isinstance(events, list):
         return set()
     ids: set[str] = set()
@@ -173,7 +173,7 @@ def _operation_ids(events: Any) -> set[str]:
 
 
 def _story_memory_contract(payload: Any) -> dict[str, Any]:
-    """功能：处理故事记忆 contract。"""
+    """校验 story_memory 聚合结构及必备视图是否齐全。"""
     if not isinstance(payload, dict):
         return {
             "ok": False,
@@ -201,7 +201,7 @@ def _story_memory_contract(payload: Any) -> dict[str, Any]:
 
 
 def _compat_fields_contract(payload: Any) -> dict[str, Any]:
-    """功能：处理 compat fields contract。"""
+    """校验兼容字段是否完整保留。"""
     if not isinstance(payload, dict):
         return {
             "ok": False,
@@ -220,7 +220,7 @@ def _compat_fields_contract(payload: Any) -> dict[str, Any]:
 
 
 def _operation_derivable(story_memory: Any, event_list: Any) -> dict[str, Any]:
-    """功能：处理操作 derivable。"""
+    """验证 story_memory.operation.operation_id 是否可由事件反推。"""
     operation_id = None
     if isinstance(story_memory, dict):
         operation = story_memory.get("operation")
@@ -236,7 +236,7 @@ def _operation_derivable(story_memory: Any, event_list: Any) -> dict[str, Any]:
 
 
 def _preflight(client: httpx.Client, checks: list[Check]) -> None:
-    """功能：处理 preflight。"""
+    """执行健康检查、Provider 可用性与连通性前置验证。"""
     status, body = _request(client, "GET", "/api/v2/health")
     _add(checks, status == 200 and body.get("status") == "healthy", "health", {"status": status, "body": body})
 
@@ -266,7 +266,7 @@ def _preflight(client: httpx.Client, checks: list[Check]) -> None:
 
 
 def run_smoke() -> dict[str, Any]:
-    """功能：执行 smoke。"""
+    """执行 story_memory 合并与兼容桥接全链路冒烟。"""
     checks: list[Check] = []
     evidence: dict[str, Any] = {}
 
@@ -702,7 +702,7 @@ def run_smoke() -> dict[str, Any]:
 
 
 def main() -> None:
-    """功能：处理 main。"""
+    """运行冒烟验证并打印结构化结果与报告路径。"""
     result = run_smoke()
     print(json.dumps(result, ensure_ascii=False, indent=2))
     print(f"\nReport written: {REPORT_JSON}")

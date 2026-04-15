@@ -1,4 +1,11 @@
-"""文件说明：后端应用层用例编排。"""
+"""记忆后处理更新服务。
+
+在单轮生成完成后，统一执行：
+1) 原始 user/assistant 消息落库；
+2) episodic 索引归档；
+3) semantic 摘要更新（同步或异步）；
+4) memory_update_journal 事件记录。
+"""
 
 from __future__ import annotations
 
@@ -21,7 +28,7 @@ logger = logging.getLogger(__name__)
 
 
 class MemoryUpdateService:
-    """封装会话消息、情节记忆索引与摘要记忆的更新流程。"""
+    """生成后记忆更新编排器。"""
     def __init__(
         self,
         *,
@@ -124,7 +131,12 @@ class MemoryUpdateService:
         operation_id: Optional[str] = None,
         sequence_start: int = 1,
     ) -> Dict[str, Any]:
-        """在生成完成后落库消息、更新记忆并记录更新事件。"""
+        """执行生成后记忆更新主流程。
+
+        返回：
+        - summary_snapshot: 本轮更新后的摘要快照；
+        - memory_updates: 已写入/待写入日志表的事件列表。
+        """
         current_turn = len(getattr(context, "messages", []) or []) // 2
         memory_updates: List[Dict[str, Any]] = []
         before_summary = self.get_summary_snapshot(session_id)

@@ -1,5 +1,9 @@
 <script setup lang="ts">
-// 文件说明：前端可复用界面组件。
+// 文件说明：StoryView 右侧“设定 / 记忆”侧栏。
+// 页面归属：
+// - /story/improv：展示剧本推进快照 + 记忆/实体态势，用于辅助即兴创作。
+// - /story/scripted：聚焦记忆与实体态势，主线推进入口改由 StoryScriptSidebar 负责。
+// 核心价值：把 memory payload 的结构化字段翻译成可读的创作决策信息。
 import { computed } from 'vue'
 import {
   AlertTriangle,
@@ -41,12 +45,14 @@ import {
   getSummaryLifecycleDescriptor,
 } from '@/domains/memory/memoryUpdatePresentation'
 
+// 单条上下文命中记录（来自显式选择、RAG 检索或规则注入）。
 interface StoryContextHit {
   label: string
   detail: string
   source: 'explicit' | 'rag' | 'rule'
 }
 
+// 摘要差异快照（本轮前后对比）。
 interface StorySummaryDiff {
   summaryChanged: boolean
   newFacts: string[]
@@ -56,6 +62,7 @@ interface StorySummaryDiff {
 }
 
 // 组件输入参数。
+// 数据来源：由 StoryView 从 storySessionStore 与 story memory payload 聚合后传入。
 const props = withDefaults(
   defineProps<{
     showScriptProgress?: boolean
@@ -92,47 +99,47 @@ const props = withDefaults(
   },
 )
 
-// 组件事件派发器。
+// 向 StoryView 回传推进操作事件（仅负责上抛，不直接持久化）。
 const emit = defineEmits<{
   (event: 'save-progress'): void
   (event: 'advance-event'): void
   (event: 'advance-stage'): void
 }>()
 
-// orderedEvents 相关状态。
+// 按提交时间排序后的记忆事件。
 const orderedEvents = computed(() => [...props.lastMemoryUpdates].sort((a, b) => a.committed_at.localeCompare(b.committed_at)))
-// semanticEvents 相关状态。
+// 语义层事件集合。
 const semanticEvents = computed(() => props.lastMemoryUpdates.filter((event) => event.memory_layer === 'semantic'))
-// episodicEvents 相关状态。
+// 情节层事件集合。
 const episodicEvents = computed(() => props.lastMemoryUpdates.filter((event) => event.memory_layer === 'episodic'))
-// entityEvents 相关状态。
+// 实体状态层事件集合。
 const entityEvents = computed(() => props.lastMemoryUpdates.filter((event) => event.memory_layer === 'entity_state'))
-// failedEvents 相关状态。
+// 失败事件集合。
 const failedEvents = computed(() => props.lastMemoryUpdates.filter((event) => event.status === 'failed'))
-// orderedEntityItems 相关状态。
+// 按展示名排序的实体快照列表。
 const orderedEntityItems = computed(() => [...(props.lastEntityState?.items ?? [])].sort((a, b) => a.display_name.localeCompare(b.display_name, 'zh-CN')))
-// entityNameMap 相关状态。
+// 实体 ID 到展示名映射。
 const entityNameMap = computed(() => new Map(orderedEntityItems.value.map((item) => [item.entity_id, item.display_name])))
-// entityLocationCount 相关状态。
+// 实体涉及的地点数量。
 const entityLocationCount = computed(() => new Set(orderedEntityItems.value.map((item) => item.current_location).filter(Boolean)).size)
-// latestEntityEvent 相关状态。
+// 最近一条实体状态事件。
 const latestEntityEvent = computed(() => (
   [...entityEvents.value].reverse().find(Boolean) ?? null
 ))
 
-// latestSemanticEvent 相关状态。
+// 最近一条语义摘要事件。
 const latestSemanticEvent = computed(() => (
   [...semanticEvents.value].reverse().find(Boolean) ?? null
 ))
 
-// latestEpisodicEvent 相关状态。
+// 最近一条情节维护事件。
 const latestEpisodicEvent = computed(() => (
   [...episodicEvents.value].reverse().find(Boolean) ?? null
 ))
 
-// summaryState 相关状态。
+// 摘要生命周期状态标识。
 const summaryState = computed(() => deriveSummaryLifecycleState(props.lastMemoryUpdates, props.lastSummary))
-// summaryLifecycle 相关状态。
+// 摘要生命周期展示描述。
 const summaryLifecycle = computed(() => {
   if (props.lastSummary && !semanticEvents.value.length) {
     return {
@@ -147,7 +154,7 @@ const summaryLifecycle = computed(() => {
   })
 })
 
-// episodicLifecycle 相关状态。
+// 情节层维护结果说明。
 const episodicLifecycle = computed(() => {
   if (!latestEpisodicEvent.value) {
     return '本轮未记录 episodic 维护动作。'
@@ -158,7 +165,7 @@ const episodicLifecycle = computed(() => {
   return '本轮主要更新原始会话消息与历史索引。'
 })
 
-// entityWarnings 相关状态。
+// 实体态势风险提示列表。
 const entityWarnings = computed(() => {
   const warnings: string[] = []
   if (!orderedEntityItems.value.length) {
@@ -185,14 +192,14 @@ const entityWarnings = computed(() => {
 
   return warnings.slice(0, 3)
 })
-// latestEntityPatch 相关状态。
+// 最近一条实体 patch 记录。
 const latestEntityPatch = computed(() => props.lastEntityStateUpdates[0] ?? null)
-// orderedEntityPatches 相关状态。
+// 最新实体 patch 列表（限 8 条）。
 const orderedEntityPatches = computed(() => [...props.lastEntityStateUpdates].slice(0, 8))
-// worldUpdateHighlights 相关状态。
+// 世界状态更新高亮条目。
 const worldUpdateHighlights = computed(() => extractWorldUpdateHighlights(props.lastWorldUpdate))
 
-/** 处理 formatEntityUpdatedAt 相关逻辑。 */
+/** 格式化实体更新时间。 */
 function formatEntityUpdatedAt(value?: string | null) {
   if (!value) return '未知时间'
   try {
@@ -205,12 +212,12 @@ function formatEntityUpdatedAt(value?: string | null) {
   }
 }
 
-/** 处理 resolveCompanionLabel 相关逻辑。 */
+/** 解析同行实体显示名称。 */
 function resolveCompanionLabel(companionId: string) {
   return entityNameMap.value.get(companionId) ?? companionId
 }
 
-/** 处理 entityTone 相关逻辑。 */
+/** 根据实体状态返回卡片色调样式。 */
 function entityTone(entity: EntityStateSnapshot) {
   if (entity.status_tags.includes('昏迷')) return 'border-rose-300 bg-rose-50/80'
   if (entity.status_tags.includes('受伤')) return 'border-amber-300 bg-amber-50/80'

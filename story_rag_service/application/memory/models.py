@@ -1,6 +1,12 @@
-"""记忆编排相关的数据模型定义。
+"""记忆编排数据契约。
 
-本文件描述 MemoryBundle 的分层结构，以及记忆更新事件的统一数据形态。
+目标：为 application.memory 内部与调用方提供稳定 TypedDict 约束，
+把“分层记忆输入”与“记忆更新事件输出”统一成可序列化结构。
+
+设计原则：
+1) 尽量使用宽容字段（total=False）保持链路兼容；
+2) 分层字段命名与前端/日志消费语义保持一致；
+3) raw_record 字段保留底层管理器原始快照，便于诊断。
 """
 
 from __future__ import annotations
@@ -9,7 +15,7 @@ from typing import Any, Dict, List, Optional, TypedDict
 
 
 class EpisodeRecord(TypedDict, total=False):
-    """单条情节记录（episodic 层的最小单元）。"""
+    """单条情节记录（episodic 最小持久化单元）。"""
     session_id: str
     world_id: Optional[str]
     role: str
@@ -20,7 +26,7 @@ class EpisodeRecord(TypedDict, total=False):
 
 
 class SemanticMemoryRecord(TypedDict, total=False):
-    """摘要记忆持久化记录。"""
+    """摘要记忆持久化记录（semantic 层原始快照）。"""
     session_id: str
     world_id: Optional[str]
     summary_text: str
@@ -31,14 +37,20 @@ class SemanticMemoryRecord(TypedDict, total=False):
 
 
 class ProfileSnapshot(TypedDict, total=False):
-    """角色画像快照（persona/character_card/story_state）。"""
+    """角色画像快照。
+
+    用于描述长期角色信息，不包含本轮 request-scoped procedural controls。
+    """
     persona: Optional[Dict[str, Any]]
     character_card: Optional[Dict[str, Any]]
     story_state: Optional[Dict[str, Any]]
 
 
 class ProceduralContext(TypedDict, total=False):
-    """程序性控制上下文（模式、作者注记、焦点指令等）。"""
+    """程序性控制上下文。
+
+    表达“本轮生成如何进行”，例如模式、作者注记、剧本约束、对白控制等。
+    """
     authors_note: Optional[str]
     dialogue_controls: Dict[str, Any]
     script_guidance: Dict[str, Any]
@@ -110,13 +122,19 @@ class MemoryEntityLayer(TypedDict, total=False):
 
 
 class MemoryBundleMeta(TypedDict, total=False):
-    """MemoryBundle 元信息（会话标识与激活日志）。"""
+    """MemoryBundle 元信息。
+
+    activation_logs 用于记录“本轮到底激活了哪些记忆来源”，便于可观测性与调试。
+    """
     session_id: str
     activation_logs: List[Dict[str, Any]]
 
 
 class MemoryBundle(TypedDict, total=False):
-    """故事生成主流程消费的统一分层记忆包。"""
+    """故事生成主流程消费的统一分层记忆包。
+
+    层次顺序并非执行顺序，而是语义分组：episodic/semantic/profile/procedural/world/runtime/entity。
+    """
     episodic: MemoryEpisodicLayer
     semantic: MemorySemanticLayer
     profile: MemoryProfileLayer
@@ -128,7 +146,10 @@ class MemoryBundle(TypedDict, total=False):
 
 
 class MemoryUpdateEvent(TypedDict, total=False):
-    """单条记忆更新事件的标准结构。"""
+    """单条记忆更新事件标准结构。
+
+    事件最终会写入 memory_update_journal，并用于前端时间线展示。
+    """
     event_id: str
     session_id: str
     operation_id: str
@@ -148,7 +169,10 @@ class MemoryUpdateEvent(TypedDict, total=False):
 
 
 class MemoryOrchestratorResult(TypedDict):
-    """MemoryOrchestrator 构建结果。"""
+    """MemoryOrchestrator 构建结果。
+
+    除 bundle 外额外返回 world_id/activation_logs，供调用侧继续复用。
+    """
     bundle: MemoryBundle
     world_id: Optional[str]
     activation_logs: List[Dict[str, Any]]

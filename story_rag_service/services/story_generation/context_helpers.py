@@ -1,5 +1,9 @@
-"""
-故事上下文相关辅助函数。
+"""故事上下文辅助函数。
+
+提供 story 生成链路常用的上下文装配与格式转换能力，包含：
+- 角色画像与剧本约束读取；
+- 会话消息持久化；
+- 对话历史与检索命中格式化。
 """
 
 from __future__ import annotations
@@ -19,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 
 def _build_default_self_persona() -> Dict[str, Any]:
-    """在未显式选择 persona 时，默认将主角视为用户本人。"""
+    """构建默认主角画像（persona 缺失时兜底为“你自己”）。"""
     return PersonaProfile(
         name="你自己",
         description="默认主角就是当前输入这段故事指令的用户本人。除非用户明确补充，否则不要擅自设定主角的固定外貌、性别、年龄、身份或详细背景。",
@@ -39,7 +43,10 @@ def _resolve_context_score(context_item: Dict[str, Any]) -> float:
 
 
 def load_roleplay_profile(roleplay_manager, request: StoryGenerationRequest) -> Dict[str, Any]:
-    """根据请求中的角色绑定加载角色扮演画像。"""
+    """加载角色扮演画像与对白控制参数。
+
+    返回同时包含长期画像（persona/story_state）和 request-scoped 对白控制。
+    """
     profile: Dict[str, Any] = {
         "story_state_mode": request.story_state_mode or "off",
         "character_card": None,
@@ -55,6 +62,7 @@ def load_roleplay_profile(roleplay_manager, request: StoryGenerationRequest) -> 
         },
     }
 
+    # 无 manager 时返回可用兜底结构，避免上层分支膨胀。
     if not roleplay_manager:
         return profile
 
@@ -78,7 +86,10 @@ def load_roleplay_profile(roleplay_manager, request: StoryGenerationRequest) -> 
 
 
 def load_script_design_context(script_design_app, request: StoryGenerationRequest) -> Dict[str, Any]:
-    """加载当前剧本设计指导快照，用于注入提示词上下文。"""
+    """加载剧本设计指导快照。
+
+    仅在 follow_script_design 开启且 script_design_id 存在时生效。
+    """
     if not script_design_app:
         return {}
 
@@ -100,6 +111,7 @@ def load_script_design_context(script_design_app, request: StoryGenerationReques
     active_stage_id = getattr(request, "active_stage_id", None)
     active_event_id = getattr(request, "active_event_id", None)
 
+    # 阶段优先级：显式阶段 > policy 推荐阶段 > 首阶段。
     if active_stage_id:
         stage = next((item for item in script_design.stage_outlines if item.id == active_stage_id), None)
     if stage is None:
@@ -109,6 +121,7 @@ def load_script_design_context(script_design_app, request: StoryGenerationReques
     if stage is None and script_design.stage_outlines:
         stage = script_design.stage_outlines[0]
 
+    # 事件优先级：显式事件 > 当前阶段 pending/active > 全局 pending/active > 首事件。
     if active_event_id:
         event = next((item for item in script_design.event_nodes if item.id == active_event_id), None)
     if event is None and stage is not None:
