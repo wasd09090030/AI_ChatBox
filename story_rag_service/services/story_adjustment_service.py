@@ -9,19 +9,23 @@ from __future__ import annotations
 import time
 from typing import Any, Optional
 
+from application.ports import LLMGateway
 from langchain_core.messages import HumanMessage, SystemMessage
 
 from config import settings
-from services.story_generation.llm_factory import create_llm
 
 
 class StoryAdjustmentService:
     """生成润色后的替换文本，不修改会话状态。"""
 
-    def __init__(self, story_manager, user_manager=None):
+    def __init__(
+        self,
+        story_manager,
+        llm_gateway: Optional[LLMGateway] = None,
+    ):
         """注入故事读取与用户配置能力，供润色流程复用。"""
         self.story_manager = story_manager
-        self.user_manager = user_manager
+        self.llm_gateway = llm_gateway
 
     async def polish_selection(self, request, *, user_id: Optional[str] = None) -> dict[str, Any]:
         """按预设风格改写用户选中文本，并保持剧情事实不变。"""
@@ -39,15 +43,17 @@ class StoryAdjustmentService:
 
         default_max_tokens = int(getattr(settings, "default_max_tokens", 2000) or 2000)
 
-        llm = create_llm(
+        if self.llm_gateway is None:
+            raise RuntimeError("LLM gateway is not configured for StoryAdjustmentService")
+
+        llm = self.llm_gateway.create_client(
             model=request.model,
+            provider=request.provider,
+            base_url=request.base_url,
             temperature=request.temperature or settings.default_temperature,
             max_tokens=min(default_max_tokens, 1200),
             user_id=user_id,
             for_streaming=False,
-            provider=request.provider,
-            base_url=request.base_url,
-            user_manager=self.user_manager,
         )
 
         system_prompt = (

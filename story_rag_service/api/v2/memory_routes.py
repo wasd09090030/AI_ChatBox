@@ -9,7 +9,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
-from api.service_context import ServiceContainer, get_services
+from api.dependencies.memory import StoryMemoryDependencies, get_story_memory_dependencies
 from api.v2.schemas import (
     MemorySessionTimelineResponse,
     MemorySummaryStateResponse,
@@ -112,7 +112,7 @@ async def get_session_memory_updates(
     session_id: str,
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=100, ge=1, le=200),
-    services: ServiceContainer = Depends(get_services),
+    memory_services: StoryMemoryDependencies = Depends(get_story_memory_dependencies),
 ):
     """查询单会话的记忆时间线，并附带当前摘要状态。"""
     result = list_memory_update_events(
@@ -120,12 +120,12 @@ async def get_session_memory_updates(
         page=page,
         page_size=page_size,
     )
-    metadata = services.session_manager.get_session_metadata(session_id)
+    metadata = memory_services.session_manager.get_session_metadata(session_id)
     if not metadata and not result["items"]:
         raise HTTPException(status_code=404, detail=f"Session '{session_id}' not found")
 
     items = [MemoryUpdateJournalItem(**item) for item in result["items"]]
-    current_summary = services.summary_memory_manager.get_summary(session_id)
+    current_summary = memory_services.summary_memory_manager.get_summary(session_id)
 
     return MemorySessionTimelineResponse(
         session_id=session_id,
@@ -147,11 +147,11 @@ async def get_story_memory_snapshot(
     story_id: Optional[str] = Query(default=None),
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=50, ge=1, le=200),
-    services: ServiceContainer = Depends(get_services),
+    memory_services: StoryMemoryDependencies = Depends(get_story_memory_dependencies),
 ):
     """读取单会话统一故事记忆快照。"""
-    metadata = services.session_manager.get_session_metadata(session_id)
-    snapshot = services.story_memory_service.get_story_memory_snapshot(
+    metadata = memory_services.session_manager.get_session_metadata(session_id)
+    snapshot = memory_services.story_memory_service.get_story_memory_snapshot(
         session_id=session_id,
         story_id=_normalize_optional_query(story_id),
         world_id=(metadata or {}).get("world_id"),

@@ -1,0 +1,1720 @@
+{
+  "summary": {
+    "base_url": "http://127.0.0.1:8012",
+    "openapi_status": 200,
+    "total_endpoints": 69,
+    "pass_count": 69,
+    "warn_count": 0,
+    "skip_count": 0,
+    "fail_count": 0,
+    "available_endpoints": 69,
+    "executed_at": "2026-04-17 19:38:18",
+    "policy": {
+      "PASS": "2xx",
+      "WARN": "non-2xx and non-5xx reachable responses",
+      "FAIL": "network errors and 5xx"
+    }
+  },
+  "fixture_context": {
+    "world_id": "4c1e04f3-bc46-4188-9c59-87e3bdbffce1",
+    "story_id": "bd981e2b-dae8-4bdf-a01a-8fe7ac0525da",
+    "session_id": "story-bd981e2b-dae8-4bdf-a01a-8fe7ac0525da-v2",
+    "entry_id": "3e4bca33-4094-45df-b964-8ca7769ac4dc",
+    "persona_id": "a8966fb8-da69-41d6-a143-ab195c8d2fea",
+    "script_design_id": "55dad5df-5aad-4495-9762-000d9c08db5b",
+    "segment_id": "029c112e-5f45-4153-aece-c382d8781bb9",
+    "provider": "deepseek",
+    "model": "deepseek-chat",
+    "created": {
+      "world_id": "4c1e04f3-bc46-4188-9c59-87e3bdbffce1",
+      "entry_id": "3e4bca33-4094-45df-b964-8ca7769ac4dc",
+      "story_id": "bd981e2b-dae8-4bdf-a01a-8fe7ac0525da",
+      "persona_id": "a8966fb8-da69-41d6-a143-ab195c8d2fea",
+      "script_design_id": "55dad5df-5aad-4495-9762-000d9c08db5b",
+      "segment_id": "029c112e-5f45-4153-aece-c382d8781bb9"
+    }
+  },
+  "fixture_prepare": [
+    {
+      "step": "GET /api/v2/health",
+      "status": 200,
+      "error": null,
+      "response": {
+        "status": "healthy",
+        "api_version": "v2"
+      }
+    },
+    {
+      "step": "POST /api/v2/worlds",
+      "status": 200,
+      "error": null,
+      "response": {
+        "truncated": "{\"id\": \"4c1e04f3-bc46-4188-9c59-87e3bdbffce1\", \"name\": \"AllApiProbe-World-43501b\", \"description\": \"fixture for all endpoint probe\", \"genre\": \"mystery\", \"setting\": null, \"rules\": null, \"style_preset\": null, \"narrative_tone\": null, \"pacing_style\": null, \"vocabulary_style\": null, \"style_tags\": [], \"default_time_of_day\": null, \"default_weather\": null, "
+      }
+    },
+    {
+      "step": "POST /api/v2/worlds/4c1e04f3-bc46-4188-9c59-87e3bdbffce1/lorebook/character",
+      "status": 200,
+      "error": null,
+      "response": {
+        "success": true,
+        "entry_id": "3e4bca33-4094-45df-b964-8ca7769ac4dc",
+        "world_id": "4c1e04f3-bc46-4188-9c59-87e3bdbffce1",
+        "message": "Character 'Probe Character' created in world '4c1e04f3-bc46-4188-9c59-87e3bdbffce1'"
+      }
+    },
+    {
+      "step": "POST /api/v2/stories",
+      "status": 200,
+      "error": null,
+      "response": {
+        "id": "bd981e2b-dae8-4bdf-a01a-8fe7ac0525da",
+        "world_id": "4c1e04f3-bc46-4188-9c59-87e3bdbffce1",
+        "world_name": "AllApiProbe-World-43501b",
+        "title": "AllApiProbe-Story-7ea9f4",
+        "segments": [],
+        "created_at": "2026-04-17T19:37:38.686499",
+        "updated_at": "2026-04-17T19:37:38.686499",
+        "metadata": {
+          "creation_mode": "improv"
+        }
+      }
+    },
+    {
+      "step": "POST /api/v2/story/session",
+      "status": 200,
+      "error": null,
+      "response": {
+        "session_id": "story-bd981e2b-dae8-4bdf-a01a-8fe7ac0525da-v2",
+        "world_id": "4c1e04f3-bc46-4188-9c59-87e3bdbffce1",
+        "character_card_id": null,
+        "persona_id": null,
+        "first_message": null,
+        "created_at": "2026-04-17T19:37:38.710185"
+      }
+    },
+    {
+      "step": "PUT /api/v2/roleplay/story-state/story-bd981e2b-dae8-4bdf-a01a-8fe7ac0525da-v2",
+      "status": 200,
+      "error": null,
+      "response": {
+        "session_id": "story-bd981e2b-dae8-4bdf-a01a-8fe7ac0525da-v2",
+        "chapter": "Probe Chapter",
+        "objective": "Probe Objective",
+        "conflict": "Probe Conflict",
+        "clues": [],
+        "relationship_arcs": {},
+        "metadata": {},
+        "updated_at": "2026-04-17T19:37:38.745381"
+      }
+    },
+    {
+      "step": "POST /api/v2/roleplay/personas",
+      "status": 200,
+      "error": null,
+      "response": {
+        "id": "a8966fb8-da69-41d6-a143-ab195c8d2fea",
+        "name": "Probe Persona a052",
+        "description": "fixture persona",
+        "title": null,
+        "traits": [],
+        "metadata": {},
+        "created_at": "2026-04-17T19:37:38.757058",
+        "updated_at": "2026-04-17T19:37:38.757058"
+      }
+    },
+    {
+      "step": "POST /api/v2/script-designs",
+      "status": 200,
+      "error": null,
+      "response": {
+        "truncated": "{\"id\": \"55dad5df-5aad-4495-9762-000d9c08db5b\", \"world_id\": \"4c1e04f3-bc46-4188-9c59-87e3bdbffce1\", \"title\": \"Probe Script Design\", \"summary\": \"fixture\", \"logline\": null, \"theme\": null, \"core_conflict\": null, \"ending_direction\": null, \"protagonist_profile\": null, \"tone_style\": null, \"status\": \"draft\", \"stage_outlines\": [], \"event_nodes\": [], \"foresh"
+      }
+    },
+    {
+      "step": "POST /api/v2/stories/bd981e2b-dae8-4bdf-a01a-8fe7ac0525da/segments",
+      "status": 200,
+      "error": null,
+      "response": {
+        "truncated": "{\"id\": \"bd981e2b-dae8-4bdf-a01a-8fe7ac0525da\", \"world_id\": \"4c1e04f3-bc46-4188-9c59-87e3bdbffce1\", \"world_name\": \"AllApiProbe-World-43501b\", \"title\": \"AllApiProbe-Story-7ea9f4\", \"segments\": [{\"id\": \"029c112e-5f45-4153-aece-c382d8781bb9\", \"prompt\": \"Write a short probe segment.\", \"creation_mode\": \"improv\", \"content\": \"probe segment\", \"retrieved_cont"
+      }
+    }
+  ],
+  "fixture_cleanup": [
+    {
+      "step": "DELETE /api/v2/stories/bd981e2b-dae8-4bdf-a01a-8fe7ac0525da",
+      "status": 200,
+      "error": null,
+      "response": {
+        "success": true,
+        "story_id": "bd981e2b-dae8-4bdf-a01a-8fe7ac0525da"
+      }
+    },
+    {
+      "step": "DELETE /api/v2/roleplay/personas/a8966fb8-da69-41d6-a143-ab195c8d2fea",
+      "status": 200,
+      "error": null,
+      "response": {
+        "success": true,
+        "id": "a8966fb8-da69-41d6-a143-ab195c8d2fea"
+      }
+    },
+    {
+      "step": "DELETE /api/v2/worlds/4c1e04f3-bc46-4188-9c59-87e3bdbffce1",
+      "status": 200,
+      "error": null,
+      "response": {
+        "success": true,
+        "message": "World '4c1e04f3-bc46-4188-9c59-87e3bdbffce1' deleted successfully",
+        "deleted_stories": 1,
+        "deleted_lorebook_entries": 4,
+        "deleted_script_designs": 2
+      }
+    }
+  ],
+  "results": [
+    {
+      "method": "GET",
+      "path": "/",
+      "probe_url_path": "/",
+      "operation_id": "root__get",
+      "status": 200,
+      "outcome": "PASS",
+      "available": true,
+      "duration_ms": 7,
+      "body_required": false,
+      "query_params_used": {},
+      "request_body_preview": null,
+      "response_preview": {
+        "service": "Story RAG Service",
+        "version": "1.0.0",
+        "status": "running",
+        "docs": "/docs",
+        "api": "/api/v2"
+      },
+      "note": null,
+      "error": null
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/client-storage",
+      "probe_url_path": "/api/client-storage",
+      "operation_id": "clear_all_api_client_storage_delete",
+      "status": 200,
+      "outcome": "PASS",
+      "available": true,
+      "duration_ms": 28,
+      "body_required": false,
+      "query_params_used": {},
+      "request_body_preview": null,
+      "response_preview": {
+        "cleared": 0
+      },
+      "note": null,
+      "error": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/client-storage/{key}",
+      "probe_url_path": "/api/client-storage/probe-key",
+      "operation_id": "get_value_api_client_storage__key__get",
+      "status": 200,
+      "outcome": "PASS",
+      "available": true,
+      "duration_ms": 18,
+      "body_required": false,
+      "query_params_used": {},
+      "request_body_preview": null,
+      "response_preview": {
+        "key": "probe-key",
+        "value": "probe"
+      },
+      "note": null,
+      "error": null
+    },
+    {
+      "method": "PUT",
+      "path": "/api/client-storage/{key}",
+      "probe_url_path": "/api/client-storage/probe-key",
+      "operation_id": "set_value_api_client_storage__key__put",
+      "status": 200,
+      "outcome": "PASS",
+      "available": true,
+      "duration_ms": 9,
+      "body_required": true,
+      "query_params_used": {},
+      "request_body_preview": {
+        "value": "probe"
+      },
+      "response_preview": {
+        "key": "probe-key"
+      },
+      "note": null,
+      "error": null
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/client-storage/{key}",
+      "probe_url_path": "/api/client-storage/probe-key",
+      "operation_id": "delete_value_api_client_storage__key__delete",
+      "status": 200,
+      "outcome": "PASS",
+      "available": true,
+      "duration_ms": 11,
+      "body_required": false,
+      "query_params_used": {},
+      "request_body_preview": null,
+      "response_preview": {
+        "ok": true
+      },
+      "note": null,
+      "error": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/health",
+      "probe_url_path": "/api/v2/health",
+      "operation_id": "v2_health_check_api_v2_health_get",
+      "status": 200,
+      "outcome": "PASS",
+      "available": true,
+      "duration_ms": 7,
+      "body_required": false,
+      "query_params_used": {},
+      "request_body_preview": null,
+      "response_preview": {
+        "status": "healthy",
+        "api_version": "v2"
+      },
+      "note": null,
+      "error": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/lorebook/entries",
+      "probe_url_path": "/api/v2/lorebook/entries",
+      "operation_id": "list_lorebook_entries_api_v2_lorebook_entries_get",
+      "status": 200,
+      "outcome": "PASS",
+      "available": true,
+      "duration_ms": 25,
+      "body_required": false,
+      "query_params_used": {},
+      "request_body_preview": null,
+      "response_preview": {
+        "truncated": "{\"entries\": [{\"id\": \"world_c672bd85-0672-4740-ad26-3ac257b38a96\", \"world_id\": \"c672bd85-0672-4740-ad26-3ac257b38a96\", \"name\": \"【世界设定】Plan0409-双路Patch验证-1775737268-49c42a\", \"type\": \"world_setting\", \"description\": \"世界名称：Plan0409-双路Patch验证-1775737268-49c42a\\n世界描述：Plan 04-09 双路Patch验证世界\\n世界类型：mystery\", \"content\": \"世界名称：Plan0409-双路Patch验证-1775737268-49c"
+      },
+      "note": null,
+      "error": null
+    },
+    {
+      "method": "PUT",
+      "path": "/api/v2/lorebook/entry/{entry_id}",
+      "probe_url_path": "/api/v2/lorebook/entry/3e4bca33-4094-45df-b964-8ca7769ac4dc",
+      "operation_id": "update_lorebook_entry_api_v2_lorebook_entry__entry_id__put",
+      "status": 200,
+      "outcome": "PASS",
+      "available": true,
+      "duration_ms": 179,
+      "body_required": true,
+      "query_params_used": {},
+      "request_body_preview": {
+        "entry_type": "character",
+        "world_id": "4c1e04f3-bc46-4188-9c59-87e3bdbffce1",
+        "data": {
+          "name": "Probe Character Updated",
+          "personality": "calm",
+          "background": "functional smoke update",
+          "inventory": [],
+          "current_location": "Probe Tower"
+        }
+      },
+      "response_preview": {
+        "success": true,
+        "entry_id": "3e4bca33-4094-45df-b964-8ca7769ac4dc"
+      },
+      "note": null,
+      "error": null
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v2/lorebook/entry/{entry_id}",
+      "probe_url_path": "/api/v2/lorebook/entry/3e4bca33-4094-45df-b964-8ca7769ac4dc",
+      "operation_id": "delete_lorebook_entry_api_v2_lorebook_entry__entry_id__delete",
+      "status": 200,
+      "outcome": "PASS",
+      "available": true,
+      "duration_ms": 88,
+      "body_required": false,
+      "query_params_used": {},
+      "request_body_preview": null,
+      "response_preview": {
+        "success": true,
+        "entry_id": "3e4bca33-4094-45df-b964-8ca7769ac4dc"
+      },
+      "note": null,
+      "error": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/memory-updates",
+      "probe_url_path": "/api/v2/memory-updates",
+      "operation_id": "get_memory_updates_api_v2_memory_updates_get",
+      "status": 200,
+      "outcome": "PASS",
+      "available": true,
+      "duration_ms": 18,
+      "body_required": false,
+      "query_params_used": {},
+      "request_body_preview": null,
+      "response_preview": {
+        "truncated": "{\"items\": [{\"event_id\": \"369fb8d3-eda0-4656-9370-3dac25986975\", \"session_id\": \"story-36afcfcc-873c-4a46-86ff-84e120f51a2e-v2\", \"operation_id\": \"regenerate:234cfa40-2105-44e0-9de2-39232cdf0c66\", \"sequence\": 2, \"display_kind\": \"index_rebuild\", \"world_id\": \"2745052e-d478-40db-8593-e4b559702413\", \"memory_layer\": \"episodic\", \"action\": \"reindexed\", \"sour"
+      },
+      "note": null,
+      "error": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/providers",
+      "probe_url_path": "/api/v2/providers",
+      "operation_id": "get_available_providers_api_v2_providers_get",
+      "status": 200,
+      "outcome": "PASS",
+      "available": true,
+      "duration_ms": 30,
+      "body_required": false,
+      "query_params_used": {},
+      "request_body_preview": null,
+      "response_preview": {
+        "truncated": "{\"providers\": [{\"provider\": \"openai\", \"name\": \"OpenAI (GPT)\", \"available\": false, \"models\": [\"gpt-4o\", \"gpt-4o-mini\", \"gpt-4-turbo\", \"gpt-3.5-turbo\"], \"default_base_url\": \"https://api.openai.com/v1\", \"custom_base_url\": \"\", \"protocol\": \"openai_compat\"}, {\"provider\": \"deepseek\", \"name\": \"DeepSeek\", \"available\": true, \"models\": [\"deepseek-chat\", \"deep"
+      },
+      "note": null,
+      "error": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/v2/providers/config",
+      "probe_url_path": "/api/v2/providers/config",
+      "operation_id": "update_provider_config_api_v2_providers_config_post",
+      "status": 200,
+      "outcome": "PASS",
+      "available": true,
+      "duration_ms": 9,
+      "body_required": true,
+      "query_params_used": {},
+      "request_body_preview": {
+        "provider": "deepseek"
+      },
+      "response_preview": {
+        "success": true,
+        "provider": "deepseek"
+      },
+      "note": null,
+      "error": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/providers/default-selection",
+      "probe_url_path": "/api/v2/providers/default-selection",
+      "operation_id": "get_default_provider_selection_api_v2_providers_default_selection_get",
+      "status": 200,
+      "outcome": "PASS",
+      "available": true,
+      "duration_ms": 18,
+      "body_required": false,
+      "query_params_used": {},
+      "request_body_preview": null,
+      "response_preview": {
+        "provider": "deepseek",
+        "model": "deepseek-chat"
+      },
+      "note": null,
+      "error": null
+    },
+    {
+      "method": "PUT",
+      "path": "/api/v2/providers/default-selection",
+      "probe_url_path": "/api/v2/providers/default-selection",
+      "operation_id": "update_default_provider_selection_api_v2_providers_default_selection_put",
+      "status": 200,
+      "outcome": "PASS",
+      "available": true,
+      "duration_ms": 21,
+      "body_required": true,
+      "query_params_used": {},
+      "request_body_preview": {
+        "provider": "deepseek",
+        "model": "deepseek-chat"
+      },
+      "response_preview": {
+        "provider": "deepseek",
+        "model": "deepseek-chat"
+      },
+      "note": null,
+      "error": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/providers/scene-models",
+      "probe_url_path": "/api/v2/providers/scene-models",
+      "operation_id": "get_scene_model_preferences_api_v2_providers_scene_models_get",
+      "status": 200,
+      "outcome": "PASS",
+      "available": true,
+      "duration_ms": 10,
+      "body_required": false,
+      "query_params_used": {},
+      "request_body_preview": null,
+      "response_preview": {
+        "story_generation": {
+          "provider": "deepseek",
+          "model": "deepseek-chat"
+        },
+        "input_enhancement": {
+          "provider": "deepseek",
+          "model": "deepseek-chat"
+        },
+        "story_adjustment": {
+          "provider": "deepseek",
+          "model": "deepseek-chat"
+        },
+        "fallback": {
+          "default_provider": "deepseek",
+          "default_model": "deepseek-chat"
+        }
+      },
+      "note": null,
+      "error": null
+    },
+    {
+      "method": "PUT",
+      "path": "/api/v2/providers/scene-models",
+      "probe_url_path": "/api/v2/providers/scene-models",
+      "operation_id": "update_scene_model_preferences_api_v2_providers_scene_models_put",
+      "status": 200,
+      "outcome": "PASS",
+      "available": true,
+      "duration_ms": 14,
+      "body_required": true,
+      "query_params_used": {},
+      "request_body_preview": {
+        "story_generation": {
+          "provider": "deepseek",
+          "model": "deepseek-chat"
+        },
+        "input_enhancement": {
+          "provider": "deepseek",
+          "model": "deepseek-chat"
+        },
+        "story_adjustment": {
+          "provider": "deepseek",
+          "model": "deepseek-chat"
+        }
+      },
+      "response_preview": {
+        "story_generation": {
+          "provider": "deepseek",
+          "model": "deepseek-chat"
+        },
+        "input_enhancement": {
+          "provider": "deepseek",
+          "model": "deepseek-chat"
+        },
+        "story_adjustment": {
+          "provider": "deepseek",
+          "model": "deepseek-chat"
+        },
+        "fallback": {
+          "default_provider": "deepseek",
+          "default_model": "deepseek-chat"
+        }
+      },
+      "note": null,
+      "error": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/v2/providers/test-connection",
+      "probe_url_path": "/api/v2/providers/test-connection",
+      "operation_id": "test_provider_connection_api_v2_providers_test_connection_post",
+      "status": 200,
+      "outcome": "PASS",
+      "available": true,
+      "duration_ms": 1401,
+      "body_required": true,
+      "query_params_used": {},
+      "request_body_preview": {
+        "provider": "deepseek",
+        "base_url": null
+      },
+      "response_preview": {
+        "success": true,
+        "status": "ok",
+        "message": "连接成功，响应时间 1389ms",
+        "latency_ms": 1389
+      },
+      "note": null,
+      "error": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/providers/{provider}/models",
+      "probe_url_path": "/api/v2/providers/deepseek/models",
+      "operation_id": "list_provider_models_api_v2_providers__provider__models_get",
+      "status": 200,
+      "outcome": "PASS",
+      "available": true,
+      "duration_ms": 1257,
+      "body_required": false,
+      "query_params_used": {},
+      "request_body_preview": null,
+      "response_preview": {
+        "source": "remote",
+        "models": [
+          {
+            "id": "deepseek-chat"
+          },
+          {
+            "id": "deepseek-reasoner"
+          }
+        ]
+      },
+      "note": null,
+      "error": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/roleplay/personas",
+      "probe_url_path": "/api/v2/roleplay/personas",
+      "operation_id": "list_personas_api_v2_roleplay_personas_get",
+      "status": 200,
+      "outcome": "PASS",
+      "available": true,
+      "duration_ms": 9,
+      "body_required": false,
+      "query_params_used": {},
+      "request_body_preview": null,
+      "response_preview": {
+        "truncated": "[{\"id\": \"a8966fb8-da69-41d6-a143-ab195c8d2fea\", \"name\": \"Probe Persona a052\", \"description\": \"fixture persona\", \"title\": null, \"traits\": [], \"metadata\": {}, \"created_at\": \"2026-04-17T19:37:38.757058\", \"updated_at\": \"2026-04-17T19:37:38.757058\"}, {\"id\": \"7a6a386c-9141-49b2-b598-64bc1ad5c001\", \"name\": \"Probe Persona 9923\", \"description\": \"functional "
+      },
+      "note": null,
+      "error": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/v2/roleplay/personas",
+      "probe_url_path": "/api/v2/roleplay/personas",
+      "operation_id": "create_persona_api_v2_roleplay_personas_post",
+      "status": 200,
+      "outcome": "PASS",
+      "available": true,
+      "duration_ms": 31,
+      "body_required": true,
+      "query_params_used": {},
+      "request_body_preview": {
+        "name": "Probe Persona 89b2",
+        "description": "functional endpoint probe",
+        "profile": {
+          "tone": "neutral"
+        }
+      },
+      "response_preview": {
+        "id": "2425b14d-00ce-4a85-9817-4de9bb50b925",
+        "name": "Probe Persona 89b2",
+        "description": "functional endpoint probe",
+        "title": null,
+        "traits": [],
+        "metadata": {},
+        "created_at": "2026-04-17T19:37:42.023756",
+        "updated_at": "2026-04-17T19:37:42.023756"
+      },
+      "note": null,
+      "error": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/roleplay/personas/{persona_id}",
+      "probe_url_path": "/api/v2/roleplay/personas/a8966fb8-da69-41d6-a143-ab195c8d2fea",
+      "operation_id": "get_persona_api_v2_roleplay_personas__persona_id__get",
+      "status": 200,
+      "outcome": "PASS",
+      "available": true,
+      "duration_ms": 9,
+      "body_required": false,
+      "query_params_used": {},
+      "request_body_preview": null,
+      "response_preview": {
+        "id": "a8966fb8-da69-41d6-a143-ab195c8d2fea",
+        "name": "Probe Persona a052",
+        "description": "fixture persona",
+        "title": null,
+        "traits": [],
+        "metadata": {},
+        "created_at": "2026-04-17T19:37:38.757058",
+        "updated_at": "2026-04-17T19:37:38.757058"
+      },
+      "note": null,
+      "error": null
+    },
+    {
+      "method": "PUT",
+      "path": "/api/v2/roleplay/personas/{persona_id}",
+      "probe_url_path": "/api/v2/roleplay/personas/a8966fb8-da69-41d6-a143-ab195c8d2fea",
+      "operation_id": "update_persona_api_v2_roleplay_personas__persona_id__put",
+      "status": 200,
+      "outcome": "PASS",
+      "available": true,
+      "duration_ms": 31,
+      "body_required": true,
+      "query_params_used": {},
+      "request_body_preview": {
+        "name": "probe",
+        "description": "probe",
+        "title": "probe"
+      },
+      "response_preview": {
+        "id": "a8966fb8-da69-41d6-a143-ab195c8d2fea",
+        "name": "probe",
+        "description": "probe",
+        "title": "probe",
+        "traits": [],
+        "metadata": {},
+        "created_at": "2026-04-17T19:37:38.757058",
+        "updated_at": "2026-04-17T19:37:42.064862"
+      },
+      "note": null,
+      "error": null
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v2/roleplay/personas/{persona_id}",
+      "probe_url_path": "/api/v2/roleplay/personas/cad691af-70ea-4ca5-af1f-d4bf83faf7c9",
+      "operation_id": "delete_persona_api_v2_roleplay_personas__persona_id__delete",
+      "status": 200,
+      "outcome": "PASS",
+      "available": true,
+      "duration_ms": 22,
+      "body_required": false,
+      "query_params_used": {},
+      "request_body_preview": null,
+      "response_preview": {
+        "success": true,
+        "id": "cad691af-70ea-4ca5-af1f-d4bf83faf7c9"
+      },
+      "note": null,
+      "error": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/roleplay/story-state/{session_id}",
+      "probe_url_path": "/api/v2/roleplay/story-state/story-bd981e2b-dae8-4bdf-a01a-8fe7ac0525da-v2",
+      "operation_id": "get_story_state_api_v2_roleplay_story_state__session_id__get",
+      "status": 200,
+      "outcome": "PASS",
+      "available": true,
+      "duration_ms": 16,
+      "body_required": false,
+      "query_params_used": {},
+      "request_body_preview": null,
+      "response_preview": {
+        "session_id": "story-bd981e2b-dae8-4bdf-a01a-8fe7ac0525da-v2",
+        "chapter": "Probe Chapter",
+        "objective": "Probe Objective",
+        "conflict": "Probe Conflict",
+        "clues": [],
+        "relationship_arcs": {},
+        "metadata": {},
+        "updated_at": "2026-04-17T19:37:38.745381"
+      },
+      "note": null,
+      "error": null
+    },
+    {
+      "method": "PUT",
+      "path": "/api/v2/roleplay/story-state/{session_id}",
+      "probe_url_path": "/api/v2/roleplay/story-state/story-bd981e2b-dae8-4bdf-a01a-8fe7ac0525da-v2",
+      "operation_id": "upsert_story_state_api_v2_roleplay_story_state__session_id__put",
+      "status": 200,
+      "outcome": "PASS",
+      "available": true,
+      "duration_ms": 13,
+      "body_required": true,
+      "query_params_used": {},
+      "request_body_preview": {
+        "chapter": "probe",
+        "objective": "probe",
+        "conflict": "probe"
+      },
+      "response_preview": {
+        "session_id": "story-bd981e2b-dae8-4bdf-a01a-8fe7ac0525da-v2",
+        "chapter": "probe",
+        "objective": "probe",
+        "conflict": "probe",
+        "clues": [],
+        "relationship_arcs": {},
+        "metadata": {},
+        "updated_at": "2026-04-17T19:37:42.155674"
+      },
+      "note": null,
+      "error": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/script-designs",
+      "probe_url_path": "/api/v2/script-designs",
+      "operation_id": "list_script_designs_api_v2_script_designs_get",
+      "status": 200,
+      "outcome": "PASS",
+      "available": true,
+      "duration_ms": 19,
+      "body_required": false,
+      "query_params_used": {},
+      "request_body_preview": null,
+      "response_preview": {
+        "truncated": "[{\"id\": \"55dad5df-5aad-4495-9762-000d9c08db5b\", \"world_id\": \"4c1e04f3-bc46-4188-9c59-87e3bdbffce1\", \"title\": \"Probe Script Design\", \"summary\": \"fixture\", \"logline\": null, \"theme\": null, \"core_conflict\": null, \"ending_direction\": null, \"protagonist_profile\": null, \"tone_style\": null, \"status\": \"draft\", \"stage_outlines\": [], \"event_nodes\": [], \"fores"
+      },
+      "note": null,
+      "error": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/v2/script-designs",
+      "probe_url_path": "/api/v2/script-designs",
+      "operation_id": "create_script_design_api_v2_script_designs_post",
+      "status": 200,
+      "outcome": "PASS",
+      "available": true,
+      "duration_ms": 11,
+      "body_required": true,
+      "query_params_used": {},
+      "request_body_preview": {
+        "world_id": "4c1e04f3-bc46-4188-9c59-87e3bdbffce1",
+        "title": "Probe Script Design 3463",
+        "summary": "functional endpoint probe"
+      },
+      "response_preview": {
+        "truncated": "{\"id\": \"6e26f31b-2343-4d34-a71f-c0c8cfc84e40\", \"world_id\": \"4c1e04f3-bc46-4188-9c59-87e3bdbffce1\", \"title\": \"Probe Script Design 3463\", \"summary\": \"functional endpoint probe\", \"logline\": null, \"theme\": null, \"core_conflict\": null, \"ending_direction\": null, \"protagonist_profile\": null, \"tone_style\": null, \"status\": \"draft\", \"stage_outlines\": [], \"ev"
+      },
+      "note": null,
+      "error": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/script-designs/{script_design_id}",
+      "probe_url_path": "/api/v2/script-designs/55dad5df-5aad-4495-9762-000d9c08db5b",
+      "operation_id": "get_script_design_api_v2_script_designs__script_design_id__get",
+      "status": 200,
+      "outcome": "PASS",
+      "available": true,
+      "duration_ms": 26,
+      "body_required": false,
+      "query_params_used": {},
+      "request_body_preview": null,
+      "response_preview": {
+        "truncated": "{\"id\": \"55dad5df-5aad-4495-9762-000d9c08db5b\", \"world_id\": \"4c1e04f3-bc46-4188-9c59-87e3bdbffce1\", \"title\": \"Probe Script Design\", \"summary\": \"fixture\", \"logline\": null, \"theme\": null, \"core_conflict\": null, \"ending_direction\": null, \"protagonist_profile\": null, \"tone_style\": null, \"status\": \"draft\", \"stage_outlines\": [], \"event_nodes\": [], \"foresh"
+      },
+      "note": null,
+      "error": null
+    },
+    {
+      "method": "PUT",
+      "path": "/api/v2/script-designs/{script_design_id}",
+      "probe_url_path": "/api/v2/script-designs/55dad5df-5aad-4495-9762-000d9c08db5b",
+      "operation_id": "update_script_design_api_v2_script_designs__script_design_id__put",
+      "status": 200,
+      "outcome": "PASS",
+      "available": true,
+      "duration_ms": 12,
+      "body_required": true,
+      "query_params_used": {},
+      "request_body_preview": {
+        "title": "probe",
+        "summary": "probe",
+        "logline": "probe"
+      },
+      "response_preview": {
+        "truncated": "{\"id\": \"55dad5df-5aad-4495-9762-000d9c08db5b\", \"world_id\": \"4c1e04f3-bc46-4188-9c59-87e3bdbffce1\", \"title\": \"probe\", \"summary\": \"probe\", \"logline\": \"probe\", \"theme\": null, \"core_conflict\": null, \"ending_direction\": null, \"protagonist_profile\": null, \"tone_style\": null, \"status\": \"draft\", \"stage_outlines\": [], \"event_nodes\": [], \"foreshadows\": [], \""
+      },
+      "note": null,
+      "error": null
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v2/script-designs/{script_design_id}",
+      "probe_url_path": "/api/v2/script-designs/2e70a26c-b845-4c66-85cd-373d03a82cb7",
+      "operation_id": "delete_script_design_api_v2_script_designs__script_design_id__delete",
+      "status": 200,
+      "outcome": "PASS",
+      "available": true,
+      "duration_ms": 20,
+      "body_required": false,
+      "query_params_used": {},
+      "request_body_preview": null,
+      "response_preview": {
+        "success": true,
+        "script_design_id": "2e70a26c-b845-4c66-85cd-373d03a82cb7"
+      },
+      "note": null,
+      "error": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/script-designs/{script_design_id}/story-bindings",
+      "probe_url_path": "/api/v2/script-designs/55dad5df-5aad-4495-9762-000d9c08db5b/story-bindings",
+      "operation_id": "get_script_design_story_bindings_api_v2_script_designs__script_design_id__story_bindings_get",
+      "status": 200,
+      "outcome": "PASS",
+      "available": true,
+      "duration_ms": 16,
+      "body_required": false,
+      "query_params_used": {},
+      "request_body_preview": null,
+      "response_preview": {
+        "script_design_id": "55dad5df-5aad-4495-9762-000d9c08db5b",
+        "count": 0,
+        "items": []
+      },
+      "note": null,
+      "error": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/stats/daily",
+      "probe_url_path": "/api/v2/stats/daily",
+      "operation_id": "get_analytics_daily_api_v2_stats_daily_get",
+      "status": 200,
+      "outcome": "PASS",
+      "available": true,
+      "duration_ms": 29,
+      "body_required": false,
+      "query_params_used": {},
+      "request_body_preview": null,
+      "response_preview": {
+        "truncated": "[{\"date\": \"2026-04-11\", \"requests\": 0, \"success\": 0, \"errors\": 0, \"input_tokens\": 0, \"output_tokens\": 0, \"provider_usage_requests\": 0, \"estimated_usage_requests\": 0, \"tokens\": 0, \"tokens_est\": 0, \"vector_hits\": 0, \"retrieved_context_count\": 0, \"generation_time_total\": 0.0, \"avg_generation_time\": 0.0, \"success_rate\": 1.0, \"avg_input_tokens\": 0.0, \"a"
+      },
+      "note": null,
+      "error": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/stats/filter-options",
+      "probe_url_path": "/api/v2/stats/filter-options",
+      "operation_id": "get_analytics_filter_options_api_v2_stats_filter_options_get",
+      "status": 200,
+      "outcome": "PASS",
+      "available": true,
+      "duration_ms": 7,
+      "body_required": false,
+      "query_params_used": {},
+      "request_body_preview": null,
+      "response_preview": {
+        "truncated": "{\"models\": [{\"value\": \"deepseek-chat\", \"count\": 24}], \"event_types\": [{\"value\": \"story_generate\", \"count\": 24}], \"world_ids\": [{\"value\": \"c672bd85-0672-4740-ad26-3ac257b38a96\", \"count\": 5}, {\"value\": \"2128cf39-f480-48c1-886b-506e2343e036\", \"count\": 2}, {\"value\": \"2c6d2a04-487b-40cd-9a72-8a255383477d\", \"count\": 2}, {\"value\": \"2e9117e6-208d-4553-8ca3"
+      },
+      "note": null,
+      "error": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/stats/log",
+      "probe_url_path": "/api/v2/stats/log",
+      "operation_id": "get_recent_events_api_v2_stats_log_get",
+      "status": 200,
+      "outcome": "PASS",
+      "available": true,
+      "duration_ms": 19,
+      "body_required": false,
+      "query_params_used": {},
+      "request_body_preview": null,
+      "response_preview": {
+        "truncated": "{\"events\": [{\"timestamp\": \"2026-04-17T11:25:26.334629+00:00\", \"event_type\": \"story_generate\", \"session_id\": \"story-36afcfcc-873c-4a46-86ff-84e120f51a2e-v2\", \"world_id\": \"2745052e-d478-40db-8593-e4b559702413\", \"model\": \"deepseek-chat\", \"success\": true, \"generation_time\": 10.834, \"prompt_tokens\": 567, \"completion_tokens\": 88, \"total_tokens\": 655, \"to"
+      },
+      "note": null,
+      "error": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/stats/overview",
+      "probe_url_path": "/api/v2/stats/overview",
+      "operation_id": "get_analytics_overview_api_v2_stats_overview_get",
+      "status": 200,
+      "outcome": "PASS",
+      "available": true,
+      "duration_ms": 9,
+      "body_required": false,
+      "query_params_used": {},
+      "request_body_preview": null,
+      "response_preview": {
+        "truncated": "{\"total_requests\": 24, \"success_requests\": 19, \"error_requests\": 5, \"success_rate\": 0.7917, \"total_input_tokens\": 13047, \"total_output_tokens\": 3619, \"total_tokens\": 16666, \"total_tokens_est\": 16666, \"avg_input_tokens\": 543.62, \"avg_output_tokens\": 150.79, \"avg_total_tokens\": 694.42, \"provider_usage_rate\": 0.7917, \"avg_generation_time\": 10.725, \"av"
+      },
+      "note": null,
+      "error": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/stories",
+      "probe_url_path": "/api/v2/stories",
+      "operation_id": "list_stories_api_v2_stories_get",
+      "status": 200,
+      "outcome": "PASS",
+      "available": true,
+      "duration_ms": 7,
+      "body_required": false,
+      "query_params_used": {},
+      "request_body_preview": null,
+      "response_preview": {
+        "truncated": "[{\"id\": \"bd981e2b-dae8-4bdf-a01a-8fe7ac0525da\", \"world_id\": \"4c1e04f3-bc46-4188-9c59-87e3bdbffce1\", \"world_name\": \"AllApiProbe-World-43501b\", \"title\": \"AllApiProbe-Story-7ea9f4\", \"segments\": [{\"id\": \"029c112e-5f45-4153-aece-c382d8781bb9\", \"prompt\": \"Write a short probe segment.\", \"creation_mode\": \"improv\", \"content\": \"probe segment\", \"retrieved_con"
+      },
+      "note": null,
+      "error": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/v2/stories",
+      "probe_url_path": "/api/v2/stories",
+      "operation_id": "create_story_api_v2_stories_post",
+      "status": 200,
+      "outcome": "PASS",
+      "available": true,
+      "duration_ms": 22,
+      "body_required": true,
+      "query_params_used": {},
+      "request_body_preview": {
+        "world_id": "4c1e04f3-bc46-4188-9c59-87e3bdbffce1",
+        "title": "AllApiProbe-Story-8215d9",
+        "metadata": {
+          "creation_mode": "improv"
+        }
+      },
+      "response_preview": {
+        "id": "4bb04802-8453-4176-a87b-12795c9b6d07",
+        "world_id": "4c1e04f3-bc46-4188-9c59-87e3bdbffce1",
+        "world_name": "AllApiProbe-World-43501b",
+        "title": "AllApiProbe-Story-8215d9",
+        "segments": [],
+        "created_at": "2026-04-17T19:37:42.381159",
+        "updated_at": "2026-04-17T19:37:42.381159",
+        "metadata": {
+          "creation_mode": "improv"
+        }
+      },
+      "note": null,
+      "error": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/stories/{story_id}",
+      "probe_url_path": "/api/v2/stories/bd981e2b-dae8-4bdf-a01a-8fe7ac0525da",
+      "operation_id": "get_story_api_v2_stories__story_id__get",
+      "status": 200,
+      "outcome": "PASS",
+      "available": true,
+      "duration_ms": 24,
+      "body_required": false,
+      "query_params_used": {},
+      "request_body_preview": null,
+      "response_preview": {
+        "truncated": "{\"id\": \"bd981e2b-dae8-4bdf-a01a-8fe7ac0525da\", \"world_id\": \"4c1e04f3-bc46-4188-9c59-87e3bdbffce1\", \"world_name\": \"AllApiProbe-World-43501b\", \"title\": \"AllApiProbe-Story-7ea9f4\", \"segments\": [{\"id\": \"029c112e-5f45-4153-aece-c382d8781bb9\", \"prompt\": \"Write a short probe segment.\", \"creation_mode\": \"improv\", \"content\": \"probe segment\", \"retrieved_cont"
+      },
+      "note": null,
+      "error": null
+    },
+    {
+      "method": "PUT",
+      "path": "/api/v2/stories/{story_id}",
+      "probe_url_path": "/api/v2/stories/bd981e2b-dae8-4bdf-a01a-8fe7ac0525da",
+      "operation_id": "update_story_api_v2_stories__story_id__put",
+      "status": 200,
+      "outcome": "PASS",
+      "available": true,
+      "duration_ms": 20,
+      "body_required": true,
+      "query_params_used": {},
+      "request_body_preview": {
+        "title": "probe",
+        "metadata": {}
+      },
+      "response_preview": {
+        "truncated": "{\"id\": \"bd981e2b-dae8-4bdf-a01a-8fe7ac0525da\", \"world_id\": \"4c1e04f3-bc46-4188-9c59-87e3bdbffce1\", \"world_name\": \"AllApiProbe-World-43501b\", \"title\": \"probe\", \"segments\": [{\"id\": \"029c112e-5f45-4153-aece-c382d8781bb9\", \"prompt\": \"Write a short probe segment.\", \"creation_mode\": \"improv\", \"content\": \"probe segment\", \"retrieved_context\": [], \"runtime_"
+      },
+      "note": null,
+      "error": null
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v2/stories/{story_id}",
+      "probe_url_path": "/api/v2/stories/6b42cb20-8e48-407e-910e-86a059f37a5d",
+      "operation_id": "delete_story_api_v2_stories__story_id__delete",
+      "status": 200,
+      "outcome": "PASS",
+      "available": true,
+      "duration_ms": 38,
+      "body_required": false,
+      "query_params_used": {},
+      "request_body_preview": null,
+      "response_preview": {
+        "success": true,
+        "story_id": "6b42cb20-8e48-407e-910e-86a059f37a5d"
+      },
+      "note": null,
+      "error": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/v2/stories/{story_id}/adjustments/commit",
+      "probe_url_path": "/api/v2/stories/bd981e2b-dae8-4bdf-a01a-8fe7ac0525da/adjustments/commit",
+      "operation_id": "commit_story_adjustments_api_v2_stories__story_id__adjustments_commit_post",
+      "status": 200,
+      "outcome": "PASS",
+      "available": true,
+      "duration_ms": 286,
+      "body_required": true,
+      "query_params_used": {},
+      "request_body_preview": {
+        "session_id": "story-bd981e2b-dae8-4bdf-a01a-8fe7ac0525da-v2",
+        "updates": [
+          {
+            "segment_id": "029c112e-5f45-4153-aece-c382d8781bb9",
+            "content": "Probe segment content after adjustment."
+          }
+        ]
+      },
+      "response_preview": {
+        "truncated": "{\"story\": {\"id\": \"bd981e2b-dae8-4bdf-a01a-8fe7ac0525da\", \"world_id\": \"4c1e04f3-bc46-4188-9c59-87e3bdbffce1\", \"world_name\": \"AllApiProbe-World-43501b\", \"title\": \"probe\", \"segments\": [{\"id\": \"029c112e-5f45-4153-aece-c382d8781bb9\", \"prompt\": \"Write a short probe segment.\", \"creation_mode\": \"improv\", \"content\": \"Probe segment content after adjustment.\""
+      },
+      "note": null,
+      "error": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/stories/{story_id}/entity-state",
+      "probe_url_path": "/api/v2/stories/bd981e2b-dae8-4bdf-a01a-8fe7ac0525da/entity-state",
+      "operation_id": "get_story_entity_state_api_v2_stories__story_id__entity_state_get",
+      "status": 200,
+      "outcome": "PASS",
+      "available": true,
+      "duration_ms": 30,
+      "body_required": false,
+      "query_params_used": {},
+      "request_body_preview": null,
+      "response_preview": {
+        "story_id": "bd981e2b-dae8-4bdf-a01a-8fe7ac0525da",
+        "session_id": "story-bd981e2b-dae8-4bdf-a01a-8fe7ac0525da-v2",
+        "entity_type": null,
+        "items": [],
+        "total": 0
+      },
+      "note": null,
+      "error": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/v2/stories/{story_id}/entity-state/rebuild",
+      "probe_url_path": "/api/v2/stories/bd981e2b-dae8-4bdf-a01a-8fe7ac0525da/entity-state/rebuild",
+      "operation_id": "rebuild_story_entity_state_api_v2_stories__story_id__entity_state_rebuild_post",
+      "status": 200,
+      "outcome": "PASS",
+      "available": true,
+      "duration_ms": 24,
+      "body_required": false,
+      "query_params_used": {},
+      "request_body_preview": null,
+      "response_preview": {
+        "story_id": "bd981e2b-dae8-4bdf-a01a-8fe7ac0525da",
+        "session_id": "story-bd981e2b-dae8-4bdf-a01a-8fe7ac0525da-v2",
+        "rebuilt": true,
+        "entity_count": 0,
+        "memory_updates": [],
+        "warnings": [],
+        "items": []
+      },
+      "note": null,
+      "error": null
+    },
+    {
+      "method": "PUT",
+      "path": "/api/v2/stories/{story_id}/progress",
+      "probe_url_path": "/api/v2/stories/bd981e2b-dae8-4bdf-a01a-8fe7ac0525da/progress",
+      "operation_id": "update_story_progress_api_v2_stories__story_id__progress_put",
+      "status": 200,
+      "outcome": "PASS",
+      "available": true,
+      "duration_ms": 21,
+      "body_required": true,
+      "query_params_used": {},
+      "request_body_preview": {
+        "script_design_id": "55dad5df-5aad-4495-9762-000d9c08db5b",
+        "active_stage_id": null,
+        "active_event_id": null,
+        "follow_script_design": true,
+        "creation_mode": "scripted"
+      },
+      "response_preview": {
+        "truncated": "{\"id\": \"bd981e2b-dae8-4bdf-a01a-8fe7ac0525da\", \"world_id\": \"4c1e04f3-bc46-4188-9c59-87e3bdbffce1\", \"world_name\": \"AllApiProbe-World-43501b\", \"title\": \"probe\", \"segments\": [{\"id\": \"029c112e-5f45-4153-aece-c382d8781bb9\", \"prompt\": \"Write a short probe segment.\", \"creation_mode\": \"improv\", \"content\": \"Probe segment content after adjustment.\", \"retriev"
+      },
+      "note": null,
+      "error": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/stories/{story_id}/runtime",
+      "probe_url_path": "/api/v2/stories/bd981e2b-dae8-4bdf-a01a-8fe7ac0525da/runtime",
+      "operation_id": "get_story_runtime_api_v2_stories__story_id__runtime_get",
+      "status": 200,
+      "outcome": "PASS",
+      "available": true,
+      "duration_ms": 50,
+      "body_required": false,
+      "query_params_used": {},
+      "request_body_preview": null,
+      "response_preview": {
+        "truncated": "{\"id\": \"4200bfd6-d697-4d68-a07e-654822295407\", \"story_id\": \"bd981e2b-dae8-4bdf-a01a-8fe7ac0525da\", \"session_id\": \"story-bd981e2b-dae8-4bdf-a01a-8fe7ac0525da-v2\", \"world_id\": \"4c1e04f3-bc46-4188-9c59-87e3bdbffce1\", \"script_design_id\": \"55dad5df-5aad-4495-9762-000d9c08db5b\", \"creation_mode\": \"scripted\", \"current_stage_id\": null, \"current_event_id\": n"
+      },
+      "note": null,
+      "error": null
+    },
+    {
+      "method": "PUT",
+      "path": "/api/v2/stories/{story_id}/runtime",
+      "probe_url_path": "/api/v2/stories/bd981e2b-dae8-4bdf-a01a-8fe7ac0525da/runtime",
+      "operation_id": "update_story_runtime_api_v2_stories__story_id__runtime_put",
+      "status": 200,
+      "outcome": "PASS",
+      "available": true,
+      "duration_ms": 47,
+      "body_required": true,
+      "query_params_used": {},
+      "request_body_preview": {
+        "script_design_id": "55dad5df-5aad-4495-9762-000d9c08db5b",
+        "creation_mode": "scripted",
+        "runtime_notes": "all_api_probe_runtime_update"
+      },
+      "response_preview": {
+        "truncated": "{\"id\": \"4200bfd6-d697-4d68-a07e-654822295407\", \"story_id\": \"bd981e2b-dae8-4bdf-a01a-8fe7ac0525da\", \"session_id\": \"story-bd981e2b-dae8-4bdf-a01a-8fe7ac0525da-v2\", \"world_id\": \"4c1e04f3-bc46-4188-9c59-87e3bdbffce1\", \"script_design_id\": \"55dad5df-5aad-4495-9762-000d9c08db5b\", \"creation_mode\": \"scripted\", \"current_stage_id\": null, \"current_event_id\": n"
+      },
+      "note": null,
+      "error": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/v2/stories/{story_id}/segments",
+      "probe_url_path": "/api/v2/stories/bd981e2b-dae8-4bdf-a01a-8fe7ac0525da/segments",
+      "operation_id": "add_story_segment_api_v2_stories__story_id__segments_post",
+      "status": 200,
+      "outcome": "PASS",
+      "available": true,
+      "duration_ms": 29,
+      "body_required": true,
+      "query_params_used": {},
+      "request_body_preview": {
+        "prompt": "Write a short probe segment.",
+        "content": "probe segment content",
+        "creation_mode": "improv"
+      },
+      "response_preview": {
+        "truncated": "{\"id\": \"bd981e2b-dae8-4bdf-a01a-8fe7ac0525da\", \"world_id\": \"4c1e04f3-bc46-4188-9c59-87e3bdbffce1\", \"world_name\": \"AllApiProbe-World-43501b\", \"title\": \"probe\", \"segments\": [{\"id\": \"029c112e-5f45-4153-aece-c382d8781bb9\", \"prompt\": \"Write a short probe segment.\", \"creation_mode\": \"improv\", \"content\": \"Probe segment content after adjustment.\", \"retriev"
+      },
+      "note": null,
+      "error": null
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v2/stories/{story_id}/segments/last",
+      "probe_url_path": "/api/v2/stories/f6720ad2-8362-4a4d-a1ed-652c86af705a/segments/last",
+      "operation_id": "delete_last_story_segment_api_v2_stories__story_id__segments_last_delete",
+      "status": 200,
+      "outcome": "PASS",
+      "available": true,
+      "duration_ms": 102,
+      "body_required": false,
+      "query_params_used": {},
+      "request_body_preview": null,
+      "response_preview": {
+        "truncated": "{\"story\": {\"id\": \"f6720ad2-8362-4a4d-a1ed-652c86af705a\", \"world_id\": \"4c1e04f3-bc46-4188-9c59-87e3bdbffce1\", \"world_name\": \"AllApiProbe-World-43501b\", \"title\": \"AllApiProbe-SegmentRollback-6faa54\", \"segments\": [], \"created_at\": \"2026-04-17T19:37:43.063132\", \"updated_at\": \"2026-04-17T19:37:43.124636\", \"metadata\": {\"creation_mode\": \"improv\"}}, \"runti"
+      },
+      "note": null,
+      "error": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/v2/story/adjustments/polish",
+      "probe_url_path": "/api/v2/story/adjustments/polish",
+      "operation_id": "polish_story_selection_api_v2_story_adjustments_polish_post",
+      "status": 200,
+      "outcome": "PASS",
+      "available": true,
+      "duration_ms": 4347,
+      "body_required": true,
+      "query_params_used": {},
+      "request_body_preview": {
+        "truncated": "{\"story_id\": \"bd981e2b-dae8-4bdf-a01a-8fe7ac0525da\", \"session_id\": \"story-bd981e2b-dae8-4bdf-a01a-8fe7ac0525da-v2\", \"segment_id\": \"029c112e-5f45-4153-aece-c382d8781bb9\", \"selected_text\": \"Probe segment content\", \"preset_key\": \"style_polish\", \"preset_instruction\": \"Polish the selected text while preserving meaning.\", \"world_id\": \"4c1e04f3-bc46-4188-"
+      },
+      "response_preview": {
+        "story_id": "bd981e2b-dae8-4bdf-a01a-8fe7ac0525da",
+        "segment_id": "029c112e-5f45-4153-aece-c382d8781bb9",
+        "original_text": "Probe segment content",
+        "polished_text": "Probe segment content",
+        "model": "deepseek-chat",
+        "generation_time": 1.7194821999983105
+      },
+      "note": null,
+      "error": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/v2/story/generate",
+      "probe_url_path": "/api/v2/story/generate",
+      "operation_id": "generate_story_v2_api_v2_story_generate_post",
+      "status": 200,
+      "outcome": "PASS",
+      "available": true,
+      "duration_ms": 9763,
+      "body_required": true,
+      "query_params_used": {},
+      "request_body_preview": {
+        "truncated": "{\"session_id\": \"story-bd981e2b-dae8-4bdf-a01a-8fe7ac0525da-v2\", \"story_id\": \"bd981e2b-dae8-4bdf-a01a-8fe7ac0525da\", \"world_id\": \"4c1e04f3-bc46-4188-9c59-87e3bdbffce1\", \"provider\": \"deepseek\", \"model\": \"deepseek-chat\", \"mode\": \"narrative\", \"temperature\": 0.3, \"max_tokens\": 80, \"creation_mode\": \"improv\", \"progress_intent\": \"hold\", \"user_input\": \"Func"
+      },
+      "response_preview": {
+        "truncated": "{\"version\": \"v2\", \"session_id\": \"story-bd981e2b-dae8-4bdf-a01a-8fe7ac0525da-v2\", \"thread_id\": \"story-bd981e2b-dae8-4bdf-a01a-8fe7ac0525da-v2\", \"output_text\": \"你站在昏暗的走廊尽头，面前是一扇厚重的橡木门，门把手在壁灯摇曳的光线下泛着冰冷的金属光泽。空气中弥漫着旧纸张和灰尘的味道，远处隐约传来钟摆规律的滴答声。你的指尖触碰到门把手的瞬间，感到一阵细微的、几乎难以察觉的颤动，仿佛门后有什么东西正在苏醒。\", \"contexts\": [], \"activation_logs\": [{\"source\": \"story_runtime\", \"e"
+      },
+      "note": null,
+      "error": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/v2/story/generate/stream",
+      "probe_url_path": "/api/v2/story/generate/stream",
+      "operation_id": "generate_story_stream_v2_api_v2_story_generate_stream_post",
+      "status": 200,
+      "outcome": "PASS",
+      "available": true,
+      "duration_ms": 2553,
+      "body_required": true,
+      "query_params_used": {},
+      "request_body_preview": {
+        "truncated": "{\"session_id\": \"story-bd981e2b-dae8-4bdf-a01a-8fe7ac0525da-v2\", \"story_id\": \"bd981e2b-dae8-4bdf-a01a-8fe7ac0525da\", \"world_id\": \"4c1e04f3-bc46-4188-9c59-87e3bdbffce1\", \"provider\": \"deepseek\", \"model\": \"deepseek-chat\", \"mode\": \"narrative\", \"temperature\": 0.3, \"max_tokens\": 64, \"creation_mode\": \"improv\", \"progress_intent\": \"hold\", \"user_input\": \"Func"
+      },
+      "response_preview": {
+        "truncated": "{\"stream_chunks\": 30, \"done_seen\": false, \"sample\": [\"data: {\\\"chunk\\\": \\\"你\\\", \\\"done\\\": false}\\n\\n\", \"data: {\\\"chunk\\\": \\\"轻轻\\\", \\\"done\\\": false}\\n\\n\", \"data: {\\\"chunk\\\": \\\"转动\\\", \\\"done\\\": false}\\n\\n\", \"data: {\\\"chunk\\\": \\\"门\\\", \\\"done\\\": false}\\n\\n\", \"data: {\\\"chunk\\\": \\\"把手\\\", \\\"done\\\": false}\\n\\n\", \"data: {\\\"chunk\\\": \\\"，\\\", \\\"done\\\": false}\\n\\n\", "
+      },
+      "note": null,
+      "error": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/v2/story/input-enhancement/preview",
+      "probe_url_path": "/api/v2/story/input-enhancement/preview",
+      "operation_id": "preview_input_enhancement_api_v2_story_input_enhancement_preview_post",
+      "status": 200,
+      "outcome": "PASS",
+      "available": true,
+      "duration_ms": 1808,
+      "body_required": true,
+      "query_params_used": {},
+      "request_body_preview": {
+        "session_id": "probe",
+        "story_id": "probe",
+        "user_input": "probe"
+      },
+      "response_preview": {
+        "original_text": "probe",
+        "enhanced_text": "你谨慎地启动了探测程序，开始扫描周围环境。",
+        "applied": true,
+        "reason": "enhanced"
+      },
+      "note": null,
+      "error": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/v2/story/session",
+      "probe_url_path": "/api/v2/story/session",
+      "operation_id": "create_story_session_api_v2_story_session_post",
+      "status": 200,
+      "outcome": "PASS",
+      "available": true,
+      "duration_ms": 18,
+      "body_required": true,
+      "query_params_used": {},
+      "request_body_preview": {
+        "session_id": "story-bd981e2b-dae8-4bdf-a01a-8fe7ac0525da-v2",
+        "world_id": "4c1e04f3-bc46-4188-9c59-87e3bdbffce1"
+      },
+      "response_preview": {
+        "session_id": "story-bd981e2b-dae8-4bdf-a01a-8fe7ac0525da-v2",
+        "world_id": "4c1e04f3-bc46-4188-9c59-87e3bdbffce1",
+        "character_card_id": null,
+        "persona_id": null,
+        "first_message": null,
+        "created_at": "2026-04-17T19:37:38.710185"
+      },
+      "note": null,
+      "error": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/story/session/{session_id}",
+      "probe_url_path": "/api/v2/story/session/story-bd981e2b-dae8-4bdf-a01a-8fe7ac0525da-v2",
+      "operation_id": "get_story_session_api_v2_story_session__session_id__get",
+      "status": 200,
+      "outcome": "PASS",
+      "available": true,
+      "duration_ms": 18,
+      "body_required": false,
+      "query_params_used": {},
+      "request_body_preview": null,
+      "response_preview": {
+        "session_id": "story-bd981e2b-dae8-4bdf-a01a-8fe7ac0525da-v2",
+        "world_id": "4c1e04f3-bc46-4188-9c59-87e3bdbffce1",
+        "character_card_id": null,
+        "persona_id": null,
+        "first_message_sent": true,
+        "created_at": "2026-04-17T19:37:38.710185",
+        "last_active_at": "2026-04-17T19:37:57.321710"
+      },
+      "note": null,
+      "error": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/story/session/{session_id}/entity-state",
+      "probe_url_path": "/api/v2/story/session/story-bd981e2b-dae8-4bdf-a01a-8fe7ac0525da-v2/entity-state",
+      "operation_id": "get_session_entity_state_api_v2_story_session__session_id__entity_state_get",
+      "status": 200,
+      "outcome": "PASS",
+      "available": true,
+      "duration_ms": 20,
+      "body_required": false,
+      "query_params_used": {},
+      "request_body_preview": null,
+      "response_preview": {
+        "story_id": "bd981e2b-dae8-4bdf-a01a-8fe7ac0525da",
+        "session_id": "story-bd981e2b-dae8-4bdf-a01a-8fe7ac0525da-v2",
+        "entity_type": null,
+        "items": [],
+        "total": 0
+      },
+      "note": null,
+      "error": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/v2/story/session/{session_id}/entity-state/rebuild",
+      "probe_url_path": "/api/v2/story/session/story-bd981e2b-dae8-4bdf-a01a-8fe7ac0525da-v2/entity-state/rebuild",
+      "operation_id": "rebuild_session_entity_state_api_v2_story_session__session_id__entity_state_rebuild_post",
+      "status": 200,
+      "outcome": "PASS",
+      "available": true,
+      "duration_ms": 20,
+      "body_required": false,
+      "query_params_used": {},
+      "request_body_preview": null,
+      "response_preview": {
+        "story_id": "bd981e2b-dae8-4bdf-a01a-8fe7ac0525da",
+        "session_id": "story-bd981e2b-dae8-4bdf-a01a-8fe7ac0525da-v2",
+        "rebuilt": true,
+        "entity_count": 0,
+        "memory_updates": [],
+        "warnings": [],
+        "items": []
+      },
+      "note": null,
+      "error": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/story/session/{session_id}/memory-updates",
+      "probe_url_path": "/api/v2/story/session/story-bd981e2b-dae8-4bdf-a01a-8fe7ac0525da-v2/memory-updates",
+      "operation_id": "get_session_memory_updates_api_v2_story_session__session_id__memory_updates_get",
+      "status": 200,
+      "outcome": "PASS",
+      "available": true,
+      "duration_ms": 10,
+      "body_required": false,
+      "query_params_used": {},
+      "request_body_preview": null,
+      "response_preview": {
+        "truncated": "{\"session_id\": \"story-bd981e2b-dae8-4bdf-a01a-8fe7ac0525da-v2\", \"world_id\": \"4c1e04f3-bc46-4188-9c59-87e3bdbffce1\", \"items\": [{\"event_id\": \"e3c69094-afe5-402d-96d0-9ee8d58e69bd\", \"session_id\": \"story-bd981e2b-dae8-4bdf-a01a-8fe7ac0525da-v2\", \"operation_id\": \"generate:0a9e5f4a-208e-4eea-8ccc-2660825ed36a\", \"sequence\": 1, \"display_kind\": \"write\", \"wo"
+      },
+      "note": null,
+      "error": null
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v2/story/session/{session_id}/messages/last",
+      "probe_url_path": "/api/v2/story/session/story-bd981e2b-dae8-4bdf-a01a-8fe7ac0525da-v2/messages/last",
+      "operation_id": "delete_last_message_api_v2_story_session__session_id__messages_last_delete",
+      "status": 200,
+      "outcome": "PASS",
+      "available": true,
+      "duration_ms": 355,
+      "body_required": false,
+      "query_params_used": {},
+      "request_body_preview": null,
+      "response_preview": {
+        "truncated": "{\"deleted\": true, \"session_id\": \"story-bd981e2b-dae8-4bdf-a01a-8fe7ac0525da-v2\", \"detail\": \"Last message deleted\", \"memory_updates\": [{\"event_id\": \"6395b9e7-c793-462e-b45c-4cc97dc0e320\", \"session_id\": \"story-bd981e2b-dae8-4bdf-a01a-8fe7ac0525da-v2\", \"operation_id\": \"rollback:d01b4108-1005-4b66-9aad-e77a11af8b2c\", \"sequence\": 1, \"display_kind\": \"ses"
+      },
+      "note": null,
+      "error": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/v2/story/session/{session_id}/regenerate",
+      "probe_url_path": "/api/v2/story/session/story-bd981e2b-dae8-4bdf-a01a-8fe7ac0525da-v2/regenerate",
+      "operation_id": "regenerate_last_response_api_v2_story_session__session_id__regenerate_post",
+      "status": 200,
+      "outcome": "PASS",
+      "available": true,
+      "duration_ms": 14535,
+      "body_required": true,
+      "query_params_used": {},
+      "request_body_preview": {
+        "story_id": "bd981e2b-dae8-4bdf-a01a-8fe7ac0525da",
+        "persona_id": "a8966fb8-da69-41d6-a143-ab195c8d2fea",
+        "provider": "deepseek",
+        "model": "deepseek-chat",
+        "temperature": 0.4,
+        "max_tokens": 96,
+        "mode": "narrative",
+        "creation_mode": "improv",
+        "progress_intent": "hold"
+      },
+      "response_preview": {
+        "truncated": "{\"version\": \"v2\", \"session_id\": \"story-bd981e2b-dae8-4bdf-a01a-8fe7ac0525da-v2\", \"thread_id\": \"story-bd981e2b-dae8-4bdf-a01a-8fe7ac0525da-v2\", \"output_text\": \"probe 站在一片由数据流构成的荒原上，脚下是不断闪烁、明灭的二进制符号。空气中弥漫着一种低沉的嗡鸣，像是无数服务器在同时低语。他抬起手，指尖划过虚空，带起一串涟漪般的代码波纹。远处，一个模糊的轮廓正在凝聚，它没有固定的形状，时而像一座塔楼，时而又散开成一片星图。那东西似乎在“观察”他。probe 没有动，只是将自身的感知模块调整到最高灵敏度，试图解析这团混沌中可能存在的任何规"
+      },
+      "note": null,
+      "error": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/story/session/{session_id}/story-memory",
+      "probe_url_path": "/api/v2/story/session/story-bd981e2b-dae8-4bdf-a01a-8fe7ac0525da-v2/story-memory",
+      "operation_id": "get_story_memory_snapshot_api_v2_story_session__session_id__story_memory_get",
+      "status": 200,
+      "outcome": "PASS",
+      "available": true,
+      "duration_ms": 19,
+      "body_required": false,
+      "query_params_used": {},
+      "request_body_preview": null,
+      "response_preview": {
+        "truncated": "{\"session_id\": \"story-bd981e2b-dae8-4bdf-a01a-8fe7ac0525da-v2\", \"story_id\": \"bd981e2b-dae8-4bdf-a01a-8fe7ac0525da\", \"world_id\": \"4c1e04f3-bc46-4188-9c59-87e3bdbffce1\", \"timeline_total\": 8, \"timeline_page\": 1, \"timeline_page_size\": 50, \"story_memory\": {\"session_id\": \"story-bd981e2b-dae8-4bdf-a01a-8fe7ac0525da-v2\", \"story_id\": \"bd981e2b-dae8-4bdf-a01"
+      },
+      "note": null,
+      "error": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/worlds",
+      "probe_url_path": "/api/v2/worlds",
+      "operation_id": "list_worlds_api_v2_worlds_get",
+      "status": 200,
+      "outcome": "PASS",
+      "available": true,
+      "duration_ms": 8,
+      "body_required": false,
+      "query_params_used": {},
+      "request_body_preview": null,
+      "response_preview": {
+        "truncated": "[{\"id\": \"4c1e04f3-bc46-4188-9c59-87e3bdbffce1\", \"name\": \"AllApiProbe-World-43501b\", \"description\": \"fixture for all endpoint probe\", \"genre\": \"mystery\", \"setting\": null, \"rules\": null, \"style_preset\": null, \"narrative_tone\": null, \"pacing_style\": null, \"vocabulary_style\": null, \"style_tags\": [], \"default_time_of_day\": null, \"default_weather\": null,"
+      },
+      "note": null,
+      "error": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/v2/worlds",
+      "probe_url_path": "/api/v2/worlds",
+      "operation_id": "create_world_api_v2_worlds_post",
+      "status": 200,
+      "outcome": "PASS",
+      "available": true,
+      "duration_ms": 153,
+      "body_required": true,
+      "query_params_used": {},
+      "request_body_preview": {
+        "name": "AllApiProbe-World-646e93",
+        "description": "all endpoint functional attempt",
+        "genre": "mystery"
+      },
+      "response_preview": {
+        "truncated": "{\"id\": \"c0fbb1d6-cb9b-464a-b453-e9962189a598\", \"name\": \"AllApiProbe-World-646e93\", \"description\": \"all endpoint functional attempt\", \"genre\": \"mystery\", \"setting\": null, \"rules\": null, \"style_preset\": null, \"narrative_tone\": null, \"pacing_style\": null, \"vocabulary_style\": null, \"style_tags\": [], \"default_time_of_day\": null, \"default_weather\": null,"
+      },
+      "note": null,
+      "error": null
+    },
+    {
+      "method": "GET",
+      "path": "/api/v2/worlds/{world_id}",
+      "probe_url_path": "/api/v2/worlds/4c1e04f3-bc46-4188-9c59-87e3bdbffce1",
+      "operation_id": "get_world_api_v2_worlds__world_id__get",
+      "status": 200,
+      "outcome": "PASS",
+      "available": true,
+      "duration_ms": 16,
+      "body_required": false,
+      "query_params_used": {},
+      "request_body_preview": null,
+      "response_preview": {
+        "truncated": "{\"id\": \"4c1e04f3-bc46-4188-9c59-87e3bdbffce1\", \"name\": \"AllApiProbe-World-43501b\", \"description\": \"fixture for all endpoint probe\", \"genre\": \"mystery\", \"setting\": null, \"rules\": null, \"style_preset\": null, \"narrative_tone\": null, \"pacing_style\": null, \"vocabulary_style\": null, \"style_tags\": [], \"default_time_of_day\": null, \"default_weather\": null, "
+      },
+      "note": null,
+      "error": null
+    },
+    {
+      "method": "PUT",
+      "path": "/api/v2/worlds/{world_id}",
+      "probe_url_path": "/api/v2/worlds/4c1e04f3-bc46-4188-9c59-87e3bdbffce1",
+      "operation_id": "update_world_api_v2_worlds__world_id__put",
+      "status": 200,
+      "outcome": "PASS",
+      "available": true,
+      "duration_ms": 168,
+      "body_required": true,
+      "query_params_used": {},
+      "request_body_preview": {
+        "name": "probe",
+        "description": "probe",
+        "genre": "probe"
+      },
+      "response_preview": {
+        "truncated": "{\"id\": \"4c1e04f3-bc46-4188-9c59-87e3bdbffce1\", \"name\": \"probe\", \"description\": \"probe\", \"genre\": \"probe\", \"setting\": null, \"rules\": null, \"style_preset\": null, \"narrative_tone\": null, \"pacing_style\": null, \"vocabulary_style\": null, \"style_tags\": [], \"default_time_of_day\": null, \"default_weather\": null, \"default_mood\": null, \"metadata\": {}, \"created"
+      },
+      "note": null,
+      "error": null
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v2/worlds/{world_id}",
+      "probe_url_path": "/api/v2/worlds/3cfa27f7-69a1-4fbe-8357-c6086e1a2621",
+      "operation_id": "delete_world_api_v2_worlds__world_id__delete",
+      "status": 200,
+      "outcome": "PASS",
+      "available": true,
+      "duration_ms": 117,
+      "body_required": false,
+      "query_params_used": {},
+      "request_body_preview": null,
+      "response_preview": {
+        "success": true,
+        "message": "World '3cfa27f7-69a1-4fbe-8357-c6086e1a2621' deleted successfully",
+        "deleted_stories": 0,
+        "deleted_lorebook_entries": 1,
+        "deleted_script_designs": 0
+      },
+      "note": null,
+      "error": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/v2/worlds/{world_id}/lorebook/bulk-import",
+      "probe_url_path": "/api/v2/worlds/4c1e04f3-bc46-4188-9c59-87e3bdbffce1/lorebook/bulk-import",
+      "operation_id": "bulk_import_lorebook_entries_api_v2_worlds__world_id__lorebook_bulk_import_post",
+      "status": 200,
+      "outcome": "PASS",
+      "available": true,
+      "duration_ms": 9,
+      "body_required": true,
+      "query_params_used": {},
+      "request_body_preview": {
+        "entries": [
+          {
+            "entry_type": "probe",
+            "data": {}
+          }
+        ]
+      },
+      "response_preview": {
+        "imported": 0,
+        "failed": 1,
+        "details": {
+          "success": [],
+          "failed": [
+            {
+              "name": "?",
+              "reason": "Unknown type: probe"
+            }
+          ]
+        }
+      },
+      "note": null,
+      "error": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/v2/worlds/{world_id}/lorebook/character",
+      "probe_url_path": "/api/v2/worlds/4c1e04f3-bc46-4188-9c59-87e3bdbffce1/lorebook/character",
+      "operation_id": "create_world_character_api_v2_worlds__world_id__lorebook_character_post",
+      "status": 200,
+      "outcome": "PASS",
+      "available": true,
+      "duration_ms": 87,
+      "body_required": true,
+      "query_params_used": {},
+      "request_body_preview": {
+        "name": "Probe Character",
+        "personality": "calm",
+        "background": "functional smoke",
+        "inventory": [],
+        "current_location": "Probe Tower"
+      },
+      "response_preview": {
+        "success": true,
+        "entry_id": "e75ea325-b46d-42a8-9368-1a30141178f9",
+        "world_id": "4c1e04f3-bc46-4188-9c59-87e3bdbffce1",
+        "message": "Character 'Probe Character' created in world '4c1e04f3-bc46-4188-9c59-87e3bdbffce1'"
+      },
+      "note": null,
+      "error": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/v2/worlds/{world_id}/lorebook/event",
+      "probe_url_path": "/api/v2/worlds/4c1e04f3-bc46-4188-9c59-87e3bdbffce1/lorebook/event",
+      "operation_id": "create_world_event_api_v2_worlds__world_id__lorebook_event_post",
+      "status": 200,
+      "outcome": "PASS",
+      "available": true,
+      "duration_ms": 76,
+      "body_required": true,
+      "query_params_used": {},
+      "request_body_preview": {
+        "name": "probe",
+        "description": "probe",
+        "time": "probe"
+      },
+      "response_preview": {
+        "success": true,
+        "entry_id": "4e995632-4756-4c67-9da4-86378f85af15",
+        "world_id": "4c1e04f3-bc46-4188-9c59-87e3bdbffce1",
+        "message": "Event 'probe' created in world '4c1e04f3-bc46-4188-9c59-87e3bdbffce1'"
+      },
+      "note": null,
+      "error": null
+    },
+    {
+      "method": "POST",
+      "path": "/api/v2/worlds/{world_id}/lorebook/location",
+      "probe_url_path": "/api/v2/worlds/4c1e04f3-bc46-4188-9c59-87e3bdbffce1/lorebook/location",
+      "operation_id": "create_world_location_api_v2_worlds__world_id__lorebook_location_post",
+      "status": 200,
+      "outcome": "PASS",
+      "available": true,
+      "duration_ms": 80,
+      "body_required": true,
+      "query_params_used": {},
+      "request_body_preview": {
+        "name": "probe",
+        "description": "probe",
+        "region": "probe"
+      },
+      "response_preview": {
+        "success": true,
+        "entry_id": "b16ff0e7-8251-49a7-bf49-b75919636783",
+        "world_id": "4c1e04f3-bc46-4188-9c59-87e3bdbffce1",
+        "message": "Location 'probe' created in world '4c1e04f3-bc46-4188-9c59-87e3bdbffce1'"
+      },
+      "note": null,
+      "error": null
+    }
+  ]
+}

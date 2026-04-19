@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, Optional
 
+from application.ports import UserSettingsReader
 from langchain_anthropic import ChatAnthropic
 from langchain_openai import ChatOpenAI
 
@@ -77,7 +78,7 @@ def create_llm(
     for_streaming: bool,
     provider: Optional[str],
     base_url: Optional[str],
-    user_manager: Any,
+    user_settings_reader: Optional[UserSettingsReader],
 ):
     """
     按 provider + 模型创建 LLM 客户端。
@@ -88,7 +89,7 @@ def create_llm(
     """
     # 请求未显式指定模型时，优先使用用户级默认模型。
     model_name = (model or "").strip()
-    user = user_manager.get_user(user_id) if user_id and user_manager else None
+    user = user_settings_reader.get_user(user_id) if user_id and user_settings_reader else None
     user_settings = getattr(user, "settings", None)
     user_default_provider = ((getattr(user_settings, "default_provider", "") if user_settings else "") or "").strip().lower()
 
@@ -111,8 +112,8 @@ def create_llm(
 
     api_key: Optional[str] = None
     # API Key 决议优先级：用户密钥 > 服务端环境密钥。
-    if user_id and user_manager:
-        api_key = user_manager.get_decrypted_api_key(user_id, resolved_provider)
+    if user_id and user_settings_reader:
+        api_key = user_settings_reader.get_decrypted_api_key(user_id, resolved_provider)
     if not api_key:
         api_key = get_env_api_key(resolved_provider)
     if not api_key:
@@ -123,8 +124,8 @@ def create_llm(
         )
 
     user_base_url: Optional[str] = None
-    if user_id and user_manager:
-        user_base_url = user_manager.get_base_url(user_id, resolved_provider)
+    if user_id and user_settings_reader:
+        user_base_url = user_settings_reader.get_base_url(user_id, resolved_provider)
     # base_url 统一由 _resolve_base_url 处理（provider 默认 + 用户覆盖 + 请求覆盖）。
     resolved_base_url = _resolve_base_url(provider_cfg, user_base_url, base_url)
 

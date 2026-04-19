@@ -15,6 +15,7 @@ import logging
 import time
 from typing import Any, AsyncGenerator, Dict, List, Optional
 
+from application.ports import LLMGateway
 from langchain_core.messages import HumanMessage, SystemMessage
 
 from application.memory import MemoryBundle, MemoryOrchestrator, MemoryUpdateService
@@ -42,7 +43,6 @@ from services.story_generation.context_helpers import (
     format_retrieved_contexts,
 )
 from services.story_generation.llm_factory import (
-    create_llm,
     detect_provider,
     estimate_tokens,
     get_env_api_key,
@@ -61,7 +61,7 @@ class StoryGenerator:
         self,
         lorebook_manager: LorebookManager,
         history_manager: Optional[ConversationHistoryManager] = None,
-        user_manager=None,
+        llm_gateway: Optional[LLMGateway] = None,
         world_manager=None,
         roleplay_manager=None,
         script_design_app=None,
@@ -78,7 +78,7 @@ class StoryGenerator:
         """
         self.lorebook_manager = lorebook_manager
         self.history_manager = history_manager
-        self.user_manager = user_manager
+        self.llm_gateway = llm_gateway
         self.world_manager = world_manager
         self.roleplay_manager = roleplay_manager
         self.script_design_app = script_design_app
@@ -284,15 +284,16 @@ class StoryGenerator:
 
         支持用户级配置覆盖、provider/base_url 显式指定以及流式/非流式模式。
         """
-        return create_llm(
+        if self.llm_gateway is None:
+            raise RuntimeError("LLM gateway is not configured for StoryGenerator")
+        return self.llm_gateway.create_client(
             model=model,
+            provider=provider,
+            base_url=base_url,
             temperature=temperature,
             max_tokens=max_tokens,
             user_id=user_id,
             for_streaming=for_streaming,
-            provider=provider,
-            base_url=base_url,
-            user_manager=self.user_manager,
         )
 
     def _build_system_prompt(

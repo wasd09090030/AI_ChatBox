@@ -2,11 +2,14 @@
 兼容层：导出 Story Graph 运行时与节点函数。
 
 真实实现已拆分到 `graph.story_v2.runtime` 与 `graph.story_v2.nodes`。
+新代码应优先依赖 `application.story_generation` 暴露的 facade / runner。
 """
 
+from application.story_generation import (
+    derive_story_state_update as _derive_state_update,
+    extract_clue_candidates as _extract_clue_candidates,
+)
 from .nodes import (
-    _derive_state_update,
-    _extract_clue_candidates,
     build_v2_response_node,
     generate_story_node,
     persist_session_node,

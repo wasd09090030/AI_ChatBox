@@ -6,7 +6,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from application.memory.events import build_memory_operation_id
-from api.service_context import ServiceContainer, get_services
+from api.dependencies.world import WorldStoryDependencies, get_world_story_dependencies
 from api.v2.schemas import EntityStateQueryParams
 from models.entity_state import EntityStateCollection, EntityStateRebuildResponse
 from models.stored_story import (
@@ -29,21 +29,24 @@ logger = logging.getLogger(__name__)
 
 
 @router.get("/worlds", response_model=List[World])
-async def list_worlds(services: ServiceContainer = Depends(get_services)):
+async def list_worlds(world_services: WorldStoryDependencies = Depends(get_world_story_dependencies)):
     """列出全部世界。"""
-    return services.world_app.list_worlds()
+    return world_services.world_app.list_worlds()
 
 
 @router.post("/worlds", response_model=World)
-async def create_world(world_data: WorldCreate, services: ServiceContainer = Depends(get_services)):
+async def create_world(
+    world_data: WorldCreate,
+    world_services: WorldStoryDependencies = Depends(get_world_story_dependencies),
+):
     """创建世界。"""
-    return services.world_app.create_world(world_data)
+    return world_services.world_app.create_world(world_data)
 
 
 @router.get("/worlds/{world_id}", response_model=World)
-async def get_world(world_id: str, services: ServiceContainer = Depends(get_services)):
+async def get_world(world_id: str, world_services: WorldStoryDependencies = Depends(get_world_story_dependencies)):
     """按 world_id 查询世界详情。"""
-    world = services.world_app.get_world(world_id)
+    world = world_services.world_app.get_world(world_id)
     if world is None:
         raise HTTPException(status_code=404, detail="World not found")
     return world
@@ -53,19 +56,19 @@ async def get_world(world_id: str, services: ServiceContainer = Depends(get_serv
 async def update_world(
     world_id: str,
     world_data: WorldUpdate,
-    services: ServiceContainer = Depends(get_services),
+    world_services: WorldStoryDependencies = Depends(get_world_story_dependencies),
 ):
     """更新世界。"""
-    world = services.world_app.update_world(world_id, world_data)
+    world = world_services.world_app.update_world(world_id, world_data)
     if world is None:
         raise HTTPException(status_code=404, detail="World not found")
     return world
 
 
 @router.delete("/worlds/{world_id}")
-async def delete_world(world_id: str, services: ServiceContainer = Depends(get_services)):
+async def delete_world(world_id: str, world_services: WorldStoryDependencies = Depends(get_world_story_dependencies)):
     """删除世界并触发关联数据级联清理。"""
-    result = services.world_app.delete_world(world_id)
+    result = world_services.world_app.delete_world(world_id)
     if result is None:
         raise HTTPException(status_code=404, detail="World not found")
     return result
@@ -74,25 +77,28 @@ async def delete_world(world_id: str, services: ServiceContainer = Depends(get_s
 @router.get("/stories", response_model=List[StoredStory])
 async def list_stories(
     world_id: Optional[str] = Query(default=None),
-    services: ServiceContainer = Depends(get_services),
+    world_services: WorldStoryDependencies = Depends(get_world_story_dependencies),
 ):
     """按可选 world_id 列出故事。"""
-    return services.story_manager.list_stories(world_id=world_id)
+    return world_services.story_manager.list_stories(world_id=world_id)
 
 
 @router.post("/stories", response_model=StoredStory)
-async def create_story(story_data: StoryCreate, services: ServiceContainer = Depends(get_services)):
+async def create_story(
+    story_data: StoryCreate,
+    world_services: WorldStoryDependencies = Depends(get_world_story_dependencies),
+):
     """创建故事。"""
-    world = services.world_manager.get_world(story_data.world_id)
+    world = world_services.world_manager.get_world(story_data.world_id)
     if world is None:
         raise HTTPException(status_code=404, detail="World not found")
-    return services.story_manager.create_story(story_data, world.name)
+    return world_services.story_manager.create_story(story_data, world.name)
 
 
 @router.get("/stories/{story_id}", response_model=StoredStory)
-async def get_story(story_id: str, services: ServiceContainer = Depends(get_services)):
+async def get_story(story_id: str, world_services: WorldStoryDependencies = Depends(get_world_story_dependencies)):
     """按 story_id 查询故事。"""
-    story = services.story_manager.get_story(story_id)
+    story = world_services.story_manager.get_story(story_id)
     if story is None:
         raise HTTPException(status_code=404, detail="Story not found")
     return story
@@ -102,23 +108,23 @@ async def get_story(story_id: str, services: ServiceContainer = Depends(get_serv
 async def update_story(
     story_id: str,
     update_data: StoryUpdate,
-    services: ServiceContainer = Depends(get_services),
+    world_services: WorldStoryDependencies = Depends(get_world_story_dependencies),
 ):
     """更新故事元数据。"""
-    story = services.story_manager.update_story(story_id, update_data)
+    story = world_services.story_manager.update_story(story_id, update_data)
     if story is None:
         raise HTTPException(status_code=404, detail="Story not found")
     return story
 
 
 @router.delete("/stories/{story_id}")
-async def delete_story(story_id: str, services: ServiceContainer = Depends(get_services)):
+async def delete_story(story_id: str, world_services: WorldStoryDependencies = Depends(get_world_story_dependencies)):
     """删除故事并清理对应实体状态快照。"""
-    deleted = services.story_manager.delete_story(story_id)
+    deleted = world_services.story_manager.delete_story(story_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Story not found")
-    services.entity_state_manager.delete_story_states(story_id)
-    services.entity_state_event_repository.delete_by_story_id(story_id)
+    world_services.entity_state_manager.delete_story_states(story_id)
+    world_services.entity_state_event_repository.delete_by_story_id(story_id)
     return {"success": True, "story_id": story_id}
 
 
@@ -126,10 +132,10 @@ async def delete_story(story_id: str, services: ServiceContainer = Depends(get_s
 async def add_story_segment(
     story_id: str,
     segment_data: StorySegmentCreate,
-    services: ServiceContainer = Depends(get_services),
+    world_services: WorldStoryDependencies = Depends(get_world_story_dependencies),
 ):
     """追加一个故事片段。"""
-    story = services.story_manager.add_segment(story_id, segment_data)
+    story = world_services.story_manager.add_segment(story_id, segment_data)
     if story is None:
         raise HTTPException(status_code=404, detail="Story not found")
     return story
@@ -138,10 +144,10 @@ async def add_story_segment(
 @router.delete("/stories/{story_id}/segments/last", response_model=StorySegmentRollbackResponse)
 async def delete_last_story_segment(
     story_id: str,
-    services: ServiceContainer = Depends(get_services),
+    world_services: WorldStoryDependencies = Depends(get_world_story_dependencies),
 ):
     """回滚最后一个故事片段，并重建会话一致性状态。"""
-    existing_story = services.story_manager.get_story(story_id)
+    existing_story = world_services.story_manager.get_story(story_id)
     if existing_story is None:
         raise HTTPException(status_code=404, detail="Story not found")
 
@@ -153,7 +159,7 @@ async def delete_last_story_segment(
         previous_runtime_snapshot = existing_story.metadata.get("runtime_initial_snapshot")
 
     try:
-        story = services.story_manager.remove_last_segment(story_id)
+        story = world_services.story_manager.remove_last_segment(story_id)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     if story is None:
@@ -162,22 +168,22 @@ async def delete_last_story_segment(
     restored_runtime = None
     if story.metadata.get("runtime_state_id") or story.metadata.get("script_design_id"):
         try:
-            restored_runtime = services.story_runtime_manager.restore_runtime_state(
+            restored_runtime = world_services.story_runtime_manager.restore_runtime_state(
                 story=story,
                 runtime_snapshot=previous_runtime_snapshot if isinstance(previous_runtime_snapshot, dict) else None,
             )
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
     if restored_runtime is not None:
-        services.story_runtime_manager.sync_story_metadata(restored_runtime)
-        story = services.story_manager.get_story(story_id) or story
+        world_services.story_runtime_manager.sync_story_metadata(restored_runtime)
+        story = world_services.story_manager.get_story(story_id) or story
 
     session_id = (
         restored_runtime.session_id
         if restored_runtime is not None and restored_runtime.session_id
         else f"story-{story_id}-v2"
     )
-    rebuild_result = services.story_consistency_rebuild_service.rebuild_story_state(
+    rebuild_result = world_services.story_consistency_rebuild_service.rebuild_story_state(
         story=story,
         session_id=session_id,
         source="story_segment_rollback",
@@ -203,10 +209,10 @@ async def delete_last_story_segment(
 async def commit_story_adjustments(
     story_id: str,
     commit_data: StoryAdjustmentCommitRequest,
-    services: ServiceContainer = Depends(get_services),
+    world_services: WorldStoryDependencies = Depends(get_world_story_dependencies),
 ):
     """批量提交片段改写并重建衍生状态。"""
-    existing_story = services.story_manager.get_story(story_id)
+    existing_story = world_services.story_manager.get_story(story_id)
     if existing_story is None:
         raise HTTPException(status_code=404, detail="Story not found")
     if not commit_data.updates:
@@ -215,11 +221,11 @@ async def commit_story_adjustments(
     session_id = commit_data.session_id or f"story-{story_id}-v2"
 
     try:
-        updated_story = services.story_manager.update_story_segments_content(story_id, commit_data.updates)
+        updated_story = world_services.story_manager.update_story_segments_content(story_id, commit_data.updates)
         if updated_story is None:
             raise HTTPException(status_code=404, detail="Story not found")
 
-        rebuild_result = services.story_consistency_rebuild_service.rebuild_story_state(
+        rebuild_result = world_services.story_consistency_rebuild_service.rebuild_story_state(
             story=updated_story,
             session_id=session_id,
             source="story_adjustment_commit",
@@ -242,8 +248,8 @@ async def commit_story_adjustments(
     except Exception as exc:
         logger.error("Failed to commit story adjustments for story %s: %s", story_id, exc, exc_info=True)
         try:
-            services.story_manager.save_story(existing_story)
-            services.story_consistency_rebuild_service.rebuild_story_state(
+            world_services.story_manager.save_story(existing_story)
+            world_services.story_consistency_rebuild_service.rebuild_story_state(
                 story=existing_story,
                 session_id=session_id,
                 source="story_adjustment_commit_rollback",
@@ -264,10 +270,10 @@ async def commit_story_adjustments(
 async def update_story_progress(
     story_id: str,
     progress_data: StoryProgressUpdate,
-    services: ServiceContainer = Depends(get_services),
+    world_services: WorldStoryDependencies = Depends(get_world_story_dependencies),
 ):
     """更新故事剧本推进元数据。"""
-    story = services.story_manager.update_story_progress(story_id, progress_data)
+    story = world_services.story_manager.update_story_progress(story_id, progress_data)
     if story is None:
         raise HTTPException(status_code=404, detail="Story not found")
     return story
@@ -276,12 +282,12 @@ async def update_story_progress(
 @router.get("/stories/{story_id}/runtime", response_model=ScriptRuntimeState)
 async def get_story_runtime(
     story_id: str,
-    services: ServiceContainer = Depends(get_services),
+    world_services: WorldStoryDependencies = Depends(get_world_story_dependencies),
 ):
     """获取故事运行时状态，不存在时按 metadata 延迟初始化。"""
-    runtime_state = services.story_runtime_manager.get_runtime_state(story_id)
+    runtime_state = world_services.story_runtime_manager.get_runtime_state(story_id)
     if runtime_state is None:
-        story = services.story_manager.get_story(story_id)
+        story = world_services.story_manager.get_story(story_id)
         if story is None:
             raise HTTPException(status_code=404, detail="Story not found")
 
@@ -291,7 +297,7 @@ async def get_story_runtime(
             raise HTTPException(status_code=404, detail="Runtime state not found")
 
         session_id = f"story-{story_id}-v2"
-        runtime_state = services.story_runtime_manager.ensure_runtime_state(
+        runtime_state = world_services.story_runtime_manager.ensure_runtime_state(
             story_id=story_id,
             session_id=session_id,
             world_id=story.world_id,
@@ -304,7 +310,7 @@ async def get_story_runtime(
             preferred_stage_id=metadata.get("active_stage_id") if isinstance(metadata.get("active_stage_id"), str) else None,
             preferred_event_id=metadata.get("active_event_id") if isinstance(metadata.get("active_event_id"), str) else None,
         )
-        services.story_runtime_manager.sync_story_metadata(runtime_state)
+        world_services.story_runtime_manager.sync_story_metadata(runtime_state)
 
     return runtime_state
 
@@ -313,16 +319,16 @@ async def get_story_runtime(
 async def update_story_runtime(
     story_id: str,
     runtime_update: ScriptRuntimeStateUpdate,
-    services: ServiceContainer = Depends(get_services),
+    world_services: WorldStoryDependencies = Depends(get_world_story_dependencies),
 ):
     """更新故事运行时状态并回写故事进度元数据。"""
     try:
-        runtime_state = services.story_runtime_manager.update_runtime_state(story_id, runtime_update)
+        runtime_state = world_services.story_runtime_manager.update_runtime_state(story_id, runtime_update)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     if runtime_state is None:
         raise HTTPException(status_code=404, detail="Runtime state not found")
-    services.story_runtime_manager.sync_story_metadata(runtime_state)
+    world_services.story_runtime_manager.sync_story_metadata(runtime_state)
     return runtime_state
 
 
@@ -330,19 +336,19 @@ async def update_story_runtime(
 async def get_story_entity_state(
     story_id: str,
     query: EntityStateQueryParams = Depends(),
-    services: ServiceContainer = Depends(get_services),
+    world_services: WorldStoryDependencies = Depends(get_world_story_dependencies),
 ):
     """读取故事当前实体状态快照（兼容桥接，优先事件回放）。"""
-    story = services.story_manager.get_story(story_id)
+    story = world_services.story_manager.get_story(story_id)
     if story is None:
         raise HTTPException(status_code=404, detail="Story not found")
 
     session_id = f"story-{story_id}-v2"
-    runtime_state = services.story_runtime_manager.get_runtime_state(story_id)
+    runtime_state = world_services.story_runtime_manager.get_runtime_state(story_id)
     if runtime_state is not None and runtime_state.session_id:
         session_id = runtime_state.session_id
 
-    return services.entity_state_fallback_service.get_story_snapshot(
+    return world_services.entity_state_fallback_service.get_story_snapshot(
         story_id=story_id,
         session_id=session_id,
         entity_type=query.entity_type,
@@ -354,21 +360,21 @@ async def get_story_entity_state(
 async def rebuild_story_entity_state(
     story_id: str,
     session_id: Optional[str] = None,
-    services: ServiceContainer = Depends(get_services),
+    world_services: WorldStoryDependencies = Depends(get_world_story_dependencies),
 ):
     """基于持久化片段重建故事级实体状态。"""
-    story = services.story_manager.get_story(story_id)
+    story = world_services.story_manager.get_story(story_id)
     if story is None:
         raise HTTPException(status_code=404, detail="Story not found")
 
-    runtime_state = services.story_runtime_manager.get_runtime_state(story_id)
+    runtime_state = world_services.story_runtime_manager.get_runtime_state(story_id)
     effective_session_id = (
         session_id
         or (runtime_state.session_id if runtime_state is not None and runtime_state.session_id else None)
         or f"story-{story_id}-v2"
     )
-    if services.entity_state_event_replay_service is not None:
-        replay_result = services.entity_state_event_replay_service.replay_story_state(
+    if world_services.entity_state_event_replay_service is not None:
+        replay_result = world_services.entity_state_event_replay_service.replay_story_state(
             story_id=story_id,
             session_id=effective_session_id,
             source="entity_state_story_rebuild_api",
@@ -379,7 +385,7 @@ async def rebuild_story_entity_state(
         if replay_result.rebuilt:
             return replay_result
 
-    return services.entity_state_fallback_service.rebuild_story_state(
+    return world_services.entity_state_fallback_service.rebuild_story_state(
         story=story,
         session_id=effective_session_id,
         runtime_state=runtime_state,

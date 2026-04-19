@@ -199,10 +199,8 @@ frontend/
 
 - 技术栈：FastAPI、Pydantic、SQLite、ChromaDB、LangGraph、LangChain、多 Provider LLM 接入。
 - 应用入口：`story_rag_service/main.py`
-  - 建立 FastAPI app
-  - 在 lifespan 中初始化数据库、用户管理、服务容器
-  - 注册 `/api/v2` 路由
-  - 挂载上传文件静态目录
+  - 当前已收敛为薄入口，委托 `bootstrap/app_factory.py` 创建 FastAPI app
+  - 生命周期中的数据库、用户管理、服务容器初始化已开始迁移到 `bootstrap/`
 - 配置入口：`story_rag_service/config.py`
   - 统一管理 API Key、默认模型、数据库路径、Chroma 路径、检索参数、LangGraph checkpoint 等
   - `allow_online_embedding_download` 默认关闭；本地模型缺失时会退回轻量离线嵌入以保证服务可启动
@@ -213,11 +211,18 @@ frontend/
 story_rag_service/
 ├── main.py                    # FastAPI 应用入口
 ├── config.py                  # pydantic-settings 配置
+├── bootstrap/                 # 组合根与应用装配（进行中）
 ├── api/                       # 路由层与服务装配
 │   ├── service_context.py     # ServiceContainer，集中装配共享服务
+│   ├── dependencies/          # FastAPI 细粒度 Depends provider（进行中）
 │   └── v2/                    # 当前主 API 版本
 ├── application/               # 应用服务层，组织跨服务业务流程
+│   ├── ports/                 # application 层依赖倒置端口（进行中）
 │   ├── story_memory/          # 故事记忆聚合契约与 story_memory payload builder
+│   └── story_generation/      # 故事生成应用用例与 facade/helper
+├── infrastructure/            # application ports 的基础设施实现（进行中）
+│   ├── providers/             # 用户设置等 provider 读取适配器
+│   ├── gateways/              # LLMGateway 等外部能力适配器
 ├── graph/story_v2/            # LangGraph 图编排
 ├── services/                  # 核心领域服务与基础设施服务
 ├── repositories/              # SQLite 仓储层
@@ -236,18 +241,49 @@ story_rag_service/
 - 路由层与依赖装配层。
 - 重点文件：
   - `service_context.py`
-    - 创建 `ServiceContainer`
-    - 装配 `StoryGenerator`、`StoryManager`、`WorldApplicationService`、`StoryRuntimeManager` 等
-    - 为路由层与图执行层提供共享服务
+    - 当前保留为兼容桥接层
+    - 真实装配逻辑已开始迁移到 `bootstrap/container.py`
+  - `dependencies/`
+    - 新增细粒度 Depends provider 目录
+    - 目前已开始承接故事生成、记忆查询、世界/故事、lorebook、script design、roleplay、story/session 与调整路由的依赖注入
+    - 故事生成依赖中已开始注入 observability 端口适配器，而不再由 route 直接引用埋点单例
   - `v2/__init__.py`
     - 汇总 v2 路由
     - 当前包含 `story`、`world_story`、`script_design`、`lorebook`、`roleplay`、`analytics`、`memory`、`provider`
   - `v2/memory_routes.py`
     - 提供记忆更新时间线查询
     - 提供统一故事记忆快照接口 `/story/session/{session_id}/story-memory`
-  - `v2/story/session_routes.py` 与 `v2/world_story_routes.py` 中保留的 `entity-state` 相关接口
+- `v2/story/session_routes.py` 与 `v2/world_story_routes.py` 中保留的 `entity-state` 相关接口
     - 当前定位为 compatibility bridge
     - 优先通过事件回放 / fallback 服务返回当前快照，不再代表主写路径
+  - `application/story_generation/`
+    - 已开始承接路由与图节点共用的请求构建、graph facade、观测封装、剧情状态组装、响应映射
+    - 新增 `execution.py` 与 `session_context.py` 后，图节点中的“执行生成”“读取/回写会话上下文”已进一步下沉为应用用例
+
+#### `story_rag_service/bootstrap/`
+
+- 后端组合根目录，负责应用工厂与分模块装配。
+- 当前已开始落地：
+  - `app_factory.py`
+    - 创建 FastAPI app
+    - 注册 lifespan、middleware、router、静态挂载
+    - 生命周期关闭阶段已通过 application graph runner 释放 Story Graph 运行时
+  - `config_resolver.py`
+    - 组合根层配置解析入口
+    - 将全局 `settings` 解析为 bootstrap 阶段可消费的最小配置切片
+    - 当前也负责解析 Story Graph 的 feature flags 与 runtime config
+  - `container.py`
+    - 管理 `ServiceContainer` 与初始化入口
+  - `modules/core.py`
+    - 数据库、用户管理、上传目录等基础装配
+  - `modules/world.py`
+    - world / story / lorebook / script design 基础装配
+  - `modules/memory.py`
+    - summary / entity / runtime / story_memory 基础装配
+  - `modules/generation.py`
+    - story generator / adjustment / rebuild 相关装配
+    - 当前会在装配阶段把 `UserManager` 适配为 `application/ports.UserSettingsReader`
+    - 并进一步装配成 `application/ports.LLMGateway`
 
 #### `story_rag_service/api/v2/story/`
 
@@ -258,8 +294,14 @@ story_rag_service/
     - 流式生成 `/story/generate/stream`
     - 输入增强预览 `/story/input-enhancement/preview`
     - `choices` 模式的最终结果清洗与重写也在这里
+    - 内部 `StoryGenerationRequest` 的拼装已下沉到 `application/story_generation/request_builder.py`
+    - Session context 的读取/创建已开始复用 `application/story_generation/session_context.py`
+    - 非流式成功/失败埋点已通过 application helper + observability ports 收口
+    - 非流式 graph 调用已通过 `application/story_generation/graph_facade.py` 统一封装
   - `session_routes.py`
     - 会话创建、读取、回滚、重新生成等
+    - 重生成路径也已复用 `application/story_generation/graph_facade.py`
+    - 会话创建入口已开始复用 `application/story_generation/session_context.py`
   - `adjustment_routes.py`
     - 故事调整相关接口
   - `health_routes.py`
@@ -275,19 +317,24 @@ story_rag_service/
 - 非流式故事生成的图编排层。
 - 重点文件：
   - `runtime.py`
-    - 懒加载并编译 LangGraph
-    - 组织节点顺序：
-      - `prepare_request`
-      - `update_story_state`
-      - `generate_story`
-      - `persist_session`
-      - `build_response`
+    - 懒加载并缓存 LangGraph 运行时
+    - 运行入口已收敛为“配置解析 + checkpointer 创建 + graph 编译结果缓存”
+  - `builder.py`
+    - 负责定义 Story Graph 节点顺序并完成编译
+  - `checkpointer.py`
+    - 负责根据 runtime config 创建 sqlite / memory checkpointer
   - `nodes.py`
     - 各节点具体实现
+    - `prepare_request_node` 已复用 `application/story_generation/request_builder.py`
+    - 节点取容器已改走 `bootstrap/container.py`，不再依赖 `api/service_context.py`
+    - Story graph 特性开关已改走 `bootstrap/config_resolver.py`
+    - `update_story_state_node` 与 `build_v2_response_node` 已进一步下沉到 application helper
+    - `generate_story_node` 与 `persist_session_node` 也已分别改走 `execution.py` 与 `session_context.py`
   - `state.py`
     - 图状态定义
   - `story_graph.py`
     - 兼容导出层
+    - 新代码应优先走 `application/story_generation/graph_runner.py` 与 facade，而不是继续直接依赖该文件
 
 #### `story_rag_service/services/`
 
@@ -299,6 +346,7 @@ story_rag_service/
     - 也负责输入增强预览等生成辅助能力
     - 当前已接入“双路生成”中的实体 patch 后处理编排入口
     - 构造函数已支持注入 `entity_state_event_replay_service`，与 `service_context.py` 保持一致
+    - 当前 LLM 客户端创建已通过 `application/ports.LLMGateway` 间接获取
   - `entity_patch_update_service.py`
     - 实体 patch 后处理编排服务
     - 串联 extractor / validator / applier / event repository / fallback rebuild
@@ -309,7 +357,7 @@ story_rag_service/
     - 封装旧 `entity_state_manager` 的 session rebuild 能力
     - 在主生成链路中只作为 fallback / repair 使用，避免继续由 `story_generator.py` 直接持有旧 rebuild 逻辑
   - `story_generation/`
-    - `llm_factory.py`：构造模型调用能力
+    - `llm_factory.py`：构造模型调用能力，当前由 infrastructure gateway 间接复用
     - `prompt_builder.py`：Prompt 组装
     - `context_helpers.py`：检索与上下文拼装辅助
     - `summary_helpers.py`：摘要相关辅助逻辑
@@ -341,14 +389,41 @@ story_rag_service/
 
 - 应用服务层，负责跨多个 service / repository 的业务编排。
 - 重点目录：
+  - `application/ports/`
+    - 新增 Protocol 端口目录
+    - 先集中声明 feature flag、用户设置、LLM 网关、仓储、observability 等抽象边界
+    - 当前已开始接入故事生成链路中的用户设置读取、LLM 客户端装配与 observability 依赖
   - `application/memory/`
     - 记忆更新事件、模型、provider 与 orchestrator
   - `application/story_memory/`
     - 统一“故事记忆”响应聚合契约、payload builder 与读模型服务 `StoryMemoryService`
   - `application/story_generation/`
     - 世界配置、检索、历史窗口等生成辅助编排
+    - 新增 `request_builder.py`，负责把 v2 API 请求归一化为内部 `StoryGenerationRequest`
+    - 同时复用于 graph payload -> `StoryGenerationRequest` 的归一化
+    - 新增 `graph_facade.py`，负责封装 Story Graph 输入载荷组装与执行
+    - 新增 `graph_runner.py`，负责对 application 层暴露 graph 执行与关闭入口
+    - 新增 `observability.py`，负责把生成结果转换为 metrics / analytics 载荷
+    - 新增 `story_state.py`，负责剧情状态派生与快照更新策略
+    - 新增 `response_builder.py`，负责 graph 内部响应 -> v2 响应映射
+    - 新增 `execution.py`，负责封装非流式故事生成执行用例
+    - 新增 `session_context.py`，负责封装会话上下文读取/创建与回写用例
   - `world_application.py`
   - `script_design_application.py`
+
+#### `story_rag_service/infrastructure/`
+
+- 基础设施实现层，用于承接 application ports 的具体适配器。
+- 当前已开始落地：
+  - `providers/user_settings.py`
+    - 把现有 `UserManager` 适配成 `application/ports.UserSettingsReader`
+    - 供 LLM gateway 读取用户模型配置、API Key 与 base URL
+  - `gateways/llm.py`
+    - 基于现有 `services/story_generation/llm_factory.py` 实现 `application/ports.LLMGateway`
+    - 由 bootstrap 装配后注入 `StoryGenerator` 与 `StoryAdjustmentService`
+  - `observability.py`
+    - 把 `analytics_service` 与 `metrics_recorder` 单例适配成 application ports
+    - 供故事生成路由通过依赖注入获取埋点能力
 
 #### `story_rag_service/repositories/`
 
@@ -390,6 +465,16 @@ story_rag_service/
   - 会先准备共享业务夹具，并对破坏性 `DELETE` 探测使用临时资源，避免后续接口因为夹具被提前删除而出现假 `404`
   - 会补齐 `segment_id`、runtime 绑定与若干业务枚举/配置类接口的有效样例，尽量把可避免的 `WARN` 压到最低
 
+#### `story_rag_service/docs/`
+
+- 架构方案、实施计划、测试记录与兼容性说明目录。
+- 重点文档：
+  - `ARCHITECTURE_REFACTOR_PLAN.md`
+    - 已落地的后端重构执行清单与阶段记录。
+  - `docs/Plan/Plan_2026-04-15_后端模块化目标目录结构蓝图.md`
+    - 后端后续模块化的目标目录草图与职责边界蓝图。
+    - 该文档描述的是推荐目标状态，不代表当前代码已经完成对应目录迁移。
+
 #### `story_rag_service/data/`
 
 - 运行时数据目录，不是业务源码。
@@ -407,19 +492,20 @@ story_rag_service/
 读取顺序建议：
 
 1. `story_rag_service/main.py`
-2. `story_rag_service/api/service_context.py`
-3. `story_rag_service/api/v2/story/generation_routes.py`
-4. `story_rag_service/api/v2/schemas.py`
-5. `story_rag_service/graph/story_v2/runtime.py`
-6. `story_rag_service/graph/story_v2/nodes.py`
-7. `story_rag_service/services/story_generation/*`
-8. `story_rag_service/repositories/*`
+2. `story_rag_service/bootstrap/app_factory.py`
+3. `story_rag_service/bootstrap/container.py`
+4. `story_rag_service/api/v2/story/generation_routes.py`
+5. `story_rag_service/api/v2/schemas.py`
+6. `story_rag_service/graph/story_v2/runtime.py`
+7. `story_rag_service/graph/story_v2/nodes.py`
+8. `story_rag_service/services/story_generation/*`
+9. `story_rag_service/repositories/*`
 
 执行链路概括：
 
-- FastAPI 启动时在 `main.py` 中初始化 `ServiceContainer`。
+- FastAPI 启动先进入 `main.py`，再由 `bootstrap/app_factory.py` 创建应用并初始化容器。
 - `/api/v2/story/generate` 进入 `generation_routes.py`。
-- 路由层组装请求并调用 `run_story_graph(...)`。
+- route 先通过 `application/story_generation/graph_facade.py` 组装 `request_payload` 并执行 graph。
 - `graph/story_v2/runtime.py` 负责执行 LangGraph。
 - 图节点在 `nodes.py` 中完成请求准备、状态更新、生成、持久化、响应构建。
 - 最终由 `V2GenerateResponse` 返回给前端。
@@ -430,6 +516,7 @@ story_rag_service/
 
 - `/api/v2/story/generate/stream` 进入 `generation_routes.py`。
 - 路由层先通过 `SessionManager` 获取或创建会话上下文。
+- 内部 `StoryGenerationRequest` 由 `application/story_generation/request_builder.py` 统一构建。
 - 然后构造 `StoryGenerationRequest`。
 - 调用 `services.story_generator.generate_story_stream(...)`。
 - 路由层使用 `StreamingResponse` 输出 SSE。
@@ -521,11 +608,13 @@ story_rag_service/
 - `story_rag_service/docs/`
 
 这些内容是历史兼容、设计方案或验证记录。需要追根溯源时再进入，不建议作为第一入口。
-其中 `story_rag_service/docs/plan/` 当前已包含：
+其中 `story_rag_service/docs/Plan/` 当前已包含：
 
 - 双路生成与结构化 patch 方案文档
 - 流式 OpenAI compat 风险与修复计划
 - 实体状态精度提升优先级清单
+- 故事记忆系统运行机制说明
+- 后端模块化目标目录结构蓝图
 
 ## 8. 检索与排噪建议
 

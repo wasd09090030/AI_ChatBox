@@ -13,7 +13,12 @@ from fastapi import APIRouter, Depends, Header, HTTPException
 
 from application.memory import build_memory_update_event, persist_memory_update_events
 from application.memory.events import build_memory_operation_id
-from api.service_context import ServiceContainer, get_services
+from application.story_generation import (
+    build_story_graph_request_payload,
+    execute_story_graph_generation,
+    load_or_create_story_session_context,
+)
+from api.dependencies.world import StorySessionDependencies, get_story_session_dependencies
 from api.v2.schemas import (
     CreateSessionRequest,
     CreateSessionResponse,
@@ -24,7 +29,6 @@ from api.v2.schemas import (
     V2GenerateResponse,
 )
 from models.entity_state import EntityStateCollection, EntityStateRebuildResponse
-from graph.story_v2.story_graph import run_story_graph
 
 # 模块日志记录器，用于输出运行诊断信息。
 logger = logging.getLogger(__name__)
@@ -35,19 +39,19 @@ router = APIRouter()
 def _reconcile_session_memory_after_mutation(
     *,
     session_id: str,
-    services: ServiceContainer,
+    session_services: StorySessionDependencies,
     source: str,
     operation_id: Optional[str] = None,
     sequence_start: int = 1,
     story_id: Optional[str] = None,
 ) -> Tuple[List[Dict[str, Any]], List[Any]]:
     """在消息回滚后重建会话缓存、历史索引、摘要与实体状态。"""
-    meta = services.session_manager.get_session_metadata(session_id) or {}
+    meta = session_services.session_manager.get_session_metadata(session_id) or {}
     world_id = meta.get("world_id")
-    messages = services.session_manager.load_session_messages(session_id, limit=500)
+    messages = session_services.session_manager.load_session_messages(session_id, limit=500)
     # 先重建会话缓存，保证后续图执行读取的是最新消息视图。
-    services.session_manager.rebuild_cached_context(session_id, messages)
-    effective_story_id = story_id or services.story_runtime_manager.derive_story_id(session_id)
+    session_services.session_manager.rebuild_cached_context(session_id, messages)
+    effective_story_id = story_id or session_services.story_runtime_manager.derive_story_id(session_id)
 
     memory_updates: List[Dict[str, Any]] = [
         build_memory_update_event(
@@ -63,7 +67,7 @@ def _reconcile_session_memory_after_mutation(
 
     try:
         # 历史向量索引失败不阻断主流程，改为写失败事件。
-        services.history_manager.rebuild_session_history(session_id, world_id, messages)
+        session_services.history_manager.rebuild_session_history(session_id, world_id, messages)
         memory_updates.append(
             build_memory_update_event(
                 session_id=session_id,
@@ -89,7 +93,7 @@ def _reconcile_session_memory_after_mutation(
             )
         )
 
-    summary_reset = services.summary_memory_manager.delete_summary(session_id)
+    summary_reset = session_services.summary_memory_manager.delete_summary(session_id)
     if summary_reset:
         memory_updates.append(
             build_memory_update_event(
@@ -105,18 +109,18 @@ def _reconcile_session_memory_after_mutation(
 
     updates_to_persist = list(memory_updates)
 
-    if services.entity_state_manager is not None and effective_story_id:
+    if session_services.entity_state_manager is not None and effective_story_id:
         try:
             completed_turns = sum(1 for message in messages if getattr(message, "role", None) == "assistant")
-            if services.entity_state_event_repository is not None:
-                services.entity_state_event_repository.delete_by_session_id_after_turn(
+            if session_services.entity_state_event_repository is not None:
+                session_services.entity_state_event_repository.delete_by_session_id_after_turn(
                     session_id,
                     completed_turns,
                 )
 
             entity_rebuild = None
-            if services.entity_state_event_replay_service is not None:
-                entity_rebuild = services.entity_state_event_replay_service.replay_session_state(
+            if session_services.entity_state_event_replay_service is not None:
+                entity_rebuild = session_services.entity_state_event_replay_service.replay_session_state(
                     story_id=effective_story_id,
                     session_id=session_id,
                     source=source,
@@ -128,7 +132,7 @@ def _reconcile_session_memory_after_mutation(
                 )
 
             if entity_rebuild is None or not entity_rebuild.rebuilt:
-                entity_rebuild = services.entity_state_fallback_service.rebuild_session_state(
+                entity_rebuild = session_services.entity_state_fallback_service.rebuild_session_state(
                     session_id=session_id,
                     story_id=effective_story_id,
                     world_id=world_id,
@@ -165,20 +169,23 @@ def _reconcile_session_memory_after_mutation(
 async def create_story_session(
     request: CreateSessionRequest,
     user_id: Optional[str] = Header(None, alias="X-User-ID"),
-    services: ServiceContainer = Depends(get_services),
+    session_services: StorySessionDependencies = Depends(get_story_session_dependencies),
 ):
     """创建故事会话。"""
     _ = user_id  # Reserved for future ownership checks.
 
     session_id = request.session_id or str(uuid.uuid4())
-    services.session_manager.get_or_create_session(
-        session_id=session_id,
-        world_id=request.world_id,
-        character_card_id=request.character_card_id,
-        persona_id=request.persona_id,
+    load_or_create_story_session_context(
+        session_store=session_services.session_manager,
+        payload={
+            "session_id": session_id,
+            "world_id": request.world_id,
+            "character_card_id": request.character_card_id,
+            "persona_id": request.persona_id,
+        },
     )
 
-    meta = services.session_manager.get_session_metadata(session_id)
+    meta = session_services.session_manager.get_session_metadata(session_id)
     return CreateSessionResponse(
         session_id=session_id,
         world_id=request.world_id,
@@ -192,10 +199,10 @@ async def create_story_session(
 @router.get("/story/session/{session_id}", response_model=SessionInfoResponse)
 async def get_story_session(
     session_id: str,
-    services: ServiceContainer = Depends(get_services),
+    session_services: StorySessionDependencies = Depends(get_story_session_dependencies),
 ):
     """读取故事会话元数据。"""
-    row = services.session_manager.get_session_metadata(session_id)
+    row = session_services.session_manager.get_session_metadata(session_id)
     if not row:
         raise HTTPException(status_code=404, detail=f"Session '{session_id}' not found")
 
@@ -216,21 +223,21 @@ async def get_story_session(
 )
 async def delete_last_message(
     session_id: str,
-    services: ServiceContainer = Depends(get_services),
+    session_services: StorySessionDependencies = Depends(get_story_session_dependencies),
 ):
     """删除最后一条消息并触发记忆一致性重建。"""
-    deleted = services.session_manager.delete_last_message(session_id)
+    deleted = session_services.session_manager.delete_last_message(session_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="No messages found for this session")
 
     operation_id = build_memory_operation_id("rollback")
     memory_updates, _ = _reconcile_session_memory_after_mutation(
         session_id=session_id,
-        services=services,
+        session_services=session_services,
         source="rollback",
         operation_id=operation_id,
         sequence_start=1,
-        story_id=services.story_runtime_manager.derive_story_id(session_id),
+        story_id=session_services.story_runtime_manager.derive_story_id(session_id),
     )
 
     return DeleteLastMessageResponse(
@@ -246,11 +253,11 @@ async def regenerate_last_response(
     session_id: str,
     request: RegenerateRequest,
     user_id: Optional[str] = Header(None, alias="X-User-ID"),
-    services: ServiceContainer = Depends(get_services),
+    session_services: StorySessionDependencies = Depends(get_story_session_dependencies),
 ):
     """删除最后一条助手消息，并基于最近用户输入重新生成。"""
-    services.session_manager.delete_last_assistant_message(session_id)
-    user_input = services.session_manager.get_last_user_message(session_id)
+    session_services.session_manager.delete_last_assistant_message(session_id)
+    user_input = session_services.session_manager.get_last_user_message(session_id)
     if not user_input:
         raise HTTPException(status_code=400, detail="No user message found to regenerate from")
 
@@ -258,53 +265,25 @@ async def regenerate_last_response(
     operation_id = build_memory_operation_id("regenerate")
     pre_generation_updates, _ = _reconcile_session_memory_after_mutation(
         session_id=session_id,
-        services=services,
+        session_services=session_services,
         source="regenerate",
         operation_id=operation_id,
         sequence_start=1,
         story_id=request.story_id,
     )
 
-    graph_state = await run_story_graph(
-        {
-            "request_payload": {
-                "session_id": session_id,
-                "story_id": request.story_id,
-                "user_input": user_input,
-                "creation_mode": request.creation_mode,
-                "progress_intent": request.progress_intent,
-                "runtime_state_id": request.runtime_state_id,
-                "allow_state_transition": request.allow_state_transition,
-                "model": request.model,
-                "provider": request.provider,
-                "base_url": request.base_url,
-                "temperature": request.temperature,
-                "max_tokens": request.max_tokens,
-                "persona_id": request.persona_id,
-                "authors_note": request.authors_note,
-                "mode": request.mode or "narrative",
-                "instruction": request.instruction,
-                "script_design_id": request.script_design_id,
-                "active_stage_id": request.active_stage_id,
-                "active_event_id": request.active_event_id,
-                "follow_script_design": request.follow_script_design,
-                "principal_character_id": request.principal_character_id,
-                "dialogue_mode": request.dialogue_mode,
-                "dialogue_target": request.dialogue_target,
-                "dialogue_intent": request.dialogue_intent,
-                "dialogue_style_hint": request.dialogue_style_hint,
-                "force_dialogue_round": request.force_dialogue_round,
-                "focus_instruction": request.focus_instruction,
-                "focus_label": request.focus_label,
-                "selected_context_entry_ids": request.selected_context_entry_ids,
-                "memory_operation_id": operation_id,
-                "memory_operation_sequence_start": len(pre_generation_updates) + 1,
-            },
-            "thread_id": session_id,
-            "user_id": user_id,
-        }
+    request_payload = build_story_graph_request_payload(
+        request=request,
+        session_id=session_id,
+        user_input=user_input,
+        memory_operation_id=operation_id,
+        memory_operation_sequence_start=len(pre_generation_updates) + 1,
     )
-    response = V2GenerateResponse(**graph_state["v2_response"])
+    response = await execute_story_graph_generation(
+        request_payload=request_payload,
+        thread_id=session_id,
+        user_id=user_id,
+    )
     response.memory_updates = pre_generation_updates + list(response.memory_updates or [])
     return response
 
@@ -313,11 +292,11 @@ async def regenerate_last_response(
 async def get_session_entity_state(
     session_id: str,
     query: EntityStateQueryParams = Depends(),
-    services: ServiceContainer = Depends(get_services),
+    session_services: StorySessionDependencies = Depends(get_story_session_dependencies),
 ):
     """读取会话当前实体状态快照（兼容桥接，优先事件回放）。"""
-    effective_story_id = services.story_runtime_manager.derive_story_id(session_id)
-    return services.entity_state_fallback_service.get_session_snapshot(
+    effective_story_id = session_services.story_runtime_manager.derive_story_id(session_id)
+    return session_services.entity_state_fallback_service.get_session_snapshot(
         session_id=session_id,
         story_id=effective_story_id,
         entity_type=query.entity_type,
@@ -330,20 +309,20 @@ async def rebuild_session_entity_state(
     session_id: str,
     story_id: Optional[str] = None,
     world_id: Optional[str] = None,
-    services: ServiceContainer = Depends(get_services),
+    session_services: StorySessionDependencies = Depends(get_story_session_dependencies),
 ):
     """基于持久化消息重建会话级实体状态。"""
-    effective_story_id = story_id or services.story_runtime_manager.derive_story_id(session_id)
+    effective_story_id = story_id or session_services.story_runtime_manager.derive_story_id(session_id)
     if not effective_story_id:
         raise HTTPException(status_code=400, detail="story_id is required for this session")
 
-    meta = services.session_manager.get_session_metadata(session_id) or {}
+    meta = session_services.session_manager.get_session_metadata(session_id) or {}
     resolved_world_id = world_id or meta.get("world_id")
-    messages = services.session_manager.load_session_messages(session_id, limit=500)
+    messages = session_services.session_manager.load_session_messages(session_id, limit=500)
     completed_turns = sum(1 for message in messages if getattr(message, "role", None) == "assistant")
 
-    if services.entity_state_event_replay_service is not None:
-        replay_result = services.entity_state_event_replay_service.replay_session_state(
+    if session_services.entity_state_event_replay_service is not None:
+        replay_result = session_services.entity_state_event_replay_service.replay_session_state(
             story_id=effective_story_id,
             session_id=session_id,
             source="entity_state_session_rebuild_api",
@@ -354,7 +333,7 @@ async def rebuild_session_entity_state(
         if replay_result.rebuilt:
             return replay_result
 
-    return services.entity_state_fallback_service.rebuild_session_state(
+    return session_services.entity_state_fallback_service.rebuild_session_state(
         session_id=session_id,
         story_id=effective_story_id,
         world_id=resolved_world_id,

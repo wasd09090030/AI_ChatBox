@@ -5,13 +5,15 @@
 本文件仅作为“稳定转发层”，避免迁移期出现大规模连锁改动。
 """
 
-from application.story_generation import (
+from application.story_generation.history_window import (
     archive_messages_outside_window,
-    build_retrieval_query,
     format_recent_history_messages,
-    load_world_config,
+)
+from application.story_generation.retrieval import (
+    build_retrieval_query,
     retrieve_rag_context,
 )
+from application.story_generation.world_config import load_world_config
 
 # 控制 import * 时可导出的公共符号（仅暴露稳定兼容 API）。
 __all__ = [

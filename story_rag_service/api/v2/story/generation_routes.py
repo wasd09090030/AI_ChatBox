@@ -18,19 +18,21 @@ from fastapi import APIRouter, Depends, Header, HTTPException, Request
 from fastapi.responses import StreamingResponse
 
 from application.memory.events import build_memory_operation_id
-from api.service_context import ServiceContainer, get_services
+from application.story_generation import (
+    build_story_graph_request_payload,
+    build_story_generation_request,
+    execute_story_graph_generation,
+    load_or_create_story_session_context,
+    record_generation_failure,
+    record_generation_success,
+)
+from api.dependencies.generation import StoryGenerationDependencies, get_story_generation_dependencies
 from api.v2.schemas import (
     V2GenerateRequest,
     V2GenerateResponse,
     V2InputEnhancementPreviewRequest,
     V2InputEnhancementPreviewResponse,
 )
-from graph.story_v2.story_graph import run_story_graph
-from models.story import StoryGenerationRequest
-from services import analytics_service
-from services.observability import metrics_recorder
-
-from .generation_metrics import build_observability_counters, resolve_token_usage
 
 # 模块日志记录器，用于输出运行诊断信息。
 logger = logging.getLogger(__name__)
@@ -128,6 +130,7 @@ async def generate_story_v2(
     http_request: Request,
     request: V2GenerateRequest,
     user_id: Optional[str] = Header(None, alias="X-User-ID"),
+    generation_services: StoryGenerationDependencies = Depends(get_story_generation_dependencies),
 ):
     """非流式故事生成入口（v2）。
 
@@ -147,79 +150,41 @@ async def generate_story_v2(
 
     try:
         operation_id = build_memory_operation_id("generate")
-        request_payload = request.model_dump()
-        request_payload["memory_operation_id"] = operation_id
-        request_payload["memory_operation_sequence_start"] = 1
-        graph_state = await run_story_graph(
-            {
-                "request_payload": request_payload,
-                "thread_id": thread_id,
-                "user_id": user_id,
-            }
+        request_payload = build_story_graph_request_payload(
+            request=request,
+            session_id=request.session_id,
+            user_input=request.user_input,
+            memory_operation_id=operation_id,
+            memory_operation_sequence_start=1,
         )
-        response = V2GenerateResponse(**graph_state["v2_response"])
+        response = await execute_story_graph_generation(
+            request_payload=request_payload,
+            thread_id=thread_id,
+            user_id=user_id,
+        )
         request_total_time = time.perf_counter() - start_time
 
-        counters = build_observability_counters(response)
-        metrics_recorder.record(
-            api_version="v2",
-            mode="generate",
+        record_generation_success(
+            metrics_recorder=generation_services.metrics_recorder,
+            analytics_sink=generation_services.analytics_sink,
             request_id=request_id,
             session_id=request.session_id,
             world_id=request.world_id,
-            generation_time=response.generation_time,
-            retrieved_context_count=len(response.contexts),
-            retrieved_history_count=counters["history_hits"],
-            activation_log_count=len(counters["activation_logs"]),
-            rule_hit_count=counters["rule_hit_count"],
-            vector_hit_count=counters["vector_hit_count"],
-            budget_trim_dropped_count=counters["budget_trim_dropped_count"],
-            summary_applied=counters["summary_applied"],
-            summary_updated=counters["summary_updated"],
-            story_state_updated=counters["story_state_updated"],
-            story_state_clues_count=counters["story_state_clues_count"],
+            request_user_input=request.user_input,
+            response=response,
             request_total_time=request_total_time,
-            success=True,
-        )
-
-        token_usage = resolve_token_usage(request_user_input=request.user_input, response=response)
-        analytics_service.record_event(
-            event_type="story_generate",
-            session_id=request.session_id,
-            world_id=request.world_id,
-            model=response.model,
-            success=True,
-            generation_time=response.generation_time,
-            prompt_tokens=token_usage["prompt_tokens"],
-            completion_tokens=token_usage["completion_tokens"],
-            total_tokens=token_usage["total_tokens"],
-            token_source=token_usage["token_source"],
-            vector_hits=counters["vector_hit_count"],
-            retrieved_context_count=len(response.contexts),
         )
         return response
     except Exception as exc:
         request_total_time = time.perf_counter() - start_time
-        metrics_recorder.record(
-            api_version="v2",
-            mode="generate",
+        record_generation_failure(
+            metrics_recorder=generation_services.metrics_recorder,
+            analytics_sink=generation_services.analytics_sink,
             request_id=request_id,
             session_id=request.session_id,
             world_id=request.world_id,
-            generation_time=request_total_time,
-            retrieved_context_count=0,
-            retrieved_history_count=0,
-            request_total_time=request_total_time,
-            success=False,
-            error_type=type(exc).__name__,
-        )
-        analytics_service.record_event(
-            event_type="story_generate",
-            session_id=request.session_id,
-            world_id=request.world_id,
             model=request.model or "-",
-            success=False,
-            generation_time=request_total_time,
+            request_total_time=request_total_time,
             error_type=type(exc).__name__,
         )
         logger.error("Error generating story via graph (v2): %s", exc)
@@ -230,49 +195,25 @@ async def generate_story_v2(
 async def preview_input_enhancement(
     request: V2InputEnhancementPreviewRequest,
     user_id: Optional[str] = Header(None, alias="X-User-ID"),
-    services: ServiceContainer = Depends(get_services),
+    generation_services: StoryGenerationDependencies = Depends(get_story_generation_dependencies),
 ):
     """预览输入增强结果，不执行正式故事生成。"""
-    session_context = services.session_manager.get_or_create_session(
-        session_id=request.session_id,
-        world_id=request.world_id,
-        character_card_id=request.character_card_id,
-        persona_id=request.persona_id,
+    session_context = load_or_create_story_session_context(
+        session_store=generation_services.session_manager,
+        payload={
+            "session_id": request.session_id,
+            "world_id": request.world_id,
+            "character_card_id": request.character_card_id,
+            "persona_id": request.persona_id,
+        },
     )
 
-    internal_request = StoryGenerationRequest(
-        session_id=request.session_id,
-        story_id=request.story_id,
-        user_input=request.user_input,
-        world_id=request.world_id,
-        creation_mode=request.creation_mode,
-        progress_intent=request.progress_intent,
-        runtime_state_id=request.runtime_state_id,
-        allow_state_transition=request.allow_state_transition,
-        context=session_context,
-        model=request.model,
-        provider=request.provider,
-        base_url=request.base_url,
-        temperature=request.temperature,
-        character_card_id=request.character_card_id,
-        persona_id=request.persona_id,
-        selected_context_entry_ids=request.selected_context_entry_ids,
-        rag_scope_entry_ids=[],
-        script_design_id=request.script_design_id,
-        active_stage_id=request.active_stage_id,
-        active_event_id=request.active_event_id,
-        follow_script_design=request.follow_script_design,
-        principal_character_id=request.principal_character_id,
-        dialogue_mode=request.dialogue_mode,
-        dialogue_target=request.dialogue_target,
-        dialogue_intent=request.dialogue_intent,
-        dialogue_style_hint=request.dialogue_style_hint,
-        force_dialogue_round=request.force_dialogue_round,
-        focus_instruction=request.focus_instruction,
-        focus_label=request.focus_label,
+    internal_request = build_story_generation_request(
+        request=request,
+        session_context=session_context,
         enhance_input=True,
     )
-    preview = await services.story_generator.preview_enhanced_input(internal_request, user_id=user_id)
+    preview = await generation_services.story_generator.preview_enhanced_input(internal_request, user_id=user_id)
     return V2InputEnhancementPreviewResponse(**preview)
 
 
@@ -280,7 +221,7 @@ async def preview_input_enhancement(
 async def generate_story_stream_v2(
     request: V2GenerateRequest,
     user_id: Optional[str] = Header(None, alias="X-User-ID"),
-    services: ServiceContainer = Depends(get_services),
+    generation_services: StoryGenerationDependencies = Depends(get_story_generation_dependencies),
 ):
     """流式故事生成入口（SSE）。
 
@@ -289,57 +230,26 @@ async def generate_story_stream_v2(
     _validate_user_header_for_generation(user_id, provider=request.provider, model=request.model)
     thread_id = request.thread_id or request.session_id
 
-    # 会话获取/创建统一委托给 SessionManager。
-    session_context = services.session_manager.get_or_create_session(
-        session_id=thread_id,
-        world_id=request.world_id,
-        character_card_id=request.character_card_id,
-        persona_id=request.persona_id,
+    session_context = load_or_create_story_session_context(
+        session_store=generation_services.session_manager,
+        payload={
+            "session_id": thread_id,
+            "world_id": request.world_id,
+            "character_card_id": request.character_card_id,
+            "persona_id": request.persona_id,
+        },
     )
 
     operation_id = build_memory_operation_id("generate")
-    internal_request = StoryGenerationRequest(
+    internal_request = build_story_generation_request(
+        request=request,
+        session_context=session_context,
         session_id=thread_id,
-        story_id=request.story_id,
-        user_input=request.user_input,
-        world_id=request.world_id,
-        creation_mode=request.creation_mode,
-        progress_intent=request.progress_intent,
-        runtime_state_id=request.runtime_state_id,
-        allow_state_transition=request.allow_state_transition,
-        context=session_context,
-        model=request.model,
-        provider=request.provider,
-        base_url=request.base_url,
-        temperature=request.temperature,
-        max_tokens=request.max_tokens,
-        style=request.style,
-        language=request.language,
-        character_card_id=request.character_card_id,
-        persona_id=request.persona_id,
-        authors_note=request.authors_note,
-        mode=request.mode or "narrative",
-        instruction=request.instruction,
-        selected_context_entry_ids=request.selected_context_entry_ids,
-        rag_scope_entry_ids=[],
-        script_design_id=request.script_design_id,
-        active_stage_id=request.active_stage_id,
-        active_event_id=request.active_event_id,
-        follow_script_design=request.follow_script_design,
-        principal_character_id=request.principal_character_id,
-        dialogue_mode=request.dialogue_mode,
-        dialogue_target=request.dialogue_target,
-        dialogue_intent=request.dialogue_intent,
-        dialogue_style_hint=request.dialogue_style_hint,
-        force_dialogue_round=request.force_dialogue_round,
-        focus_instruction=request.focus_instruction,
-        focus_label=request.focus_label,
-        enhance_input=request.enhance_input,
         memory_operation_id=operation_id,
         memory_operation_sequence_start=1,
     )
 
-    stream = services.story_generator.generate_story_stream(internal_request, user_id=user_id)
+    stream = generation_services.story_generator.generate_story_stream(internal_request, user_id=user_id)
     return StreamingResponse(
         _inject_choices_for_stream(stream, request.mode),
         media_type="text/event-stream",
