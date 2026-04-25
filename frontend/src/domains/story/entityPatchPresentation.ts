@@ -3,17 +3,31 @@
  */
 
 import type { EntityStateUpdate } from '@/domains/story/api/storyGenerationApi'
+import type { EntityStateCollection, MemoryUpdateEvent } from '@/domains/story/api/storyGenerationApi'
+import { getEntityCompanionDisplayName, getEntityCompanionId } from '@/domains/story/entityCompanion'
 import type { StoryEntityUpdateRecord, StoryWorldUpdateRecord } from '@/stores/storySession'
 
 type EntityLikeUpdate = EntityStateUpdate | StoryEntityUpdateRecord
 
 const ENTITY_FIELD_LABELS: Record<string, string> = {
+  display_name: '显示名称',
   current_location: '位置',
   inventory: '携带物',
   status_tags: '状态标签',
-  companions: '同行角色',
+  companions: '同行者',
   state_summary: '状态摘要',
   short_goal: '当前目标',
+  evidence: '证据',
+  last_source_turn: '最后来源轮次',
+  updated_at: '更新时间',
+  entity_id: '实体 ID',
+}
+
+/** 统一返回实体字段的中文展示名。 */
+export function getEntityFieldLabel(fieldName?: string | null): string {
+  const normalizedFieldName = typeof fieldName === 'string' ? fieldName.trim() : ''
+  if (!normalizedFieldName) return '实体状态'
+  return ENTITY_FIELD_LABELS[normalizedFieldName] ?? normalizedFieldName
 }
 
 /** 处理 isApiEntityUpdate 相关逻辑。 */
@@ -21,12 +35,34 @@ function isApiEntityUpdate(update: EntityLikeUpdate): update is EntityStateUpdat
   return 'entity_name' in update || 'field_name' in update
 }
 
+function extractDisplayName(value: unknown): string | null {
+  if (!value || typeof value !== 'object') return null
+  const displayName = (value as Record<string, unknown>).display_name
+  return typeof displayName === 'string' && displayName.trim() ? displayName.trim() : null
+}
+
+function normalizeEntityId(value?: string | null): string | null {
+  const normalizedValue = typeof value === 'string' ? value.trim() : ''
+  return normalizedValue || null
+}
+
+function extractEntityIdFromMemoryKey(memoryKey?: string | null): string | null {
+  const normalizedMemoryKey = normalizeEntityId(memoryKey)
+  if (!normalizedMemoryKey) return null
+  const [entityId] = normalizedMemoryKey.split(':')
+  return normalizeEntityId(entityId)
+}
+
 /** 处理 resolveEntityName 相关逻辑。 */
 function resolveEntityName(update: EntityLikeUpdate): string {
   if (isApiEntityUpdate(update)) {
     return update.entity_name ?? update.entity_id
   }
-  return update.entityName ?? update.entityId
+  return update.entityName
+    ?? extractDisplayName(update.after)
+    ?? extractDisplayName(update.before)
+    ?? update.entityId
+    ?? '未知实体'
 }
 
 /** 处理 resolveFieldName 相关逻辑。 */
@@ -37,9 +73,21 @@ function resolveFieldName(update: EntityLikeUpdate): string {
   return update.fieldName
 }
 
+/** 统一返回 patch 对应的原始字段名。 */
+export function getEntityPatchFieldName(update: EntityLikeUpdate): string {
+  return resolveFieldName(update) ?? ''
+}
+
 /** 处理 compactText 相关逻辑。 */
 function compactText(value: string, maxLength: number): string {
   return value.length > maxLength ? `${value.slice(0, maxLength - 1)}…` : value
+}
+
+function isStructuredValue(value: unknown): boolean {
+  if (Array.isArray(value)) {
+    return value.some((item) => item != null && typeof item === 'object')
+  }
+  return value != null && typeof value === 'object'
 }
 
 /** 处理 formatEntityPatchValue 相关逻辑。 */
@@ -49,6 +97,10 @@ export function formatEntityPatchValue(value: unknown): string {
     return value.map((item) => formatEntityPatchValue(item)).join('、') || '空'
   }
   if (typeof value === 'object') {
+    const companionDisplayName = getEntityCompanionDisplayName(value)
+    if (companionDisplayName) return companionDisplayName
+    const companionId = getEntityCompanionId(value)
+    if (companionId) return companionId
     try {
       return JSON.stringify(value, null, 2)
     } catch {
@@ -63,10 +115,59 @@ export function getEntityPatchEntityLabel(update: EntityLikeUpdate): string {
   return resolveEntityName(update)
 }
 
+export function buildEntityNameMap(options: {
+  snapshot?: EntityStateCollection | null
+  updates?: EntityLikeUpdate[]
+  events?: Array<Pick<MemoryUpdateEvent, 'memory_layer' | 'memory_key' | 'before' | 'after'>>
+  lorebookEntries?: Array<{
+    id?: string | null
+    name?: string | null
+    type?: string | null
+  }>
+}): Map<string, string> {
+  const nameMap = new Map<string, string>()
+
+  for (const item of options.snapshot?.items ?? []) {
+    const entityId = normalizeEntityId(item.entity_id)
+    const displayName = item.display_name?.trim()
+    if (entityId && displayName) {
+      nameMap.set(entityId, displayName)
+    }
+  }
+
+  for (const update of options.updates ?? []) {
+    const entityId = normalizeEntityId(isApiEntityUpdate(update) ? update.entity_id : update.entityId)
+    const displayName = resolveEntityName(update)?.trim()
+    if (entityId && displayName) {
+      nameMap.set(entityId, displayName)
+    }
+  }
+
+  for (const event of options.events ?? []) {
+    if (event.memory_layer !== 'entity_state') continue
+    const entityId = extractEntityIdFromMemoryKey(event.memory_key)
+    const displayName = extractDisplayName(event.after) ?? extractDisplayName(event.before)
+    if (entityId && displayName) {
+      nameMap.set(entityId, displayName)
+    }
+  }
+
+  for (const entry of options.lorebookEntries ?? []) {
+    const entryId = normalizeEntityId(entry.id)
+    const entryName = typeof entry.name === 'string' ? entry.name.trim() : ''
+    if (entry.type !== 'character') continue
+    if (entryId && entryName && !nameMap.has(entryId)) {
+      nameMap.set(entryId, entryName)
+    }
+  }
+
+  return nameMap
+}
+
 /** 处理 getEntityPatchFieldLabel 相关逻辑。 */
 export function getEntityPatchFieldLabel(update: EntityLikeUpdate): string {
   const fieldName = resolveFieldName(update)
-  return ENTITY_FIELD_LABELS[fieldName] ?? fieldName
+  return getEntityFieldLabel(fieldName)
 }
 
 /** 处理 getEntityPatchOperationLabel 相关逻辑。 */
@@ -112,14 +213,23 @@ export function getEntityPatchChangeSummary(update: EntityLikeUpdate, maxLength 
 
   if (update.op === 'remove') {
     const removedValue = before ?? value ?? after
+    if (isStructuredValue(removedValue)) {
+      return `${fieldLabel}：已移除`
+    }
     return `${fieldLabel}：移除 ${compactText(formatEntityPatchValue(removedValue), maxLength)}`
   }
 
   if (before != null || after != null) {
+    if (isStructuredValue(before) || isStructuredValue(after)) {
+      return `${fieldLabel}：已更新`
+    }
     return `${fieldLabel}：${compactText(formatEntityPatchValue(before), maxLength)} -> ${compactText(formatEntityPatchValue(after), maxLength)}`
   }
 
   if (value != null) {
+    if (isStructuredValue(value)) {
+      return `${fieldLabel}：${getEntityPatchOperationLabel(update.op)}`
+    }
     return `${fieldLabel}：${compactText(formatEntityPatchValue(value), maxLength)}`
   }
 

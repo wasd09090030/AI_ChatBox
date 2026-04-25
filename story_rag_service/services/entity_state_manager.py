@@ -8,6 +8,10 @@ from datetime import datetime
 from typing import Any, Dict, Iterable, List, Optional, Sequence
 
 from application.memory import build_memory_update_event, persist_memory_update_events
+from entity_state_response_serializer import (
+    build_entity_display_name_map,
+    serialize_companion_value,
+)
 from models.entity_state import EntityStateRebuildResponse, EntityStateSnapshot
 from models.story import Message
 from models.story_runtime import ScriptRuntimeState
@@ -373,6 +377,7 @@ class EntityStateManager:
         previous_states = self.repository.list_by_story_id(story_id)
         previous_by_id = {state.entity_id: state for state in previous_states}
         normalized_states = sorted(states.values(), key=lambda item: item.display_name)
+        display_name_map = build_entity_display_name_map([*previous_states, *normalized_states])
         warnings: List[str] = []
         memory_updates: List[Dict[str, Any]] = []
 
@@ -388,8 +393,8 @@ class EntityStateManager:
                     source_turn=state.last_source_turn,
                     memory_key=state.entity_id,
                     title=f"实体状态已{'重建' if action == 'rebuilt' else '建立'}: {state.display_name}",
-                    before=self._snapshot_preview(before_state),
-                    after=self._snapshot_preview(state),
+                    before=self._snapshot_preview(before_state, display_name_map=display_name_map),
+                    after=self._snapshot_preview(state, display_name_map=display_name_map),
                 )
             )
 
@@ -405,7 +410,7 @@ class EntityStateManager:
                     source_turn=removed_state.last_source_turn,
                     memory_key=entity_id,
                     title=f"实体状态已重置: {removed_state.display_name}",
-                    before=self._snapshot_preview(removed_state),
+                    before=self._snapshot_preview(removed_state, display_name_map=display_name_map),
                     reason="实体在最新故事/消息重建中未再出现",
                 )
             )
@@ -533,16 +538,24 @@ class EntityStateManager:
         return None
 
     @staticmethod
-    def _snapshot_preview(state: Optional[EntityStateSnapshot]) -> Optional[Dict[str, Any]]:
+    def _snapshot_preview(
+        state: Optional[EntityStateSnapshot],
+        *,
+        display_name_map: Optional[Dict[str, str]] = None,
+    ) -> Optional[Dict[str, Any]]:
         """生成用于 memory_update 的轻量状态快照。"""
         if state is None:
             return None
+        resolved_display_name_map = display_name_map or {state.entity_id: state.display_name}
         return {
             "display_name": state.display_name,
             "current_location": state.current_location,
             "inventory": list(state.inventory)[:6],
             "status_tags": list(state.status_tags)[:6],
-            "companions": list(state.companions)[:6],
+            "companions": serialize_companion_value(
+                list(state.companions)[:6],
+                display_name_map=resolved_display_name_map,
+            ),
             "short_goal": state.short_goal,
             "last_source_turn": state.last_source_turn,
         }

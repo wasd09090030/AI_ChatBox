@@ -91,7 +91,7 @@ function getSegmentModeLabel(seg: StorySegment) {
           </div>
 
           <BranchChoiceCard
-            v-if="seg.choices?.length && !generating"
+            v-if="seg.choices?.length && (!generating || isLastSeg(seg))"
             :seg-id="seg.id"
             :choices="seg.choices"
             :generating="generating"

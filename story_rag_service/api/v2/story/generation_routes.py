@@ -38,8 +38,9 @@ from api.v2.schemas import (
 logger = logging.getLogger(__name__)
 # FastAPI 路由注册器，用于挂载本模块接口。
 router = APIRouter()
-# 匹配 choices 模式输出中的 [A]/[B]/[C] 选项行。
-_CHOICE_LINE_RE = re.compile(r"^\[([ABC])\]\s*(.+)$")
+# 统一匹配 choices 模式输出中的候选项标记，并在响应层截断为前 3 项。
+_MAX_CHOICES = 3
+_CHOICE_LINE_RE = re.compile(r"^\[(?:选项\s*\d+|[A-Z])\]\s*(.+)$")
 
 
 def _validate_user_header_for_generation(user_id: Optional[str], *, provider: Optional[str], model: Optional[str]) -> None:
@@ -60,7 +61,7 @@ def _validate_user_header_for_generation(user_id: Optional[str], *, provider: Op
 
 
 def _extract_choices_and_text(raw_text: str) -> Tuple[List[str], str]:
-    """从文本中提取 [A]/[B]/[C] 选项，并返回去标记后的正文。"""
+    """从文本中提取候选项，并返回去标记后的正文。"""
     if not raw_text:
         return [], ""
 
@@ -69,13 +70,13 @@ def _extract_choices_and_text(raw_text: str) -> Tuple[List[str], str]:
     for line in raw_text.splitlines():
         match = _CHOICE_LINE_RE.match(line.strip())
         if match:
-            choice_text = match.group(2).strip()
+            choice_text = match.group(1).strip()
             if choice_text:
                 choices.append(choice_text)
             continue
         kept_lines.append(line)
 
-    return choices, "\n".join(kept_lines).strip()
+    return choices[:_MAX_CHOICES], "\n".join(kept_lines).strip()
 
 
 async def _inject_choices_for_stream(
@@ -84,7 +85,7 @@ async def _inject_choices_for_stream(
 ) -> AsyncGenerator[str, None]:
     """在 choices 模式下重写 SSE 完成事件。
 
-    该函数会缓存增量 chunk，并在 `done=True` 时提取 [A]/[B]/[C] 选项，
+    该函数会缓存增量 chunk，并在 `done=True` 时提取候选项标记，
     同时输出清洗后的 `generated_text` 与 `output_text`。
     """
     if (mode or "narrative") != "choices":

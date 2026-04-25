@@ -108,6 +108,12 @@ export const storyLibraryApi = {
       .then((response) => response.data)
   },
 
+  get(storyId: string) {
+    return api
+      .get<StoredStory>(`/stories/${storyId}`)
+      .then((response) => response.data)
+  },
+
   create(payload: CreateStoryPayload) {
     return api
       .post<StoredStory>('/stories', payload)

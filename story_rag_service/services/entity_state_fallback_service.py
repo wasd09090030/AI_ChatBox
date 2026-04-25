@@ -8,6 +8,7 @@ from __future__ import annotations
 import logging
 from typing import Any, Dict, List, Optional, Sequence
 
+from entity_state_response_serializer import serialize_entity_state_collection
 from models.entity_state import EntityStateCollection, EntityStateRebuildResponse
 from models.story import Message
 
@@ -171,7 +172,7 @@ class EntityStateFallbackService:
             items=response.items,
             total=len(response.items),
         )
-        return snapshot.model_dump(mode="json")
+        return serialize_entity_state_collection(snapshot)
 
     def rebuild_story_state(
         self,

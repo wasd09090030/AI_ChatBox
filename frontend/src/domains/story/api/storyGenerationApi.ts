@@ -9,6 +9,8 @@ import { V2GenerateResponseSchema } from '@/services/schemas'
 import { API_PREFIX } from '@/utils/constants'
 import { getUserId } from '@/domains/user/api/userIdentity'
 
+const MAX_CHOICES = 3
+
 /** 处理 getStoryHeaders 相关逻辑。 */
 function getStoryHeaders(contentType = true): Record<string, string> {
   const headers: Record<string, string> = {
@@ -140,6 +142,13 @@ export interface SummaryMemorySnapshot {
   session_id?: string
 }
 
+export interface EntityCompanionRef {
+  id: string
+  display_name: string
+}
+
+export type EntityCompanion = string | EntityCompanionRef
+
 export interface EntityStateSnapshot {
   story_id: string
   session_id: string
@@ -149,7 +158,7 @@ export interface EntityStateSnapshot {
   current_location?: string | null
   inventory: string[]
   status_tags: string[]
-  companions: string[]
+  companions: EntityCompanion[]
   short_goal?: string | null
   state_summary?: string | null
   evidence: string[]
@@ -348,7 +357,7 @@ export async function* streamStoryV2(
         const rawGenerated = raw['generated_text'] ?? raw['output_text']
         const generated = typeof rawGenerated === 'string' ? rawGenerated : undefined
         const choices = Array.isArray(raw['choices'])
-          ? raw['choices'].map((item) => String(item).trim()).filter(Boolean)
+          ? raw['choices'].map((item) => String(item).trim()).filter(Boolean).slice(0, MAX_CHOICES)
           : undefined
         return {
           type: 'done',

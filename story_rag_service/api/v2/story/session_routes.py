@@ -18,6 +18,10 @@ from application.story_generation import (
     execute_story_graph_generation,
     load_or_create_story_session_context,
 )
+from entity_state_response_serializer import (
+    serialize_entity_state_collection,
+    serialize_entity_state_rebuild_response,
+)
 from api.dependencies.world import StorySessionDependencies, get_story_session_dependencies
 from api.v2.schemas import (
     CreateSessionRequest,
@@ -28,7 +32,10 @@ from api.v2.schemas import (
     SessionInfoResponse,
     V2GenerateResponse,
 )
-from models.entity_state import EntityStateCollection, EntityStateRebuildResponse
+from models.entity_state import (
+    EntityStateCollectionResponse,
+    EntityStateRebuildResponsePayload,
+)
 
 # 模块日志记录器，用于输出运行诊断信息。
 logger = logging.getLogger(__name__)
@@ -288,7 +295,7 @@ async def regenerate_last_response(
     return response
 
 
-@router.get("/story/session/{session_id}/entity-state", response_model=EntityStateCollection)
+@router.get("/story/session/{session_id}/entity-state", response_model=EntityStateCollectionResponse)
 async def get_session_entity_state(
     session_id: str,
     query: EntityStateQueryParams = Depends(),
@@ -296,15 +303,16 @@ async def get_session_entity_state(
 ):
     """读取会话当前实体状态快照（兼容桥接，优先事件回放）。"""
     effective_story_id = session_services.story_runtime_manager.derive_story_id(session_id)
-    return session_services.entity_state_fallback_service.get_session_snapshot(
+    snapshot = session_services.entity_state_fallback_service.get_session_snapshot(
         session_id=session_id,
         story_id=effective_story_id,
         entity_type=query.entity_type,
         source="entity_state_session_snapshot_api",
     )
+    return serialize_entity_state_collection(snapshot)
 
 
-@router.post("/story/session/{session_id}/entity-state/rebuild", response_model=EntityStateRebuildResponse)
+@router.post("/story/session/{session_id}/entity-state/rebuild", response_model=EntityStateRebuildResponsePayload)
 async def rebuild_session_entity_state(
     session_id: str,
     story_id: Optional[str] = None,
@@ -331,12 +339,13 @@ async def rebuild_session_entity_state(
             persist=True,
         )
         if replay_result.rebuilt:
-            return replay_result
+            return serialize_entity_state_rebuild_response(replay_result)
 
-    return session_services.entity_state_fallback_service.rebuild_session_state(
+    rebuild_result = session_services.entity_state_fallback_service.rebuild_session_state(
         session_id=session_id,
         story_id=effective_story_id,
         world_id=resolved_world_id,
         messages=messages,
         source="entity_state_session_rebuild_api",
     )
+    return serialize_entity_state_rebuild_response(rebuild_result)

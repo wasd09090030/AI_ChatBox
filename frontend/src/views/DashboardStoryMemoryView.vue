@@ -4,17 +4,14 @@ import { storeToRefs } from 'pinia'
 import { computed, ref, watch } from 'vue'
 import {
   AlertTriangle,
-  ArrowLeftRight,
   Brain,
   CalendarRange,
   ChevronLeft,
   ChevronRight,
-  Filter,
   MapPinned,
   Package,
   RefreshCw,
   Search,
-  Sparkles,
   UserRound,
   Users,
 } from 'lucide-vue-next'
@@ -23,18 +20,11 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import {
   useMemoryUpdatesQuery,
   useSessionMemoryTimelineQuery,
   useSessionStoryMemoryQuery,
 } from '@/domains/memory/queries/useMemoryUpdateQueries'
-import { useWorldsQuery } from '@/domains/lorebook/queries/useLorebookQueries'
+import { useLorebookEntriesQuery, useWorldsQuery } from '@/domains/lorebook/queries/useLorebookQueries'
 import type { MemoryUpdateTimelineItem } from '@/domains/memory/api/memoryUpdatesApi'
 import {
   deriveSummaryLifecycleState,
@@ -44,20 +34,29 @@ import {
   getMemorySourceLabel,
   getMemoryStatusLabel,
   getSummaryLifecycleDescriptor,
-  groupMemoryEventsByOperation,
+  type MemoryPayloadField,
   type SummaryLifecycleState,
 } from '@/domains/memory/memoryUpdatePresentation'
 import {
+  buildStoryMemoryRounds,
+  type StoryMemoryRoundView,
+} from '@/domains/memory/storyMemoryRounds'
+import {
+  buildEntityNameMap,
   extractWorldUpdateHighlights,
-  formatEntityPatchValue,
   getEntityPatchChangeSummary,
   getEntityPatchCommittedAt,
   getEntityPatchEntityLabel,
   getEntityPatchEvidenceText,
   getEntityPatchEventId,
   getEntityPatchFieldLabel,
-  getEntityPatchSourceTurn,
+  getEntityPatchFieldName,
 } from '@/domains/story/entityPatchPresentation'
+import {
+  getEntityCompanionDisplayName,
+  getEntityCompanionId,
+  getEntityCompanionLabel,
+} from '@/domains/story/entityCompanion'
 import {
   getStoryMemoryEntitySnapshot,
   getStoryMemoryEntityUpdates,
@@ -65,6 +64,7 @@ import {
   getStoryMemoryTimelineEvents,
   getStoryMemoryWorldUpdate,
 } from '@/domains/story/storyMemoryPayload'
+import { useStoryQuery } from '@/domains/story/queries/useStoryQueries'
 import { useMemoryUpdateDashboardStore } from '@/stores/memoryUpdateDashboard'
 import { useStorySessionStore } from '@/stores/storySession'
 
@@ -74,57 +74,20 @@ const storySessionStore = useStorySessionStore()
 const dashboardStore = useMemoryUpdateDashboardStore()
 
 const {
-  searchTerm,
-  selectedSource,
-  selectedLayer,
-  selectedStatus,
-  selectedTimeRange,
+  sessionSearchTerm,
   selectedSessionId,
   detailPage,
-  detailPageSize,
   listSnapshot,
   queryFilters,
 } = storeToRefs(dashboardStore)
 
-// 来源筛选下拉选项。
-const sourceOptions = [
-  { value: 'all', label: '全部来源' },
-  { value: 'generate', label: '正常生成' },
-  { value: 'rollback', label: '回滚修复' },
-  { value: 'regenerate', label: '重生成修复' },
-  { value: 'story_adjustment_commit', label: '正文调整提交' },
-] as const
+dashboardStore.setSearchTerm('')
+dashboardStore.setSelectedSource('all')
+dashboardStore.setSelectedLayer('all')
+dashboardStore.setSelectedStatus('all')
+dashboardStore.setSessionViewMode('all')
 
-// 记忆层级筛选下拉选项。
-const layerOptions = [
-  { value: 'all', label: '全部层级' },
-  { value: 'episodic', label: '剧情记录' },
-  { value: 'semantic', label: '摘要语义' },
-  { value: 'entity_state', label: '实体状态' },
-] as const
-
-// 状态筛选下拉选项。
-const statusOptions = [
-  { value: 'all', label: '全部状态' },
-  { value: 'committed', label: '正常' },
-  { value: 'failed', label: '失败' },
-  { value: 'stale', label: '已过期' },
-] as const
-
-// 时间范围筛选下拉选项。
-const timeRangeOptions = [
-  { value: 'all', label: '全部时间' },
-  { value: '1h', label: '最近 1 小时' },
-  { value: '24h', label: '最近 24 小时' },
-  { value: '7d', label: '最近 7 天' },
-] as const
-
-// 分页条数下拉选项。
-const pageSizeOptions = [
-  { value: '20', label: '20 条/页' },
-  { value: '50', label: '50 条/页' },
-  { value: '100', label: '100 条/页' },
-] as const
+const TIMELINE_FETCH_PAGE_SIZE = 200
 
 // 可展开文本的展开状态记录。
 const expandedTextState = ref<Record<string, boolean>>({})
@@ -254,9 +217,65 @@ function layerBadgeClass(layer: string) {
 }
 
 /** 提取 payload 预览字段。*/
-function previewPayloadFields(payload?: Record<string, unknown> | null, limit = 2) {
-  return formatMemoryPayloadFields(payload)
-    .slice(0, limit)
+function previewPayloadFields(payload?: Record<string, unknown> | null, limit?: number) {
+  const normalizedPayload = payload
+    ? normalizeDashboardPayload(payload) as Record<string, unknown>
+    : null
+  const fields = formatMemoryPayloadFields(normalizedPayload)
+  return typeof limit === 'number' ? fields.slice(0, limit) : fields
+}
+
+/** 将 patch 的 before / after 值展开成逐字段展示行。*/
+function previewPatchValueFields(fieldName: string, value: unknown): MemoryPayloadField[] {
+  const normalizedFieldName = fieldName.trim()
+  const normalizedValue = normalizeDashboardPayload(value, normalizedFieldName || null)
+
+  if (!normalizedFieldName) {
+    if (normalizedValue && typeof normalizedValue === 'object' && !Array.isArray(normalizedValue)) {
+      return formatMemoryPayloadFields(normalizedValue as Record<string, unknown>)
+    }
+    return formatMemoryPayloadFields({ value: normalizedValue })
+  }
+
+  return formatMemoryPayloadFields({ [normalizedFieldName]: normalizedValue })
+}
+
+function normalizeDashboardPayload(value: unknown, fieldName?: string | null): Record<string, unknown> | unknown {
+  if (Array.isArray(value)) {
+    if (fieldName === 'companions') {
+      return value.map((item) => resolveEntityCompanionLabel(item))
+    }
+    return value.map((item) => normalizeDashboardPayload(item, fieldName))
+  }
+
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.entries(value as Record<string, unknown>).map(([key, nestedValue]) => [
+        key,
+        normalizeDashboardPayload(nestedValue, key),
+      ]),
+    )
+  }
+
+  if (fieldName === 'companions' && (typeof value === 'string' || (value && typeof value === 'object'))) {
+    return resolveEntityCompanionLabel(value)
+  }
+
+  return value ?? null
+}
+
+function getPatchBeforeFields(patch: (typeof selectedEntityPatchUpdates.value)[number]) {
+  return previewPatchValueFields(
+    getEntityPatchFieldName(patch),
+    patch.before ?? (patch.op === 'remove' ? patch.value : null),
+  )
+}
+
+function getPatchAfterFields(patch: (typeof selectedEntityPatchUpdates.value)[number]) {
+  return previewPatchValueFields(
+    getEntityPatchFieldName(patch),
+    patch.after ?? (patch.op !== 'remove' ? patch.value : null),
+  )
 }
 
 /** 汇总一次操作中各层级变更数量。*/
@@ -271,8 +290,12 @@ function summarizeOperation(events: MemoryUpdateTimelineItem[]) {
   return segments.map((item) => `${getMemoryLayerLabel(item.layer)} ${item.count} 条`).join('，')
 }
 
+function getRoundStandaloneDesignLabels(round: StoryMemoryRoundView) {
+  return round.designLabels.filter((item) => !round.contextLabels.includes(item))
+}
+
 // 会话总览卡片列表。
-const sessionCards = computed(() => {
+const allSessionCards = computed(() => {
   const grouped = new Map<string, MemoryUpdateTimelineItem[]>()
   for (const item of effectiveListResponse.value?.items ?? []) {
     const bucket = grouped.get(item.session_id) ?? []
@@ -310,6 +333,21 @@ const sessionCards = computed(() => {
     .sort((a, b) => (b.latestEvent?.committed_at ?? '').localeCompare(a.latestEvent?.committed_at ?? ''))
 })
 
+const sessionCards = computed(() => {
+  const keyword = sessionSearchTerm.value.trim().toLowerCase()
+  return allSessionCards.value.filter((item) => {
+    return !keyword || [
+      item.storyTitle,
+      item.sessionId,
+      item.worldId,
+      resolveWorldDisplay(item.worldId),
+      item.latestReason,
+      item.latestEventHeadline,
+    ]
+      .some((value) => String(value ?? '').toLowerCase().includes(keyword))
+  })
+})
+
 // 包含失败事件的会话数量。
 const failedSessionCount = computed(() => sessionCards.value.filter((item) => item.hasFailed).length)
 
@@ -331,19 +369,13 @@ watch(selectedSessionId, () => {
   dashboardStore.resetDetailState()
 })
 
-watch(detailPageSize, (value, oldValue) => {
-  if (value !== oldValue) {
-    dashboardStore.setDetailPage(1)
-  }
-})
-
 const {
   data: timelineResponse,
   isLoading: timelineLoading,
   isFetching: timelineFetching,
   error: timelineError,
   refetch: refetchTimeline,
-} = useSessionMemoryTimelineQuery(selectedSessionId, detailPage, detailPageSize)
+} = useSessionMemoryTimelineQuery(selectedSessionId, 1, TIMELINE_FETCH_PAGE_SIZE)
 
 // 时间线加载失败提示文案。
 const timelineErrorMessage = computed(() => (
@@ -364,7 +396,7 @@ const {
   data: storyMemoryResponse,
   isFetching: storyMemoryFetching,
   refetch: refetchStoryMemory,
-} = useSessionStoryMemoryQuery(selectedSessionId, detailPage, detailPageSize)
+} = useSessionStoryMemoryQuery(selectedSessionId, 1, TIMELINE_FETCH_PAGE_SIZE)
 
 // 当前会话 story memory 的有效数据源。
 const effectiveStoryMemoryResponse = computed(() => (
@@ -402,6 +434,21 @@ const selectedStoryMemory = computed(() => {
   return storySessionStore.getStoryMemorySession(selectedSessionId.value)?.storyMemory ?? null
 })
 
+const selectedStoryId = computed(() => {
+  const storyId = effectiveStoryMemoryResponse.value?.story_id ?? selectedStoryMemory.value?.story_id ?? null
+  return typeof storyId === 'string' && storyId.trim() ? storyId.trim() : undefined
+})
+
+const {
+  data: selectedStoryResponse,
+  isLoading: selectedStoryLoading,
+  isFetching: selectedStoryFetching,
+  error: selectedStoryError,
+  refetch: refetchSelectedStory,
+} = useStoryQuery(selectedStoryId)
+
+const selectedStory = computed(() => selectedStoryResponse.value ?? null)
+
 // 当前会话摘要快照。
 const selectedSummarySnapshot = computed(() => {
   const summaryFromMemory = getStoryMemorySummarySnapshot(selectedStoryMemory.value)
@@ -418,10 +465,34 @@ const selectedSummarySnapshot = computed(() => {
 
 // 当前会话时间线事件列表。
 const selectedTimelineEvents = computed(() => {
-  const timelineFromMemory = getStoryMemoryTimelineEvents(selectedStoryMemory.value, detailPageSize.value)
+  const timelineFromMemory = getStoryMemoryTimelineEvents(selectedStoryMemory.value, TIMELINE_FETCH_PAGE_SIZE)
   if (timelineFromMemory.length) return timelineFromMemory
   return effectiveTimelineResponse.value?.items ?? []
 })
+
+const selectedRoundCollection = computed(() => buildStoryMemoryRounds({
+  story: selectedStory.value,
+  events: selectedTimelineEvents.value,
+}))
+
+const selectedRoundViews = computed(() => selectedRoundCollection.value?.rounds ?? [])
+const unassignedRoundEvents = computed(() => selectedRoundCollection.value?.unassignedEvents ?? [])
+
+type StoryMemoryRoundPage = {
+  id: string
+  kind: 'round'
+  label: string
+  round: StoryMemoryRoundView
+}
+
+type StoryMemoryUnassignedPage = {
+  id: string
+  kind: 'unassigned'
+  label: string
+  events: MemoryUpdateTimelineItem[]
+}
+
+type StoryMemoryDetailPage = StoryMemoryRoundPage | StoryMemoryUnassignedPage
 
 // 摘要生命周期说明文案。
 const detailSummaryDescriptor = computed(() => {
@@ -433,8 +504,6 @@ const detailSummaryDescriptor = computed(() => {
   return getSummaryLifecycleDescriptor(state, { reason })
 })
 
-// 按 operationId 聚合后的事件分组。
-const operationGroups = computed(() => groupMemoryEventsByOperation(selectedTimelineEvents.value))
 // 语义层事件列表。
 const semanticEvents = computed(() => selectedTimelineEvents.value.filter((event) => event.memory_layer === 'semantic'))
 // 失败事件列表。
@@ -466,10 +535,24 @@ const selectedWorldUpdate = computed(() => {
   return selectedSessionId.value ? storySessionStore.getSessionWorldUpdate(selectedSessionId.value)?.payload ?? null : null
 })
 
-// 实体 ID 到展示名映射。
-const selectedEntityNameMap = computed(() => new Map(
-  (selectedEntitySnapshot.value?.items ?? []).map((item) => [item.entity_id, item.display_name]),
+const selectedWorldId = computed(() => {
+  const worldId = selectedStoryMemory.value?.world_id ?? selectedSessionCard.value?.worldId ?? null
+  const normalizedWorldId = typeof worldId === 'string' ? worldId.trim() : ''
+  return normalizedWorldId || undefined
+})
+
+const { data: selectedLorebookEntriesData } = useLorebookEntriesQuery(selectedWorldId)
+const selectedLorebookCharacterEntries = computed(() => (
+  (selectedLorebookEntriesData.value?.entries ?? []).filter((entry) => entry.type === 'character')
 ))
+
+// 实体 ID 到展示名映射。
+const selectedEntityNameMap = computed(() => buildEntityNameMap({
+  snapshot: selectedEntitySnapshot.value,
+  updates: selectedEntityPatchUpdates.value,
+  events: selectedTimelineEvents.value,
+  lorebookEntries: selectedLorebookCharacterEntries.value,
+}))
 
 // 实体状态风险提示列表。
 const selectedEntityWarnings = computed(() => {
@@ -486,8 +569,12 @@ const selectedEntityWarnings = computed(() => {
     warnings.push(`仍有角色缺少证据：${missingEvidence.slice(0, 4).map((item) => item.display_name).join('、')}`)
   }
   const unresolvedCompanions = items
-    .flatMap((item) => item.companions.map((companionId) => ({ owner: item.display_name, companionId })))
-    .filter((item) => !selectedEntityNameMap.value.has(item.companionId))
+    .flatMap((item) => item.companions.map((companion) => ({ owner: item.display_name, companion })))
+    .filter(({ companion }) => {
+      if (getEntityCompanionDisplayName(companion)) return false
+      const companionId = getEntityCompanionId(companion)
+      return !companionId || !selectedEntityNameMap.value.has(companionId)
+    })
   if (unresolvedCompanions.length) {
     warnings.push(`存在未解析同行引用，最近来自：${unresolvedCompanions[0]?.owner ?? '未知角色'}`)
   }
@@ -501,60 +588,6 @@ const selectedEntityLocationCount = computed(() => new Set(
 // 世界更新高亮摘要列表。
 const selectedWorldUpdateHighlights = computed(() => extractWorldUpdateHighlights(selectedWorldUpdate.value).slice(0, 4))
 
-// 近期实体变更分组摘要。
-const recentEntityChangeGroups = computed(() => {
-  const grouped = new Map<string, {
-    id: string
-    entityLabel: string
-    committedAt: string
-    sourceTurn: number | null
-    changes: Array<{
-      id: string
-      fieldLabel: string
-      summary: string
-      beforeText: string
-      afterText: string
-    }>
-    evidence: string[]
-  }>()
-
-  for (const patch of selectedEntityPatchUpdates.value.slice(0, 18)) {
-    const entityLabel = getEntityPatchEntityLabel(patch)
-    const group = grouped.get(entityLabel) ?? {
-      id: entityLabel,
-      entityLabel,
-      committedAt: getEntityPatchCommittedAt(patch),
-      sourceTurn: getEntityPatchSourceTurn(patch),
-      changes: [],
-      evidence: [],
-    }
-    group.committedAt = group.committedAt > getEntityPatchCommittedAt(patch)
-      ? group.committedAt
-      : getEntityPatchCommittedAt(patch)
-    group.sourceTurn = getEntityPatchSourceTurn(patch) ?? group.sourceTurn
-    const beforeRaw = patch.before ?? (patch.op === 'remove' ? patch.value : null)
-    const afterRaw = patch.after ?? (patch.op !== 'remove' ? patch.value : null)
-    if (!group.changes.some((item) => item.id === getEntityPatchEventId(patch))) {
-      group.changes.push({
-        id: getEntityPatchEventId(patch),
-        fieldLabel: getEntityPatchFieldLabel(patch),
-        summary: getEntityPatchChangeSummary(patch),
-        beforeText: formatEntityPatchValue(beforeRaw),
-        afterText: formatEntityPatchValue(afterRaw),
-      })
-    }
-    const evidence = getEntityPatchEvidenceText(patch)
-    if (evidence && !group.evidence.includes(evidence)) {
-      group.evidence.push(evidence)
-    }
-    grouped.set(entityLabel, group)
-  }
-
-  return Array.from(grouped.values())
-    .sort((a, b) => b.committedAt.localeCompare(a.committedAt))
-    .slice(0, 6)
-})
-
 // 最近一次语义层事件。
 const latestSemanticEvent = computed(() => (
   effectiveTimelineResponse.value?.summary_state.last_semantic_event
@@ -562,20 +595,42 @@ const latestSemanticEvent = computed(() => (
   ?? null
 ))
 
-// 当前明细总条数。
-const detailTotal = computed(() => (
-  effectiveStoryMemoryResponse.value?.timeline_total
-  ?? effectiveTimelineResponse.value?.total
-  ?? selectedTimelineEvents.value.length
+const roundPages = computed<StoryMemoryDetailPage[]>(() => {
+  const pages: StoryMemoryDetailPage[] = selectedRoundViews.value.map((round) => ({
+    id: round.id,
+    kind: 'round',
+    label: `第 ${round.turn} 轮`,
+    round,
+  }))
+  if (unassignedRoundEvents.value.length) {
+    pages.push({
+      id: 'unassigned-events',
+      kind: 'unassigned',
+      label: '未定位轮次',
+      events: unassignedRoundEvents.value,
+    })
+  }
+  return pages
+})
+
+const currentRoundPage = computed<StoryMemoryDetailPage | null>(() => (
+  roundPages.value[detailPage.value - 1] ?? null
 ))
-// 当前明细总页数。
-const detailPageCount = computed(() => Math.max(1, Math.ceil(detailTotal.value / detailPageSize.value)))
+const currentRoundView = computed<StoryMemoryRoundPage | null>(() => (
+  currentRoundPage.value?.kind === 'round' ? currentRoundPage.value : null
+))
+const currentUnassignedPage = computed<StoryMemoryUnassignedPage | null>(() => (
+  currentRoundPage.value?.kind === 'unassigned' ? currentRoundPage.value : null
+))
+// 当前轮次总页数。
+const detailPageCount = computed(() => Math.max(1, roundPages.value.length))
 // 当前分页范围文案。
 const historyRangeLabel = computed(() => {
-  if (!detailTotal.value) return '暂无历史记录'
-  const start = (detailPage.value - 1) * detailPageSize.value + 1
-  const end = Math.min(detailTotal.value, detailPage.value * detailPageSize.value)
-  return `第 ${start}-${end} 条，共 ${detailTotal.value} 条`
+  if (!roundPages.value.length) return '暂无轮次记忆'
+  const current = currentRoundPage.value
+  if (!current) return '暂无轮次记忆'
+  if (current.kind === 'unassigned') return `未定位事件页 · 共 ${roundPages.value.length} 页`
+  return `${current.label} · 共 ${roundPages.value.length} 页`
 })
 
 watch(detailPageCount, (count) => {
@@ -599,8 +654,11 @@ function goToNextPage() {
 }
 
 /** 解析同行实体展示名。*/
-function resolveEntityCompanionLabel(companionId: string) {
-  return selectedEntityNameMap.value.get(companionId) ?? companionId
+function resolveEntityCompanionLabel(companion: unknown) {
+  if (typeof companion !== 'string' && (!companion || typeof companion !== 'object')) {
+    return '未知同行者'
+  }
+  return getEntityCompanionLabel(companion, selectedEntityNameMap.value)
 }
 </script>
 
@@ -609,54 +667,21 @@ function resolveEntityCompanionLabel(companionId: string) {
     <div class="mx-auto w-full max-w-[1500px] px-4 py-4 sm:px-6 sm:py-6">
       <section class="rounded-[32px] border border-border bg-background p-4 shadow-sm sm:p-6">
         <div class="grid gap-6 xl:grid-cols-[360px_minmax(0,1fr)]">
-          <aside class="space-y-5">
-            <section class="rounded-[28px] border border-border bg-background p-6">
-              <div class="inline-flex items-center gap-2 rounded-full border border-stone-300/80 bg-white/85 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.24em] text-stone-700">
-                <Sparkles class="h-3.5 w-3.5" />
-                Story Memory Ledger
-              </div>
-              <h1 class="hero-title mt-5 text-3xl text-stone-950">故事记忆总览</h1>
-              <p class="mt-3 text-sm leading-6 text-stone-700">
-                先看当前状态，再看本轮变化，最后翻历史。默认隐藏复杂标识，只保留真正有判断价值的信息。
-              </p>
-
-              <div class="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
-                <div class="memory-stat rounded-[22px] border border-stone-200/80 p-4">
-                  <p class="text-[11px] uppercase tracking-[0.22em] text-stone-500">当前命中会话</p>
-                  <p class="mt-2 text-2xl font-semibold text-stone-950">{{ sessionCards.length }}</p>
-                </div>
-                <div class="memory-stat rounded-[22px] border border-stone-200/80 p-4">
-                  <p class="text-[11px] uppercase tracking-[0.22em] text-stone-500">命中变动条数</p>
-                  <p class="mt-2 text-2xl font-semibold text-stone-950">{{ effectiveListResponse?.total ?? 0 }}</p>
-                </div>
-                <div class="memory-stat rounded-[22px] border border-stone-200/80 p-4">
-                  <p class="text-[11px] uppercase tracking-[0.22em] text-stone-500">本地摘要快照</p>
-                  <p class="mt-2 text-2xl font-semibold text-stone-950">{{ summaries.length }}</p>
-                </div>
-                <div class="memory-stat rounded-[22px] border border-stone-200/80 p-4">
-                  <p class="text-[11px] uppercase tracking-[0.22em] text-stone-500">异常会话</p>
-                  <p class="mt-2 text-2xl font-semibold text-stone-950">{{ failedSessionCount }}</p>
-                </div>
-              </div>
-            </section>
-
+          <aside>
             <Card class="rounded-[28px] border-stone-200/80 bg-white/90 shadow-none">
               <CardHeader class="gap-4">
                 <div class="flex items-start justify-between gap-3">
                   <div>
-                    <CardTitle class="flex items-center gap-2 text-stone-950">
-                      <Filter class="h-4 w-4 text-stone-600" />
-                      筛选会话
-                    </CardTitle>
-                    <CardDescription>先定位会话，再到右侧查看当前状态、本轮变化和历史翻页。</CardDescription>
+                    <CardTitle class="text-stone-950">选择故事</CardTitle>
+                    <CardDescription>左侧尽量只做一件事：选中要看的故事。</CardDescription>
                   </div>
                   <Button
                     variant="outline"
                     size="sm"
                     class="rounded-full border-stone-300 bg-white/90 text-stone-700"
-                    @click="() => { refetchList(); refetchTimeline(); refetchStoryMemory() }"
+                    @click="() => { refetchList(); refetchTimeline(); refetchStoryMemory(); refetchSelectedStory() }"
                   >
-                    <RefreshCw class="h-3.5 w-3.5" :class="{ 'animate-spin': listFetching || timelineFetching || storyMemoryFetching }" />
+                    <RefreshCw class="h-3.5 w-3.5" :class="{ 'animate-spin': listFetching || timelineFetching || storyMemoryFetching || selectedStoryFetching }" />
                     刷新
                   </Button>
                 </div>
@@ -666,64 +691,26 @@ function resolveEntityCompanionLabel(companionId: string) {
                 <div class="relative">
                   <Search class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
                   <Input
-                    v-model="searchTerm"
-                    class="h-11 rounded-2xl border-stone-200 bg-stone-50/60 pl-9"
-                    placeholder="按标题、session、世界或原因搜索"
+                    v-model="sessionSearchTerm"
+                    class="h-11 rounded-2xl border-stone-200 bg-white pl-9"
+                    placeholder="搜索故事名、世界名或 prompt"
                   />
                 </div>
 
-                <div class="grid gap-3 sm:grid-cols-2">
-                  <Select v-model="selectedSource">
-                    <SelectTrigger class="h-11 rounded-2xl border-stone-200 bg-stone-50/60">
-                      <SelectValue placeholder="来源" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem v-for="option in sourceOptions" :key="option.value" :value="option.value">
-                        {{ option.label }}
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-
-                  <Select v-model="selectedLayer">
-                    <SelectTrigger class="h-11 rounded-2xl border-stone-200 bg-stone-50/60">
-                      <SelectValue placeholder="层级" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem v-for="option in layerOptions" :key="option.value" :value="option.value">
-                        {{ option.label }}
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-
-                  <Select v-model="selectedStatus">
-                    <SelectTrigger class="h-11 rounded-2xl border-stone-200 bg-stone-50/60">
-                      <SelectValue placeholder="状态" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem v-for="option in statusOptions" :key="option.value" :value="option.value">
-                        {{ option.label }}
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-
-                  <Select v-model="selectedTimeRange">
-                    <SelectTrigger class="h-11 rounded-2xl border-stone-200 bg-stone-50/60">
-                      <SelectValue placeholder="时间范围" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem v-for="option in timeRangeOptions" :key="option.value" :value="option.value">
-                        {{ option.label }}
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div class="rounded-[22px] border border-stone-200 bg-stone-50/75 px-4 py-3 text-xs text-stone-600">
+                  <span>已命中 {{ sessionCards.length }} 个故事</span>
+                  <span class="mx-2">·</span>
+                  <span>需处理 {{ failedSessionCount }} 个</span>
+                  <span class="mx-2">·</span>
+                  <span>右侧单页只看一轮</span>
                 </div>
 
                 <div v-if="listLoading && !effectiveListResponse" class="rounded-[22px] border border-dashed border-stone-300 bg-stone-50/70 px-4 py-10 text-center text-sm text-stone-500">
-                  正在加载服务端记忆数据…
+                  正在加载故事列表…
                 </div>
 
                 <div v-else-if="listError" class="rounded-[22px] border border-rose-200 bg-rose-50 px-4 py-5 text-sm text-rose-900">
-                  <p class="font-medium">会话列表加载失败</p>
+                  <p class="font-medium">故事列表加载失败</p>
                   <p class="mt-1 text-rose-800/80">{{ listErrorMessage }}</p>
                   <Button variant="outline" size="sm" class="mt-3 rounded-full border-rose-200 bg-white text-rose-700" @click="refetchList()">
                     重试
@@ -731,7 +718,7 @@ function resolveEntityCompanionLabel(companionId: string) {
                 </div>
 
                 <div v-else-if="!sessionCards.length" class="rounded-[22px] border border-dashed border-stone-300 bg-stone-50/70 px-4 py-10 text-center text-sm text-stone-500">
-                  当前筛选条件下没有命中会话。
+                  当前没有可选故事。
                 </div>
 
                 <div v-else class="space-y-3">
@@ -740,7 +727,7 @@ function resolveEntityCompanionLabel(companionId: string) {
                     :key="item.sessionId"
                     role="button"
                     tabindex="0"
-                    class="w-full rounded-[24px] border p-4 text-left transition-all"
+                    class="w-full rounded-[22px] border px-4 py-4 text-left transition-all"
                     :class="selectedSessionId === item.sessionId
                       ? 'border-stone-900 bg-stone-950 text-stone-50 shadow-[0_20px_40px_rgba(41,37,36,0.16)]'
                       : 'border-stone-200 bg-stone-50/80 text-stone-900 hover:border-stone-300 hover:bg-white'"
@@ -750,47 +737,18 @@ function resolveEntityCompanionLabel(companionId: string) {
                   >
                     <div class="flex items-start justify-between gap-3">
                       <div class="min-w-0">
-                        <p class="truncate text-sm font-semibold">{{ item.storyTitle }}</p>
-                        <p v-if="item.worldId" class="mt-1 text-xs opacity-70">世界：{{ resolveWorldDisplay(item.worldId) }}</p>
-                        <p class="mt-3 text-xs opacity-80">最近变化：{{ item.latestEventHeadline }}</p>
-                        <p class="mt-1 text-xs leading-5 opacity-70">
-                          {{ getExpandableText(`session-reason-${item.sessionId}`, item.latestReason, 68) }}
-                        </p>
-                        <button
-                          v-if="isTextTruncated(item.latestReason, 68)"
-                          type="button"
-                          class="mt-1 text-[11px] font-medium opacity-80 underline-offset-4 hover:underline"
-                          @click.stop="toggleTextExpansion(`session-reason-${item.sessionId}`)"
-                        >
-                          {{ isTextExpanded(`session-reason-${item.sessionId}`) ? '收起' : '展开' }}
-                        </button>
+                        <p class="truncate text-base font-semibold">{{ item.storyTitle }}</p>
+                        <p v-if="item.worldId" class="mt-1 text-xs opacity-70">{{ resolveWorldDisplay(item.worldId) }}</p>
+                        <p class="mt-3 text-xs opacity-80">{{ item.latestEventHeadline }}</p>
                       </div>
-
-                      <div class="flex shrink-0 flex-col items-end gap-2">
-                        <Badge class="border text-[10px]" :class="item.summaryDescriptor.badgeTone">
-                          {{ item.summaryDescriptor.label }}
-                        </Badge>
-                        <Badge v-if="item.hasFailed" class="border text-[10px]" :class="statusBadgeClass('failed')">
-                          需要处理
-                        </Badge>
-                      </div>
+                      <Badge
+                        v-if="item.hasFailed"
+                        class="border text-[10px]"
+                        :class="statusBadgeClass('failed')"
+                      >
+                        需处理
+                      </Badge>
                     </div>
-
-                    <div class="mt-4 grid grid-cols-3 gap-2 text-[11px]">
-                      <div class="rounded-2xl border border-current/10 px-3 py-2">
-                        <p class="opacity-60">变动</p>
-                        <p class="mt-1 font-semibold">{{ item.eventCount }}</p>
-                      </div>
-                      <div class="rounded-2xl border border-current/10 px-3 py-2">
-                        <p class="opacity-60">摘要</p>
-                        <p class="mt-1 font-semibold">{{ item.semanticCount }}</p>
-                      </div>
-                      <div class="rounded-2xl border border-current/10 px-3 py-2">
-                        <p class="opacity-60">角色</p>
-                        <p class="mt-1 font-semibold">{{ item.trackedEntities }}</p>
-                      </div>
-                    </div>
-
                     <p class="mt-3 text-[11px] opacity-60">{{ formatTimestamp(item.latestEvent?.committed_at) }}</p>
                   </div>
                 </div>
@@ -821,7 +779,7 @@ function resolveEntityCompanionLabel(companionId: string) {
                     </Badge>
                   </div>
 
-                  <h2 class="hero-title mt-4 text-3xl text-stone-950">{{ selectedSessionCard.storyTitle }}</h2>
+                  <h2 class="hero-title mt-4 text-3xl text-stone-950">{{ selectedStory?.title || selectedSessionCard.storyTitle }}</h2>
                   <p class="mt-2 text-sm leading-6 text-stone-700">
                     {{ detailSummaryDescriptor.description }}
                   </p>
@@ -829,6 +787,7 @@ function resolveEntityCompanionLabel(companionId: string) {
                   <div class="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-xs text-stone-500">
                     <span>会话：{{ selectedSessionCard.sessionId }}</span>
                     <span v-if="selectedSessionCard.worldId">世界：{{ resolveWorldDisplay(selectedSessionCard.worldId) }}</span>
+                    <span v-if="selectedStoryId">故事：{{ selectedStoryId }}</span>
                     <span>最近更新时间：{{ formatTimestamp(latestTimelineEvent?.committed_at) }}</span>
                   </div>
                 </div>
@@ -843,8 +802,8 @@ function resolveEntityCompanionLabel(companionId: string) {
                     <p class="mt-2 text-sm font-semibold text-stone-950">{{ selectedEntitySnapshot?.total ?? 0 }} 人</p>
                   </div>
                   <div class="rounded-[22px] border border-white/80 bg-white/82 px-4 py-4">
-                    <p class="text-[11px] uppercase tracking-[0.22em] text-stone-500">历史总条数</p>
-                    <p class="mt-2 text-sm font-semibold text-stone-950">{{ detailTotal }}</p>
+                    <p class="text-[11px] uppercase tracking-[0.22em] text-stone-500">当前轮次页</p>
+                    <p class="mt-2 text-sm font-semibold text-stone-950">{{ detailPage }} / {{ detailPageCount }}</p>
                   </div>
                   <div class="rounded-[22px] border border-white/80 bg-white/82 px-4 py-4">
                     <p class="text-[11px] uppercase tracking-[0.22em] text-stone-500">已覆盖地点</p>
@@ -871,92 +830,233 @@ function resolveEntityCompanionLabel(companionId: string) {
             <template v-if="selectedSessionCard">
               <section class="grid gap-5 2xl:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]">
                 <Card class="rounded-[28px] border-stone-200/80 bg-white/90 shadow-none">
-                  <CardHeader>
-                    <CardTitle class="flex items-center gap-2 text-stone-950">
-                      <ArrowLeftRight class="h-4 w-4 text-stone-600" />
-                      本轮变化
-                    </CardTitle>
-                    <CardDescription>用实体与摘要两条线，把最近变化翻译成自然语言。</CardDescription>
+                  <CardHeader class="gap-4">
+                    <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                      <div>
+                        <CardTitle class="flex items-center gap-2 text-stone-950">
+                          <CalendarRange class="h-4 w-4 text-stone-600" />
+                          故事轮次记忆
+                        </CardTitle>
+                        <CardDescription>把当前页事件归到对应 prompt，只展示该轮使用的设定和关键记忆变动。</CardDescription>
+                      </div>
+
+                      <div class="flex flex-wrap items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          class="rounded-full border-stone-200 bg-white"
+                          :disabled="detailPage <= 1"
+                          @click="goToPreviousPage"
+                        >
+                          <ChevronLeft class="h-4 w-4" />
+                          上一页
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          class="rounded-full border-stone-200 bg-white"
+                          :disabled="detailPage >= detailPageCount"
+                          @click="goToNextPage"
+                        >
+                          下一页
+                          <ChevronRight class="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-stone-500">
+                      <span>{{ historyRangeLabel }}</span>
+                      <span>当前第 {{ detailPage }} / {{ detailPageCount }} 页</span>
+                      <span v-if="timelineFetching || storyMemoryFetching || selectedStoryFetching">正在刷新当前页…</span>
+                    </div>
                   </CardHeader>
                   <CardContent class="space-y-4">
-                    <div v-if="!recentEntityChangeGroups.length" class="rounded-[22px] border border-dashed border-stone-300 bg-stone-50/70 px-4 py-10 text-center text-sm text-stone-500">
-                      当前还没有可读的实体变化摘要。
+                    <div v-if="timelineLoading && !effectiveTimelineResponse" class="rounded-[22px] border border-dashed border-stone-300 bg-stone-50/70 px-4 py-10 text-center text-sm text-stone-500">
+                      正在加载轮次记忆…
+                    </div>
+
+                    <div v-else-if="timelineError" class="rounded-[22px] border border-rose-200 bg-rose-50 px-4 py-5 text-sm text-rose-900">
+                      <p class="font-medium">轮次记忆加载失败</p>
+                      <p class="mt-1 text-rose-800/80">{{ timelineErrorMessage }}</p>
+                      <Button variant="outline" size="sm" class="mt-3 rounded-full border-rose-200 bg-white text-rose-700" @click="refetchTimeline()">
+                        重试
+                      </Button>
+                    </div>
+
+                    <div v-else-if="selectedStoryId && selectedStoryError" class="rounded-[22px] border border-rose-200 bg-rose-50 px-4 py-5 text-sm text-rose-900">
+                      <p class="font-medium">故事详情加载失败</p>
+                      <p class="mt-1 text-rose-800/80">
+                        {{ selectedStoryError instanceof Error ? selectedStoryError.message : '无法读取该会话对应的故事详情。' }}
+                      </p>
+                      <Button variant="outline" size="sm" class="mt-3 rounded-full border-rose-200 bg-white text-rose-700" @click="refetchSelectedStory()">
+                        重试
+                      </Button>
+                    </div>
+
+                    <div v-else-if="!selectedStoryId" class="rounded-[22px] border border-dashed border-stone-300 bg-stone-50/70 px-4 py-10 text-center text-sm text-stone-500">
+                      当前会话没有可追溯的故事 ID，暂时无法按轮次还原 prompt。
+                    </div>
+
+                    <div v-else-if="selectedStoryLoading && !selectedStory" class="rounded-[22px] border border-dashed border-stone-300 bg-stone-50/70 px-4 py-10 text-center text-sm text-stone-500">
+                      正在补全故事轮次信息…
+                    </div>
+
+                    <div v-else-if="!currentRoundPage" class="rounded-[22px] border border-dashed border-stone-300 bg-stone-50/70 px-4 py-10 text-center text-sm text-stone-500">
+                      当前页没有可展示的轮次记忆。
                     </div>
 
                     <article
-                      v-for="group in recentEntityChangeGroups"
-                      :key="group.id"
+                      v-else-if="currentRoundView"
+                      :key="currentRoundView.id"
                       class="rounded-[24px] border border-stone-200 bg-stone-50/80 p-4"
                     >
-                      <div class="flex items-start justify-between gap-3">
-                        <div>
-                          <p class="text-[11px] uppercase tracking-[0.22em] text-stone-500">实体</p>
-                          <p class="mt-1 text-lg font-semibold text-stone-950">{{ group.entityLabel }}</p>
+                      <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                        <div class="min-w-0 flex-1">
+                          <div class="flex flex-wrap items-center gap-2">
+                            <Badge variant="secondary" class="px-3 py-1 text-sm font-semibold">第 {{ currentRoundView.round.turn }} 轮</Badge>
+                            <Badge class="border text-[10px]" :class="statusBadgeClass(currentRoundView.round.status)">
+                              {{ getMemoryStatusLabel(currentRoundView.round.status) }}
+                            </Badge>
+                            <Badge variant="outline" class="text-[10px]">{{ currentRoundView.round.creationModeLabel }}</Badge>
+                            <Badge v-if="currentRoundView.round.missingSegment" class="border border-amber-200 bg-amber-50 text-[10px] text-amber-700">
+                              该轮故事段已缺失
+                            </Badge>
+                          </div>
+
+                          <div class="mt-4 rounded-[24px] border border-stone-200 bg-white px-5 py-5 shadow-sm">
+                            <p class="text-[11px] uppercase tracking-[0.22em] text-stone-500">用户 Prompt</p>
+                            <p class="mt-3 text-lg font-semibold leading-8 text-stone-950">
+                              {{ getExpandableText(`round-prompt-${currentRoundView.id}`, currentRoundView.round.prompt, 220) }}
+                            </p>
+                            <button
+                              v-if="isTextTruncated(currentRoundView.round.prompt, 220)"
+                              type="button"
+                              class="mt-1 text-[11px] font-medium text-stone-500 underline-offset-4 hover:underline"
+                              @click="toggleTextExpansion(`round-prompt-${currentRoundView.id}`)"
+                            >
+                              {{ isTextExpanded(`round-prompt-${currentRoundView.id}`) ? '收起 Prompt' : '展开 Prompt' }}
+                            </button>
+                          </div>
+
+                          <div class="mt-4 flex flex-wrap gap-2">
+                            <Badge
+                              v-for="label in currentRoundView.round.contextLabels"
+                              :key="`${currentRoundView.id}-context-${label}`"
+                              class="border border-sky-200 bg-sky-50 text-[11px] font-normal text-sky-800"
+                            >
+                              设定 · {{ label }}
+                            </Badge>
+                            <Badge
+                              v-for="label in getRoundStandaloneDesignLabels(currentRoundView.round)"
+                              :key="`${currentRoundView.id}-design-${label}`"
+                              class="border border-stone-200 bg-white text-[11px] font-normal text-stone-700"
+                            >
+                              {{ label }}
+                            </Badge>
+                          </div>
+
+                          <p v-if="!currentRoundView.round.contextLabels.length && !currentRoundView.round.designLabels.length" class="mt-3 text-xs text-stone-500">
+                            该轮没有保存可读的设定摘要。
+                          </p>
                         </div>
-                        <Badge variant="secondary" class="text-[10px]">
-                          {{ formatTimestamp(group.committedAt) }}
-                        </Badge>
+
+                        <div class="rounded-[22px] border border-white/90 bg-white/85 px-4 py-3 text-sm text-stone-700 lg:w-[220px]">
+                          <p class="text-[11px] uppercase tracking-[0.22em] text-stone-500">该轮记忆变动</p>
+                          <p class="mt-2 font-semibold text-stone-950">{{ summarizeOperation(currentRoundView.round.events) }}</p>
+                          <p class="mt-2 text-xs text-stone-500">{{ formatTimestamp(currentRoundView.round.timestamp ?? currentRoundView.round.events[0]?.committed_at) }}</p>
+                        </div>
                       </div>
 
-                      <div class="mt-4 space-y-2">
+                      <div class="mt-4 space-y-3">
                         <article
-                          v-for="change in group.changes.slice(0, 3)"
-                          :key="change.id"
-                          class="rounded-2xl border border-white/90 bg-white/85 p-3"
+                          v-for="event in currentRoundView.round.events.slice(0, 6)"
+                          :key="event.event_id"
+                          class="rounded-[22px] border border-white/90 bg-white/92 p-4"
                         >
-                          <p class="text-sm font-medium text-stone-900">变化：{{ change.summary }}</p>
-                          <div class="mt-3 grid gap-3 lg:grid-cols-2">
-                            <div class="rounded-2xl border border-stone-200 bg-stone-50/80 px-3 py-3">
+                          <div class="flex flex-wrap items-center gap-2">
+                            <Badge class="border text-[10px]" :class="layerBadgeClass(event.memory_layer)">
+                              {{ getMemoryLayerLabel(event.memory_layer) }}
+                            </Badge>
+                            <Badge class="border text-[10px]" :class="statusBadgeClass(event.status)">
+                              {{ getMemoryStatusLabel(event.status) }}
+                            </Badge>
+                            <Badge v-if="event.display_kind" variant="secondary" class="text-[10px]">
+                              {{ event.display_kind }}
+                            </Badge>
+                          </div>
+
+                          <p class="mt-3 text-sm font-semibold text-stone-950">{{ buildEventHeadline(event) }}</p>
+                          <p class="mt-1 text-sm leading-6 text-stone-700">{{ event.reason || event.title }}</p>
+
+                          <div class="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-[11px] text-stone-500">
+                            <span>{{ getMemorySourceLabel(event.source) }}</span>
+                            <span>{{ formatTimestamp(event.committed_at) }}</span>
+                          </div>
+
+                          <div v-if="previewPayloadFields(event.after, 3).length || previewPayloadFields(event.before, 3).length" class="mt-4 grid gap-3 lg:grid-cols-2">
+                            <div v-if="previewPayloadFields(event.before, 3).length" class="rounded-2xl border border-stone-200 bg-stone-50/80 px-3 py-3">
                               <p class="text-[11px] uppercase tracking-[0.22em] text-stone-500">变更前</p>
-                              <p class="mt-2 text-xs font-medium text-stone-600">{{ change.fieldLabel }}</p>
-                              <p class="mt-2 text-sm leading-6 text-stone-800">
-                                {{ getExpandableText(`group-before-${change.id}`, change.beforeText, 64) }}
-                              </p>
-                              <button
-                                v-if="isTextTruncated(change.beforeText, 64)"
-                                type="button"
-                                class="mt-1 text-[11px] font-medium text-stone-500 underline-offset-4 hover:underline"
-                                @click="toggleTextExpansion(`group-before-${change.id}`)"
+                              <p
+                                v-for="field in previewPayloadFields(event.before, 3)"
+                                :key="`round-before-${event.event_id}-${field.label}`"
+                                class="mt-2 text-sm leading-6 text-stone-700"
                               >
-                                {{ isTextExpanded(`group-before-${change.id}`) ? '收起' : '展开' }}
-                              </button>
+                                <span class="font-medium text-stone-500">{{ field.label }}：</span>{{ getExpandableText(`round-before-${event.event_id}-${field.label}`, field.value, 84) }}
+                              </p>
                             </div>
-                            <div class="rounded-2xl border border-emerald-200 bg-emerald-50/70 px-3 py-3">
-                              <p class="text-[11px] uppercase tracking-[0.22em] text-emerald-700">变更后</p>
-                              <p class="mt-2 text-xs font-medium text-emerald-700">{{ change.fieldLabel }}</p>
-                              <p class="mt-2 text-sm leading-6 text-stone-800">
-                                {{ getExpandableText(`group-after-${change.id}`, change.afterText, 64) }}
-                              </p>
-                              <button
-                                v-if="isTextTruncated(change.afterText, 64)"
-                                type="button"
-                                class="mt-1 text-[11px] font-medium text-emerald-700 underline-offset-4 hover:underline"
-                                @click="toggleTextExpansion(`group-after-${change.id}`)"
+                            <div v-if="previewPayloadFields(event.after, 3).length" class="rounded-2xl border border-stone-200 bg-stone-50/80 px-3 py-3">
+                              <p class="text-[11px] uppercase tracking-[0.22em] text-stone-500">变更后</p>
+                              <p
+                                v-for="field in previewPayloadFields(event.after, 3)"
+                                :key="`round-after-${event.event_id}-${field.label}`"
+                                class="mt-2 text-sm leading-6 text-stone-700"
                               >
-                                {{ isTextExpanded(`group-after-${change.id}`) ? '收起' : '展开' }}
-                              </button>
+                                <span class="font-medium text-stone-500">{{ field.label }}：</span>{{ getExpandableText(`round-after-${event.event_id}-${field.label}`, field.value, 84) }}
+                              </p>
                             </div>
                           </div>
                         </article>
-                        <p v-if="group.changes.length > 3" class="text-xs text-stone-500">
-                          还有 {{ group.changes.length - 3 }} 条变化未展开。
+
+                        <p v-if="currentRoundView.round.events.length > 6" class="text-xs text-stone-500">
+                          还有 {{ currentRoundView.round.events.length - 6 }} 条事件未展开。
                         </p>
                       </div>
+                    </article>
 
-                      <p v-if="group.evidence[0]" class="mt-4 text-xs leading-5 text-stone-600">
-                        证据：{{ getExpandableText(`group-evidence-${group.id}`, group.evidence[0], 96) }}
+                    <article v-else-if="currentUnassignedPage" class="rounded-[24px] border border-amber-200 bg-amber-50/80 p-4">
+                      <div class="flex flex-wrap items-center gap-2">
+                        <Badge class="border border-amber-200 bg-amber-100 text-[10px] text-amber-700">未定位轮次</Badge>
+                        <Badge class="border text-[10px]" :class="statusBadgeClass(currentUnassignedPage.events.some((event) => event.status === 'failed') ? 'failed' : 'committed')">
+                          {{ currentUnassignedPage.events.length }} 条事件
+                        </Badge>
+                      </div>
+                      <p class="mt-3 text-sm leading-6 text-amber-900">
+                        这些事件缺少 `source_turn`，当前只能保留在会话级，无法可靠归到具体 prompt。
                       </p>
-                      <button
-                        v-if="group.evidence[0] && isTextTruncated(group.evidence[0], 96)"
-                        type="button"
-                        class="mt-1 text-[11px] font-medium text-stone-500 underline-offset-4 hover:underline"
-                        @click="toggleTextExpansion(`group-evidence-${group.id}`)"
-                      >
-                        {{ isTextExpanded(`group-evidence-${group.id}`) ? '收起' : '展开' }}
-                      </button>
-                      <p v-if="group.sourceTurn" class="mt-2 text-[11px] text-stone-500">
-                        来源轮次：第 {{ group.sourceTurn }} 轮
-                      </p>
+
+                      <div class="mt-4 space-y-3">
+                        <article
+                          v-for="event in currentUnassignedPage.events.slice(0, 6)"
+                          :key="`unassigned-${event.event_id}`"
+                          class="rounded-[22px] border border-white/90 bg-white/92 p-4"
+                        >
+                          <div class="flex flex-wrap items-center gap-2">
+                            <Badge class="border text-[10px]" :class="layerBadgeClass(event.memory_layer)">
+                              {{ getMemoryLayerLabel(event.memory_layer) }}
+                            </Badge>
+                            <Badge class="border text-[10px]" :class="statusBadgeClass(event.status)">
+                              {{ getMemoryStatusLabel(event.status) }}
+                            </Badge>
+                          </div>
+
+                          <p class="mt-3 text-sm font-semibold text-stone-950">{{ buildEventHeadline(event) }}</p>
+                          <p class="mt-1 text-sm leading-6 text-stone-700">{{ event.reason || event.title }}</p>
+                          <div class="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-[11px] text-stone-500">
+                            <span>{{ getMemorySourceLabel(event.source) }}</span>
+                            <span>{{ formatTimestamp(event.committed_at) }}</span>
+                          </div>
+                        </article>
+                      </div>
                     </article>
                   </CardContent>
                 </Card>
@@ -1108,185 +1208,6 @@ function resolveEntityCompanionLabel(companionId: string) {
                 </CardContent>
               </Card>
 
-              <Card class="rounded-[28px] border-stone-200/80 bg-white/90 shadow-none">
-                <CardHeader class="gap-4">
-                  <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                    <div>
-                      <CardTitle class="flex items-center gap-2 text-stone-950">
-                        <CalendarRange class="h-4 w-4 text-stone-600" />
-                        历史记录
-                      </CardTitle>
-                      <CardDescription>按页回看记忆事件，重点展示“发生了什么”和“现在留下了什么”。</CardDescription>
-                    </div>
-
-                    <div class="flex flex-wrap items-center gap-2">
-                      <Select
-                        :model-value="String(detailPageSize)"
-                        @update:model-value="(value) => dashboardStore.setDetailPageSize(Number(value))"
-                      >
-                        <SelectTrigger class="h-9 w-[110px] rounded-full border-stone-200 bg-stone-50/70 text-xs">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem v-for="option in pageSizeOptions" :key="option.value" :value="option.value">
-                            {{ option.label }}
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        class="rounded-full border-stone-200 bg-white"
-                        :disabled="detailPage <= 1"
-                        @click="goToPreviousPage"
-                      >
-                        <ChevronLeft class="h-4 w-4" />
-                        上一页
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        class="rounded-full border-stone-200 bg-white"
-                        :disabled="detailPage >= detailPageCount"
-                        @click="goToNextPage"
-                      >
-                        下一页
-                        <ChevronRight class="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div class="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-stone-500">
-                    <span>{{ historyRangeLabel }}</span>
-                    <span>当前第 {{ detailPage }} / {{ detailPageCount }} 页</span>
-                    <span v-if="timelineFetching || storyMemoryFetching">正在刷新当前页…</span>
-                  </div>
-                </CardHeader>
-
-                <CardContent class="space-y-4">
-                  <div v-if="timelineLoading && !effectiveTimelineResponse" class="rounded-[22px] border border-dashed border-stone-300 bg-stone-50/70 px-4 py-10 text-center text-sm text-stone-500">
-                    正在加载历史记录…
-                  </div>
-
-                  <div v-else-if="timelineError" class="rounded-[22px] border border-rose-200 bg-rose-50 px-4 py-5 text-sm text-rose-900">
-                    <p class="font-medium">历史记录加载失败</p>
-                    <p class="mt-1 text-rose-800/80">{{ timelineErrorMessage }}</p>
-                    <Button variant="outline" size="sm" class="mt-3 rounded-full border-rose-200 bg-white text-rose-700" @click="refetchTimeline()">
-                      重试
-                    </Button>
-                  </div>
-
-                  <div v-else-if="!operationGroups.length" class="rounded-[22px] border border-dashed border-stone-300 bg-stone-50/70 px-4 py-10 text-center text-sm text-stone-500">
-                    当前页没有历史记录。
-                  </div>
-
-                  <article
-                    v-for="group in operationGroups"
-                    :key="group.id"
-                    class="rounded-[26px] border border-stone-200 bg-stone-50/80 p-4"
-                  >
-                    <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                      <div>
-                        <div class="flex flex-wrap items-center gap-2">
-                          <Badge variant="secondary" class="text-[10px]">{{ group.label }}</Badge>
-                          <Badge class="border text-[10px]" :class="statusBadgeClass(group.status)">
-                            {{ getMemoryStatusLabel(group.status) }}
-                          </Badge>
-                          <Badge
-                            v-if="group.semanticState !== 'absent'"
-                            class="border text-[10px]"
-                            :class="getSummaryLifecycleDescriptor(group.semanticState).badgeTone"
-                          >
-                            {{ getSummaryLifecycleDescriptor(group.semanticState).label }}
-                          </Badge>
-                        </div>
-
-                        <p class="mt-3 text-base font-semibold text-stone-950">{{ summarizeOperation(group.events) }}</p>
-                        <p class="mt-2 text-sm leading-6 text-stone-600">
-                          {{ formatTimestamp(group.startedAt) }}
-                          <span v-if="group.startedAt !== group.endedAt"> 至 {{ formatTimestamp(group.endedAt) }}</span>
-                        </p>
-                      </div>
-
-                      <div class="rounded-[22px] border border-white/90 bg-white/85 px-4 py-3 text-sm text-stone-700">
-                        本批次共 {{ group.events.length }} 条事件
-                      </div>
-                    </div>
-
-                    <div class="mt-4 space-y-3">
-                      <article
-                        v-for="event in group.events"
-                        :key="event.event_id"
-                        class="rounded-[22px] border border-white/90 bg-white/92 p-4"
-                      >
-                        <div class="flex flex-wrap items-center gap-2">
-                          <Badge class="border text-[10px]" :class="layerBadgeClass(event.memory_layer)">
-                            {{ getMemoryLayerLabel(event.memory_layer) }}
-                          </Badge>
-                          <Badge class="border text-[10px]" :class="statusBadgeClass(event.status)">
-                            {{ getMemoryStatusLabel(event.status) }}
-                          </Badge>
-                          <Badge v-if="event.display_kind" variant="secondary" class="text-[10px]">
-                            {{ event.display_kind }}
-                          </Badge>
-                        </div>
-
-                        <p class="mt-3 text-sm font-semibold text-stone-950">{{ buildEventHeadline(event) }}</p>
-                        <p class="mt-1 text-sm leading-6 text-stone-700">{{ event.reason || event.title }}</p>
-
-                        <div class="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-[11px] text-stone-500">
-                          <span>{{ getMemorySourceLabel(event.source) }}</span>
-                          <span v-if="event.source_turn">第 {{ event.source_turn }} 轮</span>
-                          <span>{{ formatTimestamp(event.committed_at) }}</span>
-                        </div>
-
-                        <div v-if="previewPayloadFields(event.after).length || previewPayloadFields(event.before).length" class="mt-4 grid gap-3 lg:grid-cols-2">
-                          <div v-if="previewPayloadFields(event.before).length" class="rounded-2xl border border-stone-200 bg-stone-50/80 px-3 py-3">
-                            <p class="text-[11px] uppercase tracking-[0.22em] text-stone-500">变更前</p>
-                            <p
-                              v-for="field in previewPayloadFields(event.before)"
-                              :key="`before-${event.event_id}-${field.label}`"
-                              class="mt-2 text-sm leading-6 text-stone-700"
-                            >
-                              <span class="font-medium text-stone-500">{{ field.label }}：</span>{{ getExpandableText(`timeline-before-${event.event_id}-${field.label}`, field.value, field.label === '摘要' ? 140 : 72) }}
-                            </p>
-                            <button
-                              v-for="field in previewPayloadFields(event.before).filter((item) => isTextTruncated(item.value, item.label === '摘要' ? 140 : 72))"
-                              :key="`before-toggle-${event.event_id}-${field.label}`"
-                              type="button"
-                              class="block text-[11px] font-medium text-stone-500 underline-offset-4 hover:underline"
-                              @click="toggleTextExpansion(`timeline-before-${event.event_id}-${field.label}`)"
-                            >
-                              {{ isTextExpanded(`timeline-before-${event.event_id}-${field.label}`) ? `收起${field.label}` : `展开${field.label}` }}
-                            </button>
-                          </div>
-                          <div v-if="previewPayloadFields(event.after).length" class="rounded-2xl border border-stone-200 bg-stone-50/80 px-3 py-3">
-                            <p class="text-[11px] uppercase tracking-[0.22em] text-stone-500">变更后</p>
-                            <p
-                              v-for="field in previewPayloadFields(event.after)"
-                              :key="`after-${event.event_id}-${field.label}`"
-                              class="mt-2 text-sm leading-6 text-stone-700"
-                            >
-                              <span class="font-medium text-stone-500">{{ field.label }}：</span>{{ getExpandableText(`timeline-after-${event.event_id}-${field.label}`, field.value, field.label === '摘要' ? 140 : 72) }}
-                            </p>
-                            <button
-                              v-for="field in previewPayloadFields(event.after).filter((item) => isTextTruncated(item.value, item.label === '摘要' ? 140 : 72))"
-                              :key="`after-toggle-${event.event_id}-${field.label}`"
-                              type="button"
-                              class="block text-[11px] font-medium text-stone-500 underline-offset-4 hover:underline"
-                              @click="toggleTextExpansion(`timeline-after-${event.event_id}-${field.label}`)"
-                            >
-                              {{ isTextExpanded(`timeline-after-${event.event_id}-${field.label}`) ? `收起${field.label}` : `展开${field.label}` }}
-                            </button>
-                          </div>
-                        </div>
-                      </article>
-                    </div>
-                  </article>
-                </CardContent>
-              </Card>
-
               <Card v-if="selectedEntityPatchUpdates.length" class="rounded-[28px] border-stone-200/80 bg-white/90 shadow-none">
                 <CardHeader>
                   <CardTitle class="flex items-center gap-2 text-stone-950">
@@ -1321,29 +1242,43 @@ function resolveEntityCompanionLabel(companionId: string) {
                       <div class="rounded-2xl border border-stone-200 bg-white/85 px-3 py-3">
                         <p class="text-[11px] uppercase tracking-[0.22em] text-stone-500">变更前</p>
                         <p class="mt-2 text-sm leading-6 text-stone-800">
-                          {{ getExpandableText(`patch-before-${getEntityPatchEventId(patch)}`, formatEntityPatchValue(patch.before ?? (patch.op === 'remove' ? patch.value : null)), 72) }}
+                          <span
+                            v-for="field in getPatchBeforeFields(patch)"
+                            :key="`patch-before-${getEntityPatchEventId(patch)}-${field.label}`"
+                            class="block"
+                          >
+                            <span class="font-medium text-stone-500">{{ field.label }}：</span>{{ getExpandableText(`patch-before-${getEntityPatchEventId(patch)}-${field.label}`, field.value, 72) }}
+                          </span>
                         </p>
                         <button
-                          v-if="isTextTruncated(formatEntityPatchValue(patch.before ?? (patch.op === 'remove' ? patch.value : null)), 72)"
+                          v-for="field in getPatchBeforeFields(patch).filter((item) => isTextTruncated(item.value, 72))"
+                          :key="`patch-before-toggle-${getEntityPatchEventId(patch)}-${field.label}`"
                           type="button"
                           class="mt-1 text-[11px] font-medium text-stone-500 underline-offset-4 hover:underline"
-                          @click="toggleTextExpansion(`patch-before-${getEntityPatchEventId(patch)}`)"
+                          @click="toggleTextExpansion(`patch-before-${getEntityPatchEventId(patch)}-${field.label}`)"
                         >
-                          {{ isTextExpanded(`patch-before-${getEntityPatchEventId(patch)}`) ? '收起' : '展开' }}
+                          {{ isTextExpanded(`patch-before-${getEntityPatchEventId(patch)}-${field.label}`) ? `收起${field.label}` : `展开${field.label}` }}
                         </button>
                       </div>
                       <div class="rounded-2xl border border-emerald-200 bg-emerald-50/70 px-3 py-3">
                         <p class="text-[11px] uppercase tracking-[0.22em] text-emerald-700">变更后</p>
                         <p class="mt-2 text-sm leading-6 text-stone-800">
-                          {{ getExpandableText(`patch-after-${getEntityPatchEventId(patch)}`, formatEntityPatchValue(patch.after ?? (patch.op !== 'remove' ? patch.value : null)), 72) }}
+                          <span
+                            v-for="field in getPatchAfterFields(patch)"
+                            :key="`patch-after-${getEntityPatchEventId(patch)}-${field.label}`"
+                            class="block"
+                          >
+                            <span class="font-medium text-emerald-700">{{ field.label }}：</span>{{ getExpandableText(`patch-after-${getEntityPatchEventId(patch)}-${field.label}`, field.value, 72) }}
+                          </span>
                         </p>
                         <button
-                          v-if="isTextTruncated(formatEntityPatchValue(patch.after ?? (patch.op !== 'remove' ? patch.value : null)), 72)"
+                          v-for="field in getPatchAfterFields(patch).filter((item) => isTextTruncated(item.value, 72))"
+                          :key="`patch-after-toggle-${getEntityPatchEventId(patch)}-${field.label}`"
                           type="button"
                           class="mt-1 text-[11px] font-medium text-emerald-700 underline-offset-4 hover:underline"
-                          @click="toggleTextExpansion(`patch-after-${getEntityPatchEventId(patch)}`)"
+                          @click="toggleTextExpansion(`patch-after-${getEntityPatchEventId(patch)}-${field.label}`)"
                         >
-                          {{ isTextExpanded(`patch-after-${getEntityPatchEventId(patch)}`) ? '收起' : '展开' }}
+                          {{ isTextExpanded(`patch-after-${getEntityPatchEventId(patch)}-${field.label}`) ? `收起${field.label}` : `展开${field.label}` }}
                         </button>
                       </div>
                     </div>
@@ -1370,10 +1305,6 @@ function resolveEntityCompanionLabel(companionId: string) {
 </template>
 
 <style scoped>
-.memory-stat {
-  background: rgba(255, 255, 255, 0.78);
-}
-
 .hero-title {
   font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", "STSong", serif;
   letter-spacing: -0.02em;

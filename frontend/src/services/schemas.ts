@@ -53,6 +53,11 @@ export const StoryMemoryOperationSchema = z.object({
 })
 
 // EntityStateSnapshotSchema 相关状态。
+export const EntityCompanionRefSchema = z.object({
+  id: z.string(),
+  display_name: z.string(),
+})
+
 export const EntityStateSnapshotSchema = z.object({
   story_id: z.string(),
   session_id: z.string(),
@@ -62,7 +67,7 @@ export const EntityStateSnapshotSchema = z.object({
   current_location: z.string().nullable().optional(),
   inventory: z.array(z.string()),
   status_tags: z.array(z.string()),
-  companions: z.array(z.string()),
+  companions: z.array(z.union([z.string(), EntityCompanionRefSchema])),
   short_goal: z.string().nullable().optional(),
   state_summary: z.string().nullable().optional(),
   evidence: z.array(z.string()),

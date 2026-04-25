@@ -9,6 +9,7 @@ from __future__ import annotations
 from typing import Any, Dict, Optional
 
 from application.memory.journal import list_memory_update_events
+from entity_state_response_serializer import serialize_entity_state_collection_payload
 
 from .builder import build_story_memory_payload
 
@@ -133,11 +134,11 @@ class StoryMemoryService:
             allow_empty_result=True,
             persist=False,
         )
-        return {
-            "story_id": story_id,
-            "session_id": session_id,
-            "entity_type": "character",
-            "items": [item.model_dump(mode="json") for item in replay_result.items],
-            "total": len(replay_result.items),
-            "recent_entity_updates": list(replay_result.memory_updates or [])[-20:],
-        }
+        snapshot = serialize_entity_state_collection_payload(
+            story_id=story_id,
+            session_id=session_id,
+            entity_type="character",
+            items=replay_result.items,
+        )
+        snapshot["recent_entity_updates"] = list(replay_result.memory_updates or [])[-20:]
+        return snapshot

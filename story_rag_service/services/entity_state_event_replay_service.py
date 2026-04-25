@@ -5,6 +5,10 @@ from __future__ import annotations
 from typing import Any, Dict, Iterable, List, Optional, Sequence
 
 from application.memory import build_memory_update_event, persist_memory_update_events
+from entity_state_response_serializer import (
+    build_entity_display_name_map,
+    serialize_companion_value,
+)
 from models.entity_state import EntityStateRebuildResponse, EntityStateSnapshot
 from models.entity_state_event import EntityStateEventRecord
 
@@ -119,6 +123,7 @@ class EntityStateEventReplayService:
             events=filtered_events,
         )
         projected_by_id = {state.entity_id: state for state in projected_states}
+        display_name_map = build_entity_display_name_map([*previous_states, *projected_states])
         memory_updates = self._build_memory_updates(
             session_id=session_id,
             source=source,
@@ -126,6 +131,7 @@ class EntityStateEventReplayService:
             projected_states=projected_states,
             projected_by_id=projected_by_id,
             replay_event_count=len(filtered_events),
+            display_name_map=display_name_map,
         )
 
         if persist:
@@ -179,6 +185,7 @@ class EntityStateEventReplayService:
         projected_states: Sequence[EntityStateSnapshot],
         projected_by_id: Dict[str, EntityStateSnapshot],
         replay_event_count: int,
+        display_name_map: Dict[str, str],
     ) -> List[Dict[str, Any]]:
         """根据回放前后差异构建 memory_updates 事件。"""
         memory_updates: List[Dict[str, Any]] = []
@@ -195,8 +202,8 @@ class EntityStateEventReplayService:
                     memory_key=state.entity_id,
                     title=f"实体状态已通过事件回放{'重建' if action == 'rebuilt' else '建立'}: {state.display_name}",
                     reason=f"event_replay:{replay_event_count}",
-                    before=self._snapshot_preview(before_state),
-                    after=self._snapshot_preview(state),
+                    before=self._snapshot_preview(before_state, display_name_map=display_name_map),
+                    after=self._snapshot_preview(state, display_name_map=display_name_map),
                 )
             )
 
@@ -213,22 +220,30 @@ class EntityStateEventReplayService:
                     memory_key=entity_id,
                     title=f"实体状态已通过事件回放重置: {removed_state.display_name}",
                     reason="event_replay:entity_removed",
-                    before=self._snapshot_preview(removed_state),
+                    before=self._snapshot_preview(removed_state, display_name_map=display_name_map),
                 )
             )
         return memory_updates
 
     @staticmethod
-    def _snapshot_preview(state: Optional[EntityStateSnapshot]) -> Optional[Dict[str, Any]]:
+    def _snapshot_preview(
+        state: Optional[EntityStateSnapshot],
+        *,
+        display_name_map: Optional[Dict[str, str]] = None,
+    ) -> Optional[Dict[str, Any]]:
         """提取快照关键字段，用于更新日志展示。"""
         if state is None:
             return None
+        resolved_display_name_map = display_name_map or {state.entity_id: state.display_name}
         return {
             "display_name": state.display_name,
             "current_location": state.current_location,
             "inventory": list(state.inventory)[:6],
             "status_tags": list(state.status_tags)[:6],
-            "companions": list(state.companions)[:6],
+            "companions": serialize_companion_value(
+                list(state.companions)[:6],
+                display_name_map=resolved_display_name_map,
+            ),
             "short_goal": state.short_goal,
             "last_source_turn": state.last_source_turn,
         }

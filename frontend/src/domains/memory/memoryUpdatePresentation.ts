@@ -3,6 +3,7 @@
  */
 
 import type { MemoryUpdateEvent, SummaryMemorySnapshot } from '@/domains/story/api/storyGenerationApi'
+import { getEntityFieldLabel } from '@/domains/story/entityPatchPresentation'
 
 export type SummaryLifecycleState = 'absent' | 'created' | 'reset' | 'recreated' | 'stale'
 
@@ -51,6 +52,124 @@ const MEMORY_ACTION_LABELS: Record<string, string> = {
   superseded: '已被替换',
   marked_stale: '已标记过期',
   rebuilt: '已重建',
+}
+
+const MEMORY_FIELD_LABELS: Record<string, string> = {
+  summary_text: '摘要',
+  key_facts: '关键事实',
+  last_turn: '轮次',
+  message_count: '消息数',
+  indexed_message_count: '索引消息数',
+  memory_key: '记忆键',
+  session_id: '会话 ID',
+  world_id: '世界 ID',
+  operation_id: '操作 ID',
+  source_turn: '来源轮次',
+  title: '标题',
+  reason: '原因',
+  display_kind: '展示类型',
+  entities: '实体集合',
+  items: '条目',
+  total: '总数',
+  tracked_entities: '追踪实体数',
+  facts_count: '事实数',
+  patch_count: 'Patch 数',
+  fallback_used: '使用回退构建',
+  warnings: '告警',
+  raw_record: '原始记录',
+  user_input_preview: '用户输入摘要',
+  assistant_output_preview: '助手输出摘要',
+  roles: '消息角色',
+  field: '字段',
+  value: '值',
+}
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return Object.prototype.toString.call(value) === '[object Object]'
+}
+
+function isCompanionRef(value: unknown): value is { id?: unknown; display_name?: unknown } {
+  if (!isPlainObject(value)) return false
+  const keys = Object.keys(value)
+  return keys.length > 0 && keys.every((key) => key === 'id' || key === 'display_name')
+}
+
+function resolveMemoryFieldLabel(key: string): string {
+  const entityFieldLabel = getEntityFieldLabel(key)
+  if (entityFieldLabel !== key) return entityFieldLabel
+  return MEMORY_FIELD_LABELS[key] ?? key
+}
+
+function composeMemoryFieldLabel(parentLabel: string | null, currentLabel: string): string {
+  return parentLabel ? `${parentLabel} / ${currentLabel}` : currentLabel
+}
+
+function formatMemoryScalarValue(value: unknown): string {
+  if (value == null) return '空'
+  if (typeof value === 'boolean') return value ? '是' : '否'
+  if (typeof value === 'string') return value.trim() || '空'
+  if (isCompanionRef(value)) {
+    const displayName = typeof value.display_name === 'string' ? value.display_name.trim() : ''
+    if (displayName) return displayName
+    const companionId = typeof value.id === 'string' ? value.id.trim() : ''
+    return companionId || '空'
+  }
+  if (typeof value === 'number' || typeof value === 'bigint') return String(value)
+  return String(value)
+}
+
+function pushMemoryPayloadFields(
+  fields: MemoryPayloadField[],
+  value: unknown,
+  parentLabel: string | null,
+): void {
+  if (Array.isArray(value)) {
+    if (!parentLabel) return
+    if (!value.length) {
+      fields.push({ label: parentLabel, value: '空' })
+      return
+    }
+
+    const hasNestedStructure = value.some((item) => Array.isArray(item) || (isPlainObject(item) && !isCompanionRef(item)))
+    if (!hasNestedStructure) {
+      fields.push({
+        label: parentLabel,
+        value: value.map((item) => formatMemoryScalarValue(item)).join('、') || '空',
+      })
+      return
+    }
+
+    value.forEach((item, index) => {
+      pushMemoryPayloadFields(fields, item, `${parentLabel} #${index + 1}`)
+    })
+    return
+  }
+
+  if (isPlainObject(value)) {
+    if (isCompanionRef(value)) {
+      if (parentLabel) {
+        fields.push({ label: parentLabel, value: formatMemoryScalarValue(value) })
+      }
+      return
+    }
+    const entries = Object.entries(value)
+    if (!entries.length) {
+      if (parentLabel) fields.push({ label: parentLabel, value: '空' })
+      return
+    }
+
+    entries.forEach(([key, nestedValue]) => {
+      pushMemoryPayloadFields(
+        fields,
+        nestedValue,
+        composeMemoryFieldLabel(parentLabel, resolveMemoryFieldLabel(key)),
+      )
+    })
+    return
+  }
+
+  if (!parentLabel) return
+  fields.push({ label: parentLabel, value: formatMemoryScalarValue(value) })
 }
 
 function sortEventsAsc<TEvent extends Pick<MemoryUpdateEvent, 'committed_at'>>(events: TEvent[]): TEvent[] {
@@ -202,40 +321,8 @@ export function formatMemoryPayloadFields(payload?: Record<string, unknown> | nu
   if (!payload) return []
 
   const fields: MemoryPayloadField[] = []
-  if (typeof payload.summary_text === 'string' && payload.summary_text.trim()) {
-    fields.push({ label: '摘要', value: payload.summary_text.trim() })
-  }
-  if (Array.isArray(payload.key_facts) && payload.key_facts.length) {
-    fields.push({
-      label: '事实',
-      value: payload.key_facts
-        .map((item) => String(item).trim())
-        .filter(Boolean)
-        .slice(0, 8)
-        .join(' / '),
-    })
-  }
-  if (typeof payload.last_turn === 'number') {
-    fields.push({ label: '轮次', value: String(payload.last_turn) })
-  }
-  if (typeof payload.message_count === 'number') {
-    fields.push({ label: '消息数', value: String(payload.message_count) })
-  }
-  if (typeof payload.indexed_message_count === 'number') {
-    fields.push({ label: '索引消息数', value: String(payload.indexed_message_count) })
-  }
-  if (typeof payload.memory_key === 'string' && payload.memory_key.trim()) {
-    fields.push({ label: 'Key', value: payload.memory_key.trim() })
-  }
-
-  if (fields.length) return fields
-
-  return [
-    {
-      label: 'Payload',
-      value: JSON.stringify(payload),
-    },
-  ]
+  pushMemoryPayloadFields(fields, payload, null)
+  return fields
 }
 
 /** ????? groupMemoryEventsByOperation??? groupMemoryEventsByOperation ????? */

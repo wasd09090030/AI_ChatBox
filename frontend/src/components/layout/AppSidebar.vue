@@ -39,7 +39,7 @@ interface NavItem {
 
 const featureItems: NavItem[] = [
   { path: '/story/improv', label: '渐进式创作', icon: BookOpen },
-  { path: '/story/scripted', label: '严格剧本创作', icon: ScrollText },
+  { path: '/story/scripted', label: '剧本主导创作', icon: ScrollText },
   { path: '/story-adjustment', label: '故事调整', icon: FilePenLine },
 ]
 

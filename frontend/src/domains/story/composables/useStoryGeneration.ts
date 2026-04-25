@@ -65,16 +65,59 @@ interface UseStoryGenerationArgs {
   onFocusInput?: () => void
 }
 
+const MAX_CHOICES = 3
+const CHOICE_MARKER_RE = /(^|\n)\[(?:选项\s*\d+|[A-Z])\]\s*/g
+const TRAILING_PARTIAL_CHOICE_RE = /\n\[(?:[A-Z]?|选项(?:\s*\d*)?)?$/
+
+interface StreamedChoiceState {
+  content: string
+  choices: string[]
+}
+
 /** 处理 parseChoices 相关逻辑。 */
 function parseChoices(text: string): string[] {
-  const re = /\[(?:选项\s*\d+|[A-Z])\]\s*([^\[\n]+)/g
-  const results: string[] = []
+  return splitChoicesFromStreamText(text).choices
+}
+
+/** 处理 splitChoicesFromStreamText 相关逻辑。 */
+function splitChoicesFromStreamText(text: string): StreamedChoiceState {
+  if (!text) return { content: '', choices: [] }
+
+  const normalized = text.replace(/\r\n?/g, '\n')
+  const markers: Array<{ start: number; textStart: number }> = []
   let match: RegExpExecArray | null
-  while ((match = re.exec(text)) !== null) {
-    const choiceText = match[1]?.trim()
-    if (choiceText) results.push(choiceText)
+
+  CHOICE_MARKER_RE.lastIndex = 0
+  while ((match = CHOICE_MARKER_RE.exec(normalized)) !== null) {
+    const linePrefix = match[1] ?? ''
+    markers.push({
+      start: match.index + linePrefix.length,
+      textStart: match.index + match[0].length,
+    })
   }
-  return results
+
+  if (!markers.length) {
+    const partialMarker = TRAILING_PARTIAL_CHOICE_RE.exec(normalized)
+    const contentEnd = partialMarker ? partialMarker.index : normalized.length
+    return {
+      content: normalized.slice(0, contentEnd).trimEnd(),
+      choices: [],
+    }
+  }
+
+  const content = normalized.slice(0, markers[0]!.start).trimEnd()
+  const choices = markers
+    .map((marker, index) => {
+      const nextMarkerStart = markers[index + 1]?.start ?? normalized.length
+      return normalized
+        .slice(marker.textStart, nextMarkerStart)
+        .replace(TRAILING_PARTIAL_CHOICE_RE, '')
+        .trim()
+    })
+    .filter(Boolean)
+    .slice(0, MAX_CHOICES)
+
+  return { content, choices }
 }
 
 /** 处理 formatActivationHits 相关逻辑。 */
@@ -263,6 +306,8 @@ export function useStoryGeneration(args: UseStoryGenerationArgs) {
       runtime_state_snapshot: null,
       timestamp: new Date().toISOString(),
     }
+    let streamRawText = ''
+    const choicesModeEnabled = args.storyMode.value === 'choices'
 
     args.currentStory.value.segments.push(pendingSegment)
     const segment = args.currentStory.value.segments[existingSegmentCount]
@@ -271,6 +316,7 @@ export function useStoryGeneration(args: UseStoryGenerationArgs) {
     clearEnhancementPreview()
     generating.value = true
     abortController.value = new AbortController()
+    lastChoices.value = []
     await nextTick()
     scrollToBottom({ force: true })
 
@@ -363,16 +409,31 @@ export function useStoryGeneration(args: UseStoryGenerationArgs) {
     try {
       for await (const event of streamStoryV2(payload, abortController.value.signal)) {
         if (event.type === 'chunk' && event.content) {
-          segment.content += event.content
+          if (choicesModeEnabled) {
+            streamRawText += event.content
+            const streamedChoiceState = splitChoicesFromStreamText(streamRawText)
+            segment.content = streamedChoiceState.content
+            segment.choices = streamedChoiceState.choices
+            lastChoices.value = streamedChoiceState.choices
+          } else {
+            segment.content += event.content
+          }
           nextTick(() => scrollToBottom())
         } else if (event.type === 'done') {
-          if (event.generated_text) segment.content = event.generated_text
-          segment.id = `seg-${Date.now()}`
-          const streamChoices = Array.isArray(event.choices) ? event.choices.filter(Boolean) : []
-          segment.choices = streamChoices.length ? streamChoices : parseChoices(segment.content)
-          if (!event.generated_text && segment.choices.length) {
-            segment.content = segment.content.replace(/\n?\[[A-Z]\]\s*[^\n]*/g, '').trimEnd()
+          if (choicesModeEnabled) {
+            const streamChoices = Array.isArray(event.choices)
+              ? event.choices.filter(Boolean).slice(0, MAX_CHOICES)
+              : []
+            segment.choices = streamChoices.length ? streamChoices : parseChoices(streamRawText)
+            if (event.generated_text) {
+              segment.content = event.generated_text
+            } else if (streamRawText) {
+              segment.content = splitChoicesFromStreamText(streamRawText).content
+            }
+          } else if (event.generated_text) {
+            segment.content = event.generated_text
           }
+          segment.id = `seg-${Date.now()}`
           lastChoices.value = segment.choices
           if (event.activation_logs?.length) {
             const contextHits = formatActivationHits(event.activation_logs)
@@ -634,7 +695,7 @@ export function useStoryGeneration(args: UseStoryGenerationArgs) {
       ) ?? lastSummary.value
 
       lastSegment.content = response.output_text
-      lastSegment.choices = response.choices ?? parseChoices(response.output_text)
+      lastSegment.choices = (response.choices ?? parseChoices(response.output_text)).slice(0, MAX_CHOICES)
       lastChoices.value = lastSegment.choices
       if (response.activation_logs?.length) {
         const contextHits = formatActivationHits(response.activation_logs)

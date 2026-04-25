@@ -12,30 +12,19 @@ import type {
 } from '@/domains/memory/api/memoryUpdatesApi'
 
 export type MemoryUpdateDetailTab = 'timeline' | 'semantic' | 'entity'
-export type MemoryUpdateTimeRange = 'all' | '1h' | '24h' | '7d'
-
-/** 处理 buildDateRange 相关逻辑。 */
-function buildDateRange(range: MemoryUpdateTimeRange) {
-  if (range === 'all') return { date_from: undefined, date_to: undefined }
-  const now = new Date()
-  const start = new Date(now)
-  if (range === '1h') start.setHours(start.getHours() - 1)
-  if (range === '24h') start.setHours(start.getHours() - 24)
-  if (range === '7d') start.setDate(start.getDate() - 7)
-  return {
-    date_from: start.toISOString(),
-    date_to: now.toISOString(),
-  }
-}
+export type MemorySessionViewMode = 'all' | 'attention' | 'tracked' | 'summarized'
 
 // useMemoryUpdateDashboardStore 状态仓库实例。
 export const useMemoryUpdateDashboardStore = defineStore('memoryUpdateDashboard', () => {
   const searchTerm = ref('')
+  const sessionSearchTerm = ref('')
   const selectedSource = ref('all')
   const selectedLayer = ref('all')
   const selectedStatus = ref('all')
-  const selectedTimeRange = ref<MemoryUpdateTimeRange>('24h')
+  const sessionViewMode = ref<MemorySessionViewMode>('all')
   const selectedSessionId = ref<string | null>(null)
+  const sessionListPage = ref(1)
+  const sessionListPageSize = ref(6)
   const detailPage = ref(1)
   const detailPageSize = ref(100)
   const detailTab = ref<MemoryUpdateDetailTab>('timeline')
@@ -45,14 +34,11 @@ export const useMemoryUpdateDashboardStore = defineStore('memoryUpdateDashboard'
   const storyMemorySnapshotBySession = ref<Record<string, StoryMemorySnapshotResponse>>({})
 
   const queryFilters = computed<MemoryUpdateQueryFilters>(() => {
-    const range = buildDateRange(selectedTimeRange.value)
     return {
       search: searchTerm.value.trim() || undefined,
       source: selectedSource.value === 'all' ? undefined : selectedSource.value,
       memory_layer: selectedLayer.value === 'all' ? undefined : selectedLayer.value,
       status: selectedStatus.value === 'all' ? undefined : selectedStatus.value,
-      date_from: range.date_from,
-      date_to: range.date_to,
       page: 1,
       page_size: 120,
     }
@@ -60,6 +46,10 @@ export const useMemoryUpdateDashboardStore = defineStore('memoryUpdateDashboard'
 
   function setSearchTerm(value: string) {
     searchTerm.value = value
+  }
+
+  function setSessionSearchTerm(value: string) {
+    sessionSearchTerm.value = value
   }
 
   function setSelectedSource(value: string) {
@@ -74,12 +64,20 @@ export const useMemoryUpdateDashboardStore = defineStore('memoryUpdateDashboard'
     selectedStatus.value = value
   }
 
-  function setSelectedTimeRange(value: MemoryUpdateTimeRange) {
-    selectedTimeRange.value = value
+  function setSessionViewMode(value: MemorySessionViewMode) {
+    sessionViewMode.value = value
   }
 
   function setSelectedSessionId(value: string | null) {
     selectedSessionId.value = value
+  }
+
+  function setSessionListPage(value: number) {
+    sessionListPage.value = Math.max(1, value)
+  }
+
+  function setSessionListPageSize(value: number) {
+    sessionListPageSize.value = Math.max(1, value)
   }
 
   function setDetailPage(value: number) {
@@ -133,11 +131,14 @@ export const useMemoryUpdateDashboardStore = defineStore('memoryUpdateDashboard'
 
   return {
     searchTerm,
+    sessionSearchTerm,
     selectedSource,
     selectedLayer,
     selectedStatus,
-    selectedTimeRange,
+    sessionViewMode,
     selectedSessionId,
+    sessionListPage,
+    sessionListPageSize,
     detailPage,
     detailPageSize,
     detailTab,
@@ -146,11 +147,14 @@ export const useMemoryUpdateDashboardStore = defineStore('memoryUpdateDashboard'
     storyMemorySnapshotBySession,
     queryFilters,
     setSearchTerm,
+    setSessionSearchTerm,
     setSelectedSource,
     setSelectedLayer,
     setSelectedStatus,
-    setSelectedTimeRange,
+    setSessionViewMode,
     setSelectedSessionId,
+    setSessionListPage,
+    setSessionListPageSize,
     setDetailPage,
     setDetailPageSize,
     setDetailTab,

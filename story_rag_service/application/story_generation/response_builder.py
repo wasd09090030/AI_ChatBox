@@ -5,15 +5,27 @@ from __future__ import annotations
 import re
 from typing import Any, Dict, List, Optional
 
+_MAX_CHOICES = 3
+_CHOICE_LINE_RE = re.compile(r"^\[(?:选项\s*\d+|[A-Z])\]\s*(.+)$")
+
 
 def _extract_choices_and_clean_text(raw_text: str) -> tuple[List[str], str]:
     """解析 choices 模式内嵌候选，并返回清洗后的正文。"""
-    choices_matches = re.findall(r"\[([ABC])\]\s*(.+)", raw_text)
-    if not choices_matches:
-        return [], raw_text
-    choices = [text.strip() for _, text in choices_matches]
-    cleaned_text = re.sub(r"\n?\[([ABC])\]\s*.+", "", raw_text).rstrip()
-    return choices, cleaned_text
+    if not raw_text:
+        return [], ""
+
+    choices: List[str] = []
+    kept_lines: List[str] = []
+    for line in raw_text.splitlines():
+        match = _CHOICE_LINE_RE.match(line.strip())
+        if match:
+            choice_text = match.group(1).strip()
+            if choice_text:
+                choices.append(choice_text)
+            continue
+        kept_lines.append(line)
+
+    return choices[:_MAX_CHOICES], "\n".join(kept_lines).strip()
 
 
 def build_graph_activation_logs(

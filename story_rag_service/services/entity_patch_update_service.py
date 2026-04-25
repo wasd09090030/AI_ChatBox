@@ -6,6 +6,12 @@ import logging
 from typing import Any, Dict, List, Optional
 
 from application.memory import build_memory_update_event, persist_memory_update_events
+from entity_state_response_serializer import (
+    build_entity_display_name_map,
+    serialize_entity_state_collection,
+    serialize_entity_state_collection_payload,
+    serialize_memory_event_payload,
+)
 from models.entity_state import EntityStateCollection
 from models.entity_state_event import EntityPatchExtractionResult
 from services.entity_state_manager import EntityStateManager
@@ -205,9 +211,9 @@ class EntityPatchUpdateService:
                 session_id=request.session_id,
                 items=current_states,
                 total=len(current_states),
-            ).model_dump(mode="json")
+            )
             return {
-                "entity_state_snapshot": snapshot,
+                "entity_state_snapshot": serialize_entity_state_collection(snapshot),
                 "entity_state_updates": [],
                 "world_update": {
                     "entity_patch": {
@@ -252,8 +258,21 @@ class EntityPatchUpdateService:
             )
             for event in apply_result.events
         ]
+        display_name_map = build_entity_display_name_map(apply_result.snapshots)
+        serialized_entity_updates = [
+            serialize_memory_event_payload(
+                event.model_dump(mode="json"),
+                display_name_map=display_name_map,
+                field_name=event.field_name,
+            )
+            for event in apply_result.events
+        ]
+        serialized_memory_updates = [
+            serialize_memory_event_payload(update, display_name_map=display_name_map)
+            for update in memory_updates
+        ]
         persist_memory_update_events(
-            memory_updates,
+            serialized_memory_updates,
             operation_id=operation_id,
             sequence_start=sequence_start,
         )
@@ -272,10 +291,10 @@ class EntityPatchUpdateService:
             session_id=request.session_id,
             items=apply_result.snapshots,
             total=len(apply_result.snapshots),
-        ).model_dump(mode="json")
+        )
         return {
-            "entity_state_snapshot": snapshot,
-            "entity_state_updates": [event.model_dump(mode="json") for event in apply_result.events],
+            "entity_state_snapshot": serialize_entity_state_collection(snapshot),
+            "entity_state_updates": serialized_entity_updates,
             "world_update": {
                 "entity_patch": {
                     "patch_count": len(validated.patches),
@@ -283,7 +302,7 @@ class EntityPatchUpdateService:
                     "fallback_used": False,
                 }
             },
-            "memory_updates": memory_updates,
+            "memory_updates": serialized_memory_updates,
             "warnings": validated.warnings,
             "used_fallback_rebuild": False,
         }
@@ -347,12 +366,12 @@ class EntityPatchUpdateService:
                 sequence_start=sequence_start,
             )
         )
-        snapshot = EntityStateCollection(
+        snapshot = serialize_entity_state_collection_payload(
             story_id=story_id,
             session_id=request.session_id,
+            entity_type=None,
             items=rebuild_result.items,
-            total=len(rebuild_result.items),
-        ).model_dump(mode="json") if rebuild_result.rebuilt else None
+        ) if rebuild_result.rebuilt else None
         return {
             "entity_state_snapshot": snapshot,
             "entity_state_updates": [],

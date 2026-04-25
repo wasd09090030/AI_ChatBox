@@ -22,6 +22,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import type { LorebookEntry } from '@/services/lorebookService'
 import type {
   EntityStateCollection,
   EntityStateSnapshot,
@@ -30,6 +31,7 @@ import type {
   SummaryMemorySnapshot,
 } from '@/domains/story/api/storyGenerationApi'
 import {
+  buildEntityNameMap,
   extractWorldUpdateHighlights,
   getEntityPatchCommittedAt,
   getEntityPatchDetail,
@@ -38,6 +40,11 @@ import {
   getEntityPatchHeadline,
   getEntityPatchSourceTurn,
 } from '@/domains/story/entityPatchPresentation'
+import {
+  getEntityCompanionDisplayName,
+  getEntityCompanionId,
+  getEntityCompanionLabel,
+} from '@/domains/story/entityCompanion'
 import type { StoryEntityUpdateRecord, StoryWorldUpdateRecord } from '@/stores/storySession'
 import {
   deriveSummaryLifecycleState,
@@ -80,6 +87,7 @@ const props = withDefaults(
     lastEntityState?: EntityStateCollection | null
     lastEntityStateUpdates?: Array<EntityStateUpdate | StoryEntityUpdateRecord>
     lastWorldUpdate?: Record<string, unknown> | StoryWorldUpdateRecord | null
+    lorebookCharacterEntries?: LorebookEntry[]
   }>(),
   {
     showScriptProgress: true,
@@ -96,6 +104,7 @@ const props = withDefaults(
     lastEntityState: null,
     lastEntityStateUpdates: () => [],
     lastWorldUpdate: null,
+    lorebookCharacterEntries: () => [],
   },
 )
 
@@ -119,7 +128,12 @@ const failedEvents = computed(() => props.lastMemoryUpdates.filter((event) => ev
 // 按展示名排序的实体快照列表。
 const orderedEntityItems = computed(() => [...(props.lastEntityState?.items ?? [])].sort((a, b) => a.display_name.localeCompare(b.display_name, 'zh-CN')))
 // 实体 ID 到展示名映射。
-const entityNameMap = computed(() => new Map(orderedEntityItems.value.map((item) => [item.entity_id, item.display_name])))
+const entityNameMap = computed(() => buildEntityNameMap({
+  snapshot: props.lastEntityState,
+  updates: props.lastEntityStateUpdates,
+  events: props.lastMemoryUpdates,
+  lorebookEntries: props.lorebookCharacterEntries,
+}))
 // 实体涉及的地点数量。
 const entityLocationCount = computed(() => new Set(orderedEntityItems.value.map((item) => item.current_location).filter(Boolean)).size)
 // 最近一条实体状态事件。
@@ -184,8 +198,12 @@ const entityWarnings = computed(() => {
   }
 
   const unresolvedCompanions = orderedEntityItems.value
-    .flatMap((item) => item.companions.map((companionId) => ({ owner: item.display_name, companionId })))
-    .filter((item) => !entityNameMap.value.has(item.companionId))
+    .flatMap((item) => item.companions.map((companion) => ({ owner: item.display_name, companion })))
+    .filter(({ companion }) => {
+      if (getEntityCompanionDisplayName(companion)) return false
+      const companionId = getEntityCompanionId(companion)
+      return !companionId || !entityNameMap.value.has(companionId)
+    })
   if (unresolvedCompanions.length) {
     warnings.push(`同行关系中仍有未解析引用，最近一条来自：${unresolvedCompanions[0]?.owner ?? '未知角色'}`)
   }
@@ -213,8 +231,11 @@ function formatEntityUpdatedAt(value?: string | null) {
 }
 
 /** 解析同行实体显示名称。 */
-function resolveCompanionLabel(companionId: string) {
-  return entityNameMap.value.get(companionId) ?? companionId
+function resolveCompanionLabel(companion: unknown) {
+  if (typeof companion !== 'string' && (!companion || typeof companion !== 'object')) {
+    return '未知同行者'
+  }
+  return getEntityCompanionLabel(companion, entityNameMap.value)
 }
 
 /** 根据实体状态返回卡片色调样式。 */

@@ -504,7 +504,11 @@ export const useStorySessionStore = defineStore('storySession', () => {
         ...item,
         inventory: [...item.inventory],
         status_tags: [...item.status_tags],
-        companions: [...item.companions],
+        companions: item.companions.map((companion) => (
+          typeof companion === 'string'
+            ? companion
+            : { ...companion }
+        )),
         evidence: [...item.evidence],
         metadata: { ...item.metadata },
       })),

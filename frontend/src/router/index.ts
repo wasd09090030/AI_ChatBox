@@ -36,7 +36,7 @@ const router = createRouter({
       name: 'story-scripted',
       component: () => import('@/views/StoryView.vue'),
       props: { pageMode: 'scripted' },
-      meta: { title: '严格剧本创作', group: 'features', keepAlive: true },
+      meta: { title: '剧本主导创作', group: 'features', keepAlive: true },
     },
     {
       path: '/story-adjustment',

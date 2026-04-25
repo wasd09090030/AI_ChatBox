@@ -2,7 +2,7 @@
 // 文件说明：StoryView 右侧控制抽屉。
 // 页面归属：
 // - 渐进式创作页（/story/improv）：承担创作控制、主角人设、可选剧本参考与关键角色对白约束。
-// - 严格剧本创作页（/story/scripted）：承担角色与对白相关控制，不直接负责主线推进（主线由 StoryScriptSidebar 处理）。
+// - 剧本主导创作页（/story/scripted）：承担角色与对白相关控制，不直接负责主线推进（主线由 StoryScriptSidebar 处理）。
 // 设计意义：将“生成参数编辑”从主输入区解耦，避免输入区承担过多配置操作。
 import { computed, ref, watch } from 'vue'
 import { Input } from '@/components/ui/input'

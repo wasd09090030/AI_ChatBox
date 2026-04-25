@@ -84,7 +84,10 @@ frontend/
   - `StoryAdjustmentView.vue`：故事文本调整页面。
   - `DashboardLorebookView.vue`：Lorebook 管理台。
   - `DashboardScriptDesignView.vue`：剧本设计管理页。
-  - `DashboardStoryMemoryView.vue`：故事记忆阅读台，按“当前状态 / 本轮变化 / 历史翻页”组织会话信息，并补充世界名映射、前后对比卡与省略文本展开。
+  - `DashboardStoryMemoryView.vue`：故事记忆阅读台，主阅读路径已切到“世界 / 故事 / 每轮 prompt 的记忆变动”，基于 `story_memory.story_id + StoredStory.segments + source_turn` 把时间线事件还原到具体轮次；每轮只展示摘要化 prompt、涉及设定与关键变动，不完整倾倒原始结构。
+    - 左栏已收敛成极简“选择故事”面板，只保留刷新、关键字搜索和故事卡片，不再展示复杂筛选器、总览区或会话列表分页控件。
+    - 右栏会优先尝试拉取 `/stories/{story_id}` 补全轮次 prompt / `retrieved_context`；缺失 `story_id` 或 `source_turn` 时会回退到未定位事件提示，而不是伪造轮次。
+    - 右栏核心阅读区已改成“单轮单页”，第几轮和用户 prompt 会被突出展示；翻页只在轮次页之间切换，不再把整段历史事件堆在同一页。
   - `views/console/*`：模型管理、模型选择、分析看板。
 
 #### `frontend/src/components/`
@@ -106,7 +109,8 @@ frontend/
   - `storySession.ts`：故事会话相关快照，包含统一 `storyMemorySessionMap` 聚合记录，并兼容摘要记忆、实体状态、字段级 `entity patch`、`world_update`、记忆事件、分支树等旧结构。
   - `storyDraftState.ts`：按故事与路由隔离的输入草稿状态。
   - `storyWorkspace.ts`：故事工作区相关状态。
-  - `memoryUpdateDashboard.ts`：记忆可视化页面状态。
+- `memoryUpdateDashboard.ts`：记忆可视化页面状态。
+    - 当前维护服务端事件查询条件、左栏会话定位条件、会话列表本地分页，以及右栏时间线详情分页状态；不再维护页面级时间窗口筛选。
 
 #### `frontend/src/domains/`
 
@@ -128,9 +132,22 @@ frontend/
 - `frontend/src/domains/story/entityPatchPresentation.ts`
   - 统一格式化 `entity_state_updates` / `world_update` 的展示文案
   - 供故事页侧栏与 dashboard 共享，避免重复实现 patch 展示逻辑
+  - `buildEntityNameMap(...)` 当前会同时合并实体快照、patch / 时间线以及 Lorebook 角色条目，减少同行关系回退成 UUID
+- `frontend/src/domains/story/entityCompanion.ts`
+  - 统一兼容实体同行关系的两种结构：旧 `UUID string` 与新 `{ id, display_name }`
+  - 供故事页侧栏、dashboard 和记忆字段展示共享，优先输出角色名，回退时再显示 id
 - `frontend/src/domains/story/storyMemoryPayload.ts`
   - 统一从 `story_memory` 提取摘要、实体快照、实体 patch、`world_update` 与时间线
   - 供故事页与 dashboard 共享，减少页面层重复解包逻辑
+- `frontend/src/domains/story/queries/useStoryQueries.ts`
+  - 提供按 `story_id` 读取单故事详情的 TanStack Query hook
+  - 供记忆历史页在选中 session 后补全 `segments.prompt / retrieved_context`
+- `frontend/src/domains/memory/memoryUpdatePresentation.ts`
+  - 统一格式化记忆更新时间线中的 `before/after` 负载
+  - 会递归展开对象与数组，输出逐字段中文 `key:value`，避免在 UI 中直接展示整段 JSON
+- `frontend/src/domains/memory/storyMemoryRounds.ts`
+  - 把 `StoredStory.segments` 与记忆时间线按 `source_turn` 组装成轮次视图
+  - 输出 dashboard 消费的“每轮 prompt / 涉及设定 / 关键事件”摘要模型，并处理缺失 story segment 的回退态
 
 #### `frontend/src/services/`
 
@@ -162,6 +179,11 @@ frontend/
   - 发送 `X-User-ID`
   - 解析 SSE 事件
   - 定义 TypeScript 侧契约
+  - 当前 `EntityStateSnapshot.companions` 已兼容旧 `string[]` 与新 `{ id, display_name }[]`
+- `useStoryGeneration.ts` 在 `choices` 模式下会对流式 chunk 做前端增量拆分：
+  - 流式阶段把 `[A]/[B]/[C]` 选项从正文显示中剥离，避免污染会话输出
+  - 最后一段的 `BranchChoiceCard` 会在生成中实时跟随 `seg.choices` 刷新，但保持禁用态，待生成结束后再允许点击发送
+  - 无论模型实际吐出多少个候选，前后端都会在抽取层和消费层双重截断为前 3 个
 - `frontend/src/domains/memory/api/memoryUpdatesApi.ts`
   - 负责查询服务端记忆 journal 与统一故事记忆快照
   - 包含 `/api/v2/story/session/{session_id}/story-memory` 对应前端调用
@@ -169,7 +191,11 @@ frontend/
 - `storySession.ts` 把统一故事记忆记录、摘要记忆、实体状态、`entity patch` 时间线、`world_update` 与分支树等会话级数据持久化到前端状态中。
 - `storySession.ts` 的旧摘要/实体/world/timeline getter 已逐步改为优先读取统一 `storyMemorySessionMap`，旧 map 主要保留为兼容桥接与回填来源。
 - `StoryMemorySidebar.vue` 产品层统一展示“故事记忆”，底层仍兼容实体快照、结构化 `world update` 与字段级 patch 时间线。
-- `DashboardStoryMemoryView.vue` 会聚合展示服务端 journal，并优先通过统一 `story_memory` 详情接口读取摘要、实体快照、`world_update` 与 patch 时间线；页面默认隐藏复杂标识，优先输出可读中文摘要，补充世界名显示，并为历史事件提供分页浏览与省略文本展开。
+- `StoryMemorySidebar.vue` 当前会合并当前世界的 Lorebook 角色条目，补全 `companions` 的显示名，避免同行者仅显示 UUID。
+- `DashboardStoryMemoryView.vue` 会聚合展示服务端 journal，并优先通过统一 `story_memory` 详情接口读取摘要、实体快照、`world_update` 与 patch 时间线；页面默认隐藏复杂标识，优先输出可读中文摘要，补充世界名显示，并为历史事件提供分页浏览与省略文本展开，`before/after` 明细默认展开为逐字段中文对比。
+- `DashboardStoryMemoryView.vue` 当前不会再按时间窗口裁剪 `/memory-updates` 结果；左栏只保留极简故事定位，不再暴露复杂筛选项。
+- `DashboardStoryMemoryView.vue` 左栏直接选择故事；右栏按轮次单页阅读，并继续用 `/story/session/{session_id}/memory-updates` 与 `/story/session/{session_id}/story-memory` 拉取原始事件后在前端重组成轮次页。
+- `DashboardStoryMemoryView.vue` 当前也会按选中会话的 `world_id` 拉取 Lorebook 角色条目，用于补全 `companions` 显示名。
 
 ### 3.5 前端高频改动落点
 
@@ -256,6 +282,7 @@ story_rag_service/
 - `v2/story/session_routes.py` 与 `v2/world_story_routes.py` 中保留的 `entity-state` 相关接口
     - 当前定位为 compatibility bridge
     - 优先通过事件回放 / fallback 服务返回当前快照，不再代表主写路径
+    - API 输出已改为响应层富化：`companions` 返回 `{ id, display_name }[]`，不再只暴露 UUID
   - `application/story_generation/`
     - 已开始承接路由与图节点共用的请求构建、graph facade、观测封装、剧情状态组装、响应映射
     - 新增 `execution.py` 与 `session_context.py` 后，图节点中的“执行生成”“读取/回写会话上下文”已进一步下沉为应用用例
@@ -350,12 +377,17 @@ story_rag_service/
   - `entity_patch_update_service.py`
     - 实体 patch 后处理编排服务
     - 串联 extractor / validator / applier / event repository / fallback rebuild
+    - 当前会在返回与持久化前富化 `companions` 字段，保证 patch / memory update 中的同行关系可读
   - `entity_state_event_replay_service.py`
     - 基于 `entity_state_events` 回放当前实体快照
     - 供 rollback / rebuild / repair fallback 优先使用
   - `entity_state_fallback_service.py`
     - 封装旧 `entity_state_manager` 的 session rebuild 能力
     - 在主生成链路中只作为 fallback / repair 使用，避免继续由 `story_generator.py` 直接持有旧 rebuild 逻辑
+  - `story_rag_service/entity_state_response_serializer.py`
+    - 统一实体状态 API 序列化
+    - 负责把内部 `companions: list[str]` 富化为响应层 `{ id, display_name }[]`
+    - 也会处理 patch / memory update 负载中的同行关系字段，减少前端 UUID 兜底逻辑
   - `story_generation/`
     - `llm_factory.py`：构造模型调用能力，当前由 infrastructure gateway 间接复用
     - `prompt_builder.py`：Prompt 组装

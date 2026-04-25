@@ -6,9 +6,16 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from application.memory.events import build_memory_operation_id
+from entity_state_response_serializer import (
+    serialize_entity_state_collection,
+    serialize_entity_state_rebuild_response,
+)
 from api.dependencies.world import WorldStoryDependencies, get_world_story_dependencies
 from api.v2.schemas import EntityStateQueryParams
-from models.entity_state import EntityStateCollection, EntityStateRebuildResponse
+from models.entity_state import (
+    EntityStateCollectionResponse,
+    EntityStateRebuildResponsePayload,
+)
 from models.stored_story import (
     StoryAdjustmentCommitRequest,
     StoryAdjustmentCommitResponse,
@@ -332,7 +339,7 @@ async def update_story_runtime(
     return runtime_state
 
 
-@router.get("/stories/{story_id}/entity-state", response_model=EntityStateCollection)
+@router.get("/stories/{story_id}/entity-state", response_model=EntityStateCollectionResponse)
 async def get_story_entity_state(
     story_id: str,
     query: EntityStateQueryParams = Depends(),
@@ -348,15 +355,16 @@ async def get_story_entity_state(
     if runtime_state is not None and runtime_state.session_id:
         session_id = runtime_state.session_id
 
-    return world_services.entity_state_fallback_service.get_story_snapshot(
+    snapshot = world_services.entity_state_fallback_service.get_story_snapshot(
         story_id=story_id,
         session_id=session_id,
         entity_type=query.entity_type,
         source="entity_state_story_snapshot_api",
     )
+    return serialize_entity_state_collection(snapshot)
 
 
-@router.post("/stories/{story_id}/entity-state/rebuild", response_model=EntityStateRebuildResponse)
+@router.post("/stories/{story_id}/entity-state/rebuild", response_model=EntityStateRebuildResponsePayload)
 async def rebuild_story_entity_state(
     story_id: str,
     session_id: Optional[str] = None,
@@ -383,11 +391,12 @@ async def rebuild_story_entity_state(
             persist=True,
         )
         if replay_result.rebuilt:
-            return replay_result
+            return serialize_entity_state_rebuild_response(replay_result)
 
-    return world_services.entity_state_fallback_service.rebuild_story_state(
+    rebuild_result = world_services.entity_state_fallback_service.rebuild_story_state(
         story=story,
         session_id=effective_session_id,
         runtime_state=runtime_state,
         source="entity_state_story_rebuild_api",
     )
+    return serialize_entity_state_rebuild_response(rebuild_result)

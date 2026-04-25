@@ -2,7 +2,7 @@
 // 文件说明：故事主工作台页面（StoryView）。
 // 路由归属：
 // - /story/improv：渐进式创作，强调自由 Prompt 与上下文扩展；
-// - /story/scripted：严格剧本创作，强调主线运行态推进。
+// - /story/scripted：剧本主导创作，强调主线运行态推进。
 // 页面职责：统一编排“会话、生成、剧本推进、Prompt 编排、记忆侧栏”等子组件与状态流。
 import { ref, computed, watch, nextTick, onActivated } from 'vue'
 import {
@@ -61,7 +61,7 @@ import type { StoryRuntimeState } from '@/domains/story/api/storyLibraryApi'
 import type { LorebookEntry } from '@/services/lorebookService'
 import type { StoredStory } from '@/components/story/types'
 
-// 页面输入参数，决定使用即兴或严格剧本创作模式。
+// 页面输入参数，决定使用即兴或剧本主导创作模式。
 const props = withDefaults(defineProps<{
   pageMode?: 'improv' | 'scripted'
 }>(), {
@@ -267,7 +267,7 @@ const modeLabels: Record<StoryMode, string> = {
 
 // 页面模式标题文案。
 const pageModeLabel = computed(() => (
-  props.pageMode === 'scripted' ? '严格剧本创作' : '渐进式创作'
+  props.pageMode === 'scripted' ? '剧本主导创作' : '渐进式创作'
 ))
 // 布尔状态 isScriptedPage。
 const isScriptedPage = computed(() => props.pageMode === 'scripted')
@@ -283,7 +283,7 @@ const alternateRoute = computed(() => (
 ))
 // 模式切换按钮文案。
 const alternateRouteLabel = computed(() => (
-  props.pageMode === 'scripted' ? '切换到渐进式创作' : '切换到严格剧本创作'
+  props.pageMode === 'scripted' ? '切换到渐进式创作' : '切换到剧本主导创作'
 ))
 // 输入框 DOM ID（按页面模式切换）。
 const promptInputDomId = computed(() => (
@@ -1187,6 +1187,7 @@ async function advanceToNextStage() {
             :last-entity-state="currentEntityStateSnapshot"
             :last-entity-state-updates="currentEntityStateUpdates"
             :last-world-update="currentWorldUpdate"
+            :lorebook-character-entries="lorebookCharacterEntries"
             @save-progress="saveCurrentProgress"
             @advance-event="advanceToNextEvent"
             @advance-stage="advanceToNextStage"
