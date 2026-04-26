@@ -7,7 +7,6 @@
  */
 
 import { API_PREFIX } from '@/utils/constants'
-import { getUserId } from '@/domains/user/api/userIdentity'
 
 export type ConnectionStatus = 'ok' | 'unauthorized' | 'not_found' | 'timeout' | 'network_error' | 'no_key' | 'no_base_url' | 'unknown'
 
@@ -43,9 +42,9 @@ export async function testApiConnection(
 
     const resp = await fetch(`${API_PREFIX}/providers/test-connection`, {
       method: 'POST',
+      credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
-        'X-User-ID': getUserId(),
       },
       body: JSON.stringify(body),
     })

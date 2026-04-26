@@ -11,6 +11,7 @@
 AI_ChatBox/
 ├── frontend/                  # Vue 3 + TypeScript + Vite 前端工作台
 ├── story_rag_service/         # FastAPI 后端，负责故事生成、RAG、持久化、流式输出
+├── doc/                       # 仓库级论文写作与阶段性说明文档
 ├── README.md                  # 面向人的项目介绍
 ├── AGENTS.md                  # 轻量协作约束
 ├── CLAUDE.md                  # 更完整的仓库事实与架构说明
@@ -43,10 +44,13 @@ AI_ChatBox/
 - 应用壳层：`frontend/src/App.vue`
   - 挂载左侧导航 `AppSidebar`
   - 挂载 `RouterView`
-  - 在 `onMounted` 时初始化配置与故事会话状态
-  - 调用 `useConfigStore().initializeConfig()`
-  - 调用 `useStorySessionStore().loadFromStorage()`
+  - 先解析登录状态，再按当前用户恢复工作区
+  - 未登录或 `hideChrome` 路由不显示侧边栏
+  - 仅在已登录后调用 `useConfigStore().initializeConfig()`
+  - 仅在已登录后调用 `useStorySessionStore().loadFromStorage()`
 - 路由入口：`frontend/src/router/index.ts`
+  - `/login` 是独立登录页，使用 `publicOnly` / `hideChrome` meta
+  - 其他工作台路由默认要求登录，守卫会保留原始 `fullPath` 作为回跳目标
   - `/story/improv` 和 `/story/scripted` 共用 `StoryView.vue`
   - `story-adjustment` 对应独立故事调整页
   - `/dashboard/*` 和 `/console/*` 是后台/控制台入口
@@ -105,8 +109,11 @@ frontend/
 
 - Pinia 状态中心，负责本地长生命周期状态。
 - 重点文件：
+  - `auth.ts`：登录态、会话恢复、注册/登录/登出与 legacy 认领触发。
   - `config.ts`：Provider、模型、API Key 状态与全局配置。
+    - 当前支持按登录用户重置内存态，避免切号时把前一个用户配置当作 fallback。
   - `storySession.ts`：故事会话相关快照，包含统一 `storyMemorySessionMap` 聚合记录，并兼容摘要记忆、实体状态、字段级 `entity patch`、`world_update`、记忆事件、分支树等旧结构。
+    - 当前会在重新加载前先清空内存态，避免跨用户残留。
   - `storyDraftState.ts`：按故事与路由隔离的输入草稿状态。
   - `storyWorkspace.ts`：故事工作区相关状态。
 - `memoryUpdateDashboard.ts`：记忆可视化页面状态。
@@ -121,6 +128,7 @@ frontend/
   - `composables/`：页面编排与复用逻辑
   - `constants/` / `types.ts` / `utils/`：该业务域内部约定
 - 已出现的核心业务域：
+  - `domains/auth/`
   - `domains/story/`
   - `domains/lorebook/`
   - `domains/memory/`
@@ -153,9 +161,13 @@ frontend/
 
 - 通用服务层，放跨域共享的能力，而不是某个单一业务域。
 - 重点文件：
-  - `api.ts`：Axios 实例与统一错误拦截。
+  - `api.ts`：Axios 实例、统一错误拦截与 `withCredentials` Cookie 请求模式。
   - `schemas.ts`：Zod 响应校验，尤其是 v2 生成结果契约。
   - `storyV2Api.ts`、`roleApi.ts`、`lorebookService.ts` 等：较旧或跨域共享 API。
+- `frontend/src/utils/storage.ts`
+  - 本地缓存按 `user_id` 作用域命名空间存储
+  - 后端 `client-storage` 请求统一携带 Cookie
+  - 保留旧全局 key 的一次性本地迁移兼容
 
 ### 3.4 前端故事主链路
 
@@ -176,7 +188,7 @@ frontend/
 - `useStoryGeneration.ts` 等 composable 负责把 UI 行为组织成请求参数。
 - `storyGenerationApi.ts` 负责：
   - 构造 `/api/v2/story/generate` 与 `/api/v2/story/generate/stream` 请求
-  - 发送 `X-User-ID`
+  - 发送基于 Cookie 的认证请求
   - 解析 SSE 事件
   - 定义 TypeScript 侧契约
   - 当前 `EntityStateSnapshot.companions` 已兼容旧 `string[]` 与新 `{ id, display_name }[]`
@@ -228,7 +240,7 @@ frontend/
   - 当前已收敛为薄入口，委托 `bootstrap/app_factory.py` 创建 FastAPI app
   - 生命周期中的数据库、用户管理、服务容器初始化已开始迁移到 `bootstrap/`
 - 配置入口：`story_rag_service/config.py`
-  - 统一管理 API Key、默认模型、数据库路径、Chroma 路径、检索参数、LangGraph checkpoint 等
+  - 统一管理 API Key、默认模型、数据库路径、Chroma 路径、检索参数、LangGraph checkpoint 与认证/CORS 配置等
   - `allow_online_embedding_download` 默认关闭；本地模型缺失时会退回轻量离线嵌入以保证服务可启动
 
 ### 4.2 后端目录职责
@@ -271,11 +283,15 @@ story_rag_service/
     - 真实装配逻辑已开始迁移到 `bootstrap/container.py`
   - `dependencies/`
     - 新增细粒度 Depends provider 目录
+    - 当前新增 `auth.py`，负责解析 Cookie 会话对应的 `current_user`
     - 目前已开始承接故事生成、记忆查询、世界/故事、lorebook、script design、roleplay、story/session 与调整路由的依赖注入
     - 故事生成依赖中已开始注入 observability 端口适配器，而不再由 route 直接引用埋点单例
   - `v2/__init__.py`
     - 汇总 v2 路由
-    - 当前包含 `story`、`world_story`、`script_design`、`lorebook`、`roleplay`、`analytics`、`memory`、`provider`
+    - 当前包含 `auth`、`story`、`world_story`、`script_design`、`lorebook`、`roleplay`、`analytics`、`memory`、`provider`
+  - `client_storage_routes.py`
+    - 前端跨设备 KV 存储接口
+    - 当前已改为按 `current_user.id` 做服务端隔离，不再是全局共享表
   - `v2/memory_routes.py`
     - 提供记忆更新时间线查询
     - 提供统一故事记忆快照接口 `/story/session/{session_id}/story-memory`
@@ -294,6 +310,7 @@ story_rag_service/
   - `app_factory.py`
     - 创建 FastAPI app
     - 注册 lifespan、middleware、router、静态挂载
+    - 当前以显式 CORS origins + `allow_credentials=True` 支持 Cookie 认证
     - 生命周期关闭阶段已通过 application graph runner 释放 Story Graph 运行时
   - `config_resolver.py`
     - 组合根层配置解析入口
@@ -460,7 +477,10 @@ story_rag_service/
 #### `story_rag_service/repositories/`
 
 - SQLite 仓储层。
+- `world_repository.py`、`story_repository.py`、`script_design_repository.py`、`story_runtime_repository.py`
+  - 当前已补 legacy SQLite 自愈逻辑：启动时会先检查 `owner_user_id` 是否存在，缺列则补齐，再创建 owner 相关索引，避免旧 `chatbox.db` 因索引先建而启动失败。
 - 当前可见仓储包括：
+  - `auth_session_repository.py`
   - `story_repository.py`
   - `story_session_repository.py`
   - `story_runtime_repository.py`
@@ -474,11 +494,17 @@ story_rag_service/
 
 - 领域模型与存储结构模型。
 - 包括故事、世界、Lorebook、角色扮演、运行态、剧本设计、实体状态、实体 patch / 事件流等模型定义。
+- 当前新增 `auth.py`，承载登录、注册、当前用户与 legacy 认领的请求/响应模型。
 
 #### `story_rag_service/migrations/`
 
 - Alembic 迁移目录。
 - 如果任务涉及数据库表结构，不要只改 repository / model，必须同步检查迁移。
+- 当前新增 `20260426_0007_auth_owner_isolation.py`
+  - 扩展 `users` 认证字段
+  - 新增 `auth_sessions`
+  - 为核心资源补 `owner_user_id`
+  - 新增 `client_storage_entries` 复合主键表
 
 #### `story_rag_service/scripts/`
 
@@ -492,10 +518,15 @@ story_rag_service/
   - `smoke_dual_route_patch_plan_20260409.py`
   - `smoke_story_memory_plan_20260410.py`
   - `smoke_all_api_functional_attempt_20260410.py`
+  - `smoke_auth_story_runtime.py`
 - `smoke_all_api_functional_attempt_20260410.py`
   - 基于 OpenAPI 遍历接口
   - 会先准备共享业务夹具，并对破坏性 `DELETE` 探测使用临时资源，避免后续接口因为夹具被提前删除而出现假 `404`
   - 会补齐 `segment_id`、runtime 绑定与若干业务枚举/配置类接口的有效样例，尽量把可避免的 `WARN` 压到最低
+- `smoke_auth_story_runtime.py`
+  - 面向登录后的真实运行链路
+  - 会跑 `auth -> provider test -> worlds -> stories -> story/session -> story/generate -> stories/{id}/segments`
+  - 最后直接查 SQLite 验证 owner 隔离是否正确
 
 #### `story_rag_service/docs/`
 
@@ -673,21 +704,22 @@ npm run lint
 
 ```bash
 cd story_rag_service
-pip install -r requirements.txt
-uvicorn main:app --reload
-python -m alembic -c alembic.ini upgrade head
+..\.venv\Scripts\python.exe -m pip install -r requirements.txt
+..\.venv\Scripts\python.exe -m uvicorn main:app --reload
+..\.venv\Scripts\python.exe -m alembic -c alembic.ini upgrade head
 ```
 
 ### 常用 smoke 脚本
 
 ```bash
 cd story_rag_service
-python scripts/smoke_v2_only.py
-python scripts/smoke_persistence_streaming.py
-python scripts/smoke_story_control.py
-python scripts/smoke_story_stream_contract.py
-python scripts/smoke_dual_route_patch_plan_20260409.py
-python scripts/smoke_story_memory_plan_20260410.py
+..\.venv\Scripts\python.exe scripts/smoke_v2_only.py
+..\.venv\Scripts\python.exe scripts/smoke_persistence_streaming.py
+..\.venv\Scripts\python.exe scripts/smoke_story_control.py
+..\.venv\Scripts\python.exe scripts/smoke_story_stream_contract.py
+..\.venv\Scripts\python.exe scripts/smoke_dual_route_patch_plan_20260409.py
+..\.venv\Scripts\python.exe scripts/smoke_story_memory_plan_20260410.py
+..\.venv\Scripts\python.exe scripts/smoke_auth_story_runtime.py --base-url http://127.0.0.1:8001
 ```
 
 ## 10. 一句话总结

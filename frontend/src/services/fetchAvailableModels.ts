@@ -7,7 +7,6 @@
  */
 
 import { API_PREFIX } from '@/utils/constants'
-import { getUserId } from '@/domains/user/api/userIdentity'
 
 export interface ModelInfo {
   id: string
@@ -47,7 +46,7 @@ export async function fetchAvailableModels(
       `${API_PREFIX}/providers/${encodeURIComponent(provider)}/models${query}`,
       {
         method: 'GET',
-        headers: { 'X-User-ID': getUserId() },
+        credentials: 'include',
       },
     )
 

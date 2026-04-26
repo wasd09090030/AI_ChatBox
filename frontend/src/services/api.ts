@@ -12,6 +12,7 @@ import { normalizeApiError } from './errors'
 const api: AxiosInstance = axios.create({
   baseURL: API_PREFIX,
   timeout: 30000,
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },

@@ -39,11 +39,16 @@ class UserSettings(BaseModel):
 class User(BaseModel):
     """用户模型。"""
     id: str = Field(..., description="User unique ID")
+    login_identifier: Optional[str] = None
+    display_name: Optional[str] = None
+    password_hash: Optional[str] = None
+    status: str = "active"
     username: Optional[str] = None
     email: Optional[str] = None
     settings: UserSettings = Field(default_factory=UserSettings)
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
+    last_login_at: Optional[datetime] = None
 
 
 class UserSettingsUpdate(BaseModel):

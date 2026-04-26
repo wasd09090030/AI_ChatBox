@@ -20,19 +20,36 @@ class PersonaStore:
         """注入底层 SQLite 存储对象。"""
         self._db = db
 
-    def list(self) -> List[PersonaProfile]:
+    def list(self, owner_user_id: Optional[str] = None) -> List[PersonaProfile]:
         """查询全部人格卡，按更新时间倒序返回。"""
         with self._db.connect() as conn:
-            rows = conn.execute("SELECT * FROM persona_profiles ORDER BY updated_at DESC").fetchall()
+            if owner_user_id is None:
+                rows = conn.execute(
+                    "SELECT * FROM persona_profiles ORDER BY updated_at DESC"
+                ).fetchall()
+            else:
+                rows = conn.execute(
+                    "SELECT * FROM persona_profiles WHERE owner_user_id = ? ORDER BY updated_at DESC",
+                    (owner_user_id,),
+                ).fetchall()
         return [row_to_persona(row) for row in rows]
 
-    def get(self, persona_id: str) -> Optional[PersonaProfile]:
+    def get(self, persona_id: str, owner_user_id: Optional[str] = None) -> Optional[PersonaProfile]:
         """按 ID 查询单个人格卡。"""
         with self._db.connect() as conn:
-            row = conn.execute("SELECT * FROM persona_profiles WHERE id = ?", (persona_id,)).fetchone()
+            if owner_user_id is None:
+                row = conn.execute(
+                    "SELECT * FROM persona_profiles WHERE id = ?",
+                    (persona_id,),
+                ).fetchone()
+            else:
+                row = conn.execute(
+                    "SELECT * FROM persona_profiles WHERE id = ? AND owner_user_id = ?",
+                    (persona_id, owner_user_id),
+                ).fetchone()
         return row_to_persona(row) if row else None
 
-    def create(self, data: PersonaProfileCreate) -> PersonaProfile:
+    def create(self, data: PersonaProfileCreate, owner_user_id: Optional[str] = None) -> PersonaProfile:
         """创建人格卡并返回持久化后的对象。"""
         now = datetime.now().isoformat()
         persona_id = str(uuid.uuid4())
@@ -40,11 +57,12 @@ class PersonaStore:
             conn.execute(
                 """
                 INSERT INTO persona_profiles (
-                    id, name, description, title, traits, metadata, created_at, updated_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    id, owner_user_id, name, description, title, traits, metadata, created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     persona_id,
+                    owner_user_id,
                     data.name,
                     data.description,
                     data.title,
@@ -55,14 +73,19 @@ class PersonaStore:
                 ),
             )
             conn.commit()
-        created = self.get(persona_id)
+        created = self.get(persona_id, owner_user_id=owner_user_id)
         if created is None:
             raise RuntimeError("Failed to create persona")
         return created
 
-    def update(self, persona_id: str, data: PersonaProfileUpdate) -> Optional[PersonaProfile]:
+    def update(
+        self,
+        persona_id: str,
+        data: PersonaProfileUpdate,
+        owner_user_id: Optional[str] = None,
+    ) -> Optional[PersonaProfile]:
         """按补丁字段更新人格卡；不存在时返回 None。"""
-        existing = self.get(persona_id)
+        existing = self.get(persona_id, owner_user_id=owner_user_id)
         if existing is None:
             return None
 
@@ -85,16 +108,29 @@ class PersonaStore:
         updates.append("updated_at = ?")
         params.append(datetime.now().isoformat())
         params.append(persona_id)
+        query = f"UPDATE persona_profiles SET {', '.join(updates)} WHERE id = ?"
+        if owner_user_id is not None:
+            query += " AND owner_user_id = ?"
+            params.append(owner_user_id)
 
         with self._db.connect() as conn:
-            conn.execute(f"UPDATE persona_profiles SET {', '.join(updates)} WHERE id = ?", params)
+            conn.execute(query, params)
             conn.commit()
 
-        return self.get(persona_id)
+        return self.get(persona_id, owner_user_id=owner_user_id)
 
-    def delete(self, persona_id: str) -> bool:
+    def delete(self, persona_id: str, owner_user_id: Optional[str] = None) -> bool:
         """按 ID 删除人格卡并返回是否成功。"""
         with self._db.connect() as conn:
-            cursor = conn.execute("DELETE FROM persona_profiles WHERE id = ?", (persona_id,))
+            if owner_user_id is None:
+                cursor = conn.execute(
+                    "DELETE FROM persona_profiles WHERE id = ?",
+                    (persona_id,),
+                )
+            else:
+                cursor = conn.execute(
+                    "DELETE FROM persona_profiles WHERE id = ? AND owner_user_id = ?",
+                    (persona_id, owner_user_id),
+                )
             conn.commit()
             return cursor.rowcount > 0

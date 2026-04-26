@@ -155,6 +155,7 @@ export async function importLorebookData(
     try {
       const response = await fetch(`${apiBase}/worlds/${worldId}/lorebook/character`, {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(character)
       })
@@ -175,6 +176,7 @@ export async function importLorebookData(
     try {
       const response = await fetch(`${apiBase}/worlds/${worldId}/lorebook/location`, {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(location)
       })
@@ -195,6 +197,7 @@ export async function importLorebookData(
     try {
       const response = await fetch(`${apiBase}/worlds/${worldId}/lorebook/event`, {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(event)
       })

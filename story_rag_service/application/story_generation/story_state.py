@@ -55,6 +55,7 @@ def update_story_state_snapshot(
     user_input: str,
     story_state_mode: Optional[str],
     story_state_enabled: bool,
+    owner_user_id: Optional[str] = None,
 ) -> Optional[Dict[str, Any]]:
     """按策略更新并返回剧情状态快照。"""
     if not story_state_enabled:
@@ -64,10 +65,14 @@ def update_story_state_snapshot(
     if normalized_mode == "off":
         return None
 
-    existing_state = roleplay_manager.get_story_state(session_id)
+    existing_state = roleplay_manager.get_story_state(session_id, owner_user_id=owner_user_id)
     update_payload = derive_story_state_update(existing_state, user_input)
     if normalized_mode == "light" and update_payload.clues:
         update_payload.clues = update_payload.clues[-4:]
 
-    updated_state = roleplay_manager.upsert_story_state(session_id, update_payload)
+    updated_state = roleplay_manager.upsert_story_state(
+        session_id,
+        update_payload,
+        owner_user_id=owner_user_id,
+    )
     return updated_state.model_dump()

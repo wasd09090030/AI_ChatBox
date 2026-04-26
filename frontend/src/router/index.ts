@@ -3,12 +3,17 @@
  */
 
 import { createRouter, createWebHistory } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
+import { pinia } from '@/stores/pinia'
 
 declare module 'vue-router' {
   interface RouteMeta {
     title?: string
     group?: string
     keepAlive?: boolean
+    requiresAuth?: boolean
+    publicOnly?: boolean
+    hideChrome?: boolean
   }
 }
 
@@ -19,6 +24,17 @@ const router = createRouter({
     {
       path: '/',
       redirect: '/story/improv',
+    },
+    {
+      path: '/login',
+      name: 'login',
+      component: () => import('@/views/LoginView.vue'),
+      meta: {
+        title: '登录',
+        publicOnly: true,
+        requiresAuth: false,
+        hideChrome: true,
+      },
     },
     {
       path: '/story',
@@ -102,9 +118,28 @@ const router = createRouter({
   ],
 })
 
-router.beforeEach((to, _from, next) => {
+router.beforeEach(async (to) => {
+  const authStore = useAuthStore(pinia)
+  await authStore.ensureResolved()
+
   document.title = to.meta.title ? `${to.meta.title as string} — 故事工坊` : '故事工坊'
-  next()
+
+  if (to.meta.publicOnly && authStore.isAuthenticated) {
+    const redirect = typeof to.query.redirect === 'string' && to.query.redirect.startsWith('/')
+      ? to.query.redirect
+      : '/story/improv'
+    return redirect
+  }
+
+  const requiresAuth = to.meta.requiresAuth ?? !to.meta.publicOnly
+  if (requiresAuth && !authStore.isAuthenticated) {
+    return {
+      name: 'login',
+      query: { redirect: to.fullPath },
+    }
+  }
+
+  return true
 })
 
 export default router

@@ -27,9 +27,15 @@ class StoryAdjustmentService:
         self.story_manager = story_manager
         self.llm_gateway = llm_gateway
 
-    async def polish_selection(self, request, *, user_id: Optional[str] = None) -> dict[str, Any]:
+    async def polish_selection(
+        self,
+        request,
+        *,
+        user_id: Optional[str] = None,
+        owner_user_id: Optional[str] = None,
+    ) -> dict[str, Any]:
         """按预设风格改写用户选中文本，并保持剧情事实不变。"""
-        story = self.story_manager.get_story(request.story_id)
+        story = self.story_manager.get_story(request.story_id, owner_user_id=owner_user_id)
         if story is None:
             raise LookupError(f"Story '{request.story_id}' not found")
 

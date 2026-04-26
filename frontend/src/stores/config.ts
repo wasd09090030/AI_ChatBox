@@ -38,35 +38,47 @@ import { storage } from '@/utils/storage'
 // 常量 BASE_URLS_STORAGE_KEY。
 const BASE_URLS_STORAGE_KEY = 'provider_base_urls_v1'
 
-// useConfigStore 状态仓库实例。
-export const useConfigStore = defineStore('config', () => {
-  // ── State ────────────────────────────────────────────────────────────────
-  const config = ref<UserConfig>({
+function createDefaultConfig(): UserConfig {
+  return {
     theme: 'system',
     defaultProvider: 'deepseek',
     defaultModel: 'deepseek-chat',
     temperature: 0.7,
     maxTokens: 2000,
-  })
+  }
+}
 
-  const apiKeys = ref<APIKeys>({
+function createDefaultApiKeys(): APIKeys {
+  return {
     openai: undefined,
     anthropic: undefined,
     deepseek: undefined,
     qwen: undefined,
     gemini: undefined,
     custom: undefined,
-  })
+  }
+}
 
-  /** Custom base URL overrides. Empty string = use provider default. */
-  const providerBaseUrls = ref<ProviderBaseUrls>({
+function createDefaultBaseUrls(): ProviderBaseUrls {
+  return {
     openai: '',
     anthropic: '',
     deepseek: '',
     qwen: '',
     gemini: '',
     custom: '',
-  })
+  }
+}
+
+// useConfigStore 状态仓库实例。
+export const useConfigStore = defineStore('config', () => {
+  // ── State ────────────────────────────────────────────────────────────────
+  const config = ref<UserConfig>(createDefaultConfig())
+
+  const apiKeys = ref<APIKeys>(createDefaultApiKeys())
+
+  /** Custom base URL overrides. Empty string = use provider default. */
+  const providerBaseUrls = ref<ProviderBaseUrls>(createDefaultBaseUrls())
 
   const isLoading = ref(false)
   const error = ref<string | null>(null)
@@ -127,8 +139,10 @@ export const useConfigStore = defineStore('config', () => {
   async function initializeConfig() {
     try {
       isLoading.value = true
+      error.value = null
+      providerBaseUrls.value = createDefaultBaseUrls()
 
-      const state = await fetchConfigState(config.value, apiKeys.value)
+      const state = await fetchConfigState(createDefaultConfig(), createDefaultApiKeys())
       config.value  = state.config
       apiKeys.value = state.apiKeys
 
@@ -243,14 +257,19 @@ export const useConfigStore = defineStore('config', () => {
   }
 
   async function resetConfig() {
-    config.value = {
-      theme: 'system',
-      defaultProvider: 'deepseek',
-      defaultModel: 'deepseek-chat',
-      temperature: 0.7,
-      maxTokens: 2000,
-    }
+    config.value = createDefaultConfig()
     await persistConfigState()
+  }
+
+  function resetSessionState() {
+    config.value = createDefaultConfig()
+    apiKeys.value = createDefaultApiKeys()
+    providerBaseUrls.value = createDefaultBaseUrls()
+    error.value = null
+    sceneModelPreferences.value = createEmptySceneModelPreferences()
+    sceneModelsLoading.value = false
+    isLoading.value = false
+    document.documentElement.classList.toggle('dark', false)
   }
 
   async function refreshSceneModelPreferences() {
@@ -340,5 +359,6 @@ export const useConfigStore = defineStore('config', () => {
     getResolvedSceneModel,
     exportData,
     importData,
+    resetSessionState,
   }
 })

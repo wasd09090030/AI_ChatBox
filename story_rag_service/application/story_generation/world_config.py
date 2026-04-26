@@ -17,13 +17,14 @@ def load_world_config(
     world_manager: Optional[Any],
     world_id: Optional[str],
     log_prefix: str = "",
+    owner_user_id: Optional[str] = None,
 ) -> Optional[Dict[str, Any]]:
     """加载世界风格与氛围配置。"""
     if not world_id or not world_manager:
         return None
 
     try:
-        world = world_manager.get_world(world_id)
+        world = world_manager.get_world(world_id, owner_user_id=owner_user_id)
         if not world:
             return None
 

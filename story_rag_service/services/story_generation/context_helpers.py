@@ -150,17 +150,24 @@ def load_script_design_context(script_design_app, request: StoryGenerationReques
     }
 
 
-def persist_message_to_db(database_path: str, session_id: str, role: str, content: str) -> None:
+def persist_message_to_db(
+    database_path: str,
+    session_id: str,
+    role: str,
+    content: str,
+    *,
+    owner_user_id: Optional[str] = None,
+) -> None:
     """持久化单条会话消息到 story_session_messages。"""
     conn = sqlite3.connect(database_path)
     conn.execute("PRAGMA journal_mode=WAL;")
     conn.execute(
         """
         INSERT OR IGNORE INTO story_session_messages
-            (id, session_id, role, content, token_estimate, archived)
-        VALUES (?, ?, ?, ?, ?, 0)
+            (id, session_id, owner_user_id, role, content, token_estimate, archived)
+        VALUES (?, ?, ?, ?, ?, ?, 0)
         """,
-        (str(uuid.uuid4()), session_id, role, content, len(content) // 4),
+        (str(uuid.uuid4()), session_id, owner_user_id, role, content, len(content) // 4),
     )
     conn.commit()
     conn.close()

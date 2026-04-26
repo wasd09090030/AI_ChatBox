@@ -49,6 +49,7 @@ class RoleplaySQLiteStore:
                 """
                 CREATE TABLE IF NOT EXISTS persona_profiles (
                     id TEXT PRIMARY KEY,
+                    owner_user_id TEXT DEFAULT NULL,
                     name TEXT NOT NULL,
                     description TEXT DEFAULT '',
                     title TEXT,
@@ -63,6 +64,7 @@ class RoleplaySQLiteStore:
                 """
                 CREATE TABLE IF NOT EXISTS story_states (
                     session_id TEXT PRIMARY KEY,
+                    owner_user_id TEXT DEFAULT NULL,
                     chapter TEXT,
                     objective TEXT,
                     conflict TEXT,
@@ -71,6 +73,26 @@ class RoleplaySQLiteStore:
                     metadata TEXT DEFAULT '{}',
                     updated_at TEXT NOT NULL
                 )
+                """
+            )
+            try:
+                cursor.execute("ALTER TABLE persona_profiles ADD COLUMN owner_user_id TEXT DEFAULT NULL")
+            except sqlite3.OperationalError:
+                pass
+            try:
+                cursor.execute("ALTER TABLE story_states ADD COLUMN owner_user_id TEXT DEFAULT NULL")
+            except sqlite3.OperationalError:
+                pass
+            cursor.execute(
+                """
+                CREATE INDEX IF NOT EXISTS idx_persona_profiles_owner_user_id
+                ON persona_profiles(owner_user_id)
+                """
+            )
+            cursor.execute(
+                """
+                CREATE INDEX IF NOT EXISTS idx_story_states_owner_user_id
+                ON story_states(owner_user_id)
                 """
             )
             conn.commit()

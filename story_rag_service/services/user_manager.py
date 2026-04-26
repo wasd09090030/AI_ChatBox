@@ -6,6 +6,7 @@
 
 import base64
 import logging
+import uuid
 from typing import Optional
 
 from models.user import User, UserSettingsUpdate
@@ -91,6 +92,45 @@ class UserManager:
             用户对象；未找到时返回 None。
         """
         return self.repo.get_user(user_id)
+
+    def get_user_by_login_identifier(self, login_identifier: str) -> Optional[User]:
+        """按登录标识查询正式账号。"""
+        normalized = (login_identifier or "").strip().lower()
+        if not normalized:
+            return None
+        return self.repo.get_user_by_login_identifier(normalized)
+
+    def create_account(
+        self,
+        *,
+        login_identifier: str,
+        password_hash: str,
+        display_name: Optional[str] = None,
+    ) -> User:
+        """创建可登录账号。"""
+        normalized = (login_identifier or "").strip().lower()
+        if not normalized:
+            raise ValueError("login_identifier is required")
+        if self.get_user_by_login_identifier(normalized) is not None:
+            raise ValueError("login_identifier already exists")
+
+        account_user_id = str(uuid.uuid4())
+        resolved_display_name = (display_name or normalized.split("@")[0] or "用户").strip()
+        self.repo.create_account(
+            user_id=account_user_id,
+            login_identifier=normalized,
+            display_name=resolved_display_name,
+            password_hash=password_hash,
+        )
+        logger.info("Created new account user: %s", account_user_id)
+        created = self.get_user(account_user_id)
+        if created is None:
+            raise RuntimeError("Failed to load created account")
+        return created
+
+    def update_last_login(self, user_id: str) -> None:
+        """刷新最近登录时间。"""
+        self.repo.update_last_login(user_id)
 
     def update_user_settings(self, user_id: str, settings_update: UserSettingsUpdate) -> User:
         """

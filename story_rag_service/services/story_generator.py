@@ -336,6 +336,7 @@ class StoryGenerator:
         *,
         request: StoryGenerationRequest,
         context: StoryContext,
+        owner_user_id: Optional[str] = None,
         history_k: int,
         history_score_threshold: Optional[float] = None,
         assistant_weight: Optional[float] = None,
@@ -348,6 +349,7 @@ class StoryGenerator:
         result = self.memory_orchestrator.build_bundle(
             request=request,
             context=context,
+            owner_user_id=owner_user_id,
             history_k=history_k,
             history_score_threshold=history_score_threshold,
             assistant_weight=assistant_weight,
@@ -423,6 +425,8 @@ class StoryGenerator:
         self,
         request: StoryGenerationRequest,
         activation_logs: List[Dict[str, Any]],
+        *,
+        owner_user_id: Optional[str] = None,
     ) -> tuple[
         StoryGenerationRequest,
         Optional[ScriptRuntimeState],
@@ -463,7 +467,10 @@ class StoryGenerator:
             request.creation_mode = "improv"
             return request, None, None, None
 
-        script_design = self.script_design_app.get_script_design(script_design_id)
+        script_design = self.script_design_app.get_script_design(
+            script_design_id,
+            owner_user_id=owner_user_id,
+        )
         # 请求给出的剧本不存在时回退，避免硬失败中断生成。
         if script_design is None:
             activation_logs.append(
@@ -483,6 +490,7 @@ class StoryGenerator:
             world_id=request.world_id,
             script_design_id=script_design_id,
             creation_mode=request.creation_mode,
+            owner_user_id=owner_user_id,
             preferred_stage_id=getattr(request, "active_stage_id", None),
             preferred_event_id=getattr(request, "active_event_id", None),
         )
@@ -783,12 +791,14 @@ class StoryGenerator:
         request, runtime_state, round_contract, script_design = self._prepare_scripted_request(
             request,
             activation_logs,
+            owner_user_id=user_id,
         )
 
         # 组装分层记忆并展开主流程常用字段。
         memory_state = self._build_memory_bundle(
             request=request,
             context=context,
+            owner_user_id=user_id,
             history_k=5,
         )
         bundle = memory_state["bundle"]
@@ -862,6 +872,7 @@ class StoryGenerator:
         update_result = self.memory_update_service.run_post_generation_updates(
             session_id=request.session_id,
             world_id=world_id,
+            owner_user_id=user_id,
             context=context,
             user_input=request.user_input,
             assistant_output=generated_text,
@@ -949,10 +960,15 @@ class StoryGenerator:
 
         context = request.context or StoryContext(session_id=request.session_id, messages=[])
         preview_logs: List[Dict[str, Any]] = []
-        request, _, _, _ = self._prepare_scripted_request(request, preview_logs)
+        request, _, _, _ = self._prepare_scripted_request(
+            request,
+            preview_logs,
+            owner_user_id=user_id,
+        )
         memory_state = self._build_memory_bundle(
             request=request,
             context=context,
+            owner_user_id=user_id,
             history_k=5,
         )
         retrieved_contexts = memory_state["retrieved_contexts"]
@@ -989,11 +1005,13 @@ class StoryGenerator:
         request, runtime_state, round_contract, script_design = self._prepare_scripted_request(
             request,
             activation_logs,
+            owner_user_id=user_id,
         )
 
         memory_state = self._build_memory_bundle(
             request=request,
             context=context,
+            owner_user_id=user_id,
             history_k=3,
         )
         bundle = memory_state["bundle"]
@@ -1069,6 +1087,7 @@ class StoryGenerator:
         update_result = self.memory_update_service.run_post_generation_updates(
             session_id=request.session_id,
             world_id=world_id,
+            owner_user_id=user_id,
             context=context,
             user_input=request.user_input,
             assistant_output=generated_text,
@@ -1145,11 +1164,13 @@ class StoryGenerator:
         request, runtime_state, round_contract, script_design = self._prepare_scripted_request(
             request,
             activation_logs,
+            owner_user_id=user_id,
         )
 
         memory_state = self._build_memory_bundle(
             request=request,
             context=context,
+            owner_user_id=user_id,
             history_k=5,
             history_score_threshold=0.35,
             assistant_weight=1.3,
@@ -1280,6 +1301,7 @@ class StoryGenerator:
         update_result = self.memory_update_service.run_post_generation_updates(
             session_id=request.session_id,
             world_id=world_id,
+            owner_user_id=user_id,
             context=context,
             user_input=request.user_input,
             assistant_output=full_text,

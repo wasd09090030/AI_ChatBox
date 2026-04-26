@@ -8,12 +8,13 @@
 
 import sqlite3
 import logging
-from pathlib import Path
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
+from api.dependencies.auth import get_current_user
 from config import settings
+from models.user import User
 
 # 模块日志器，用于记录客户端存储接口的异常与诊断信息。
 logger = logging.getLogger(__name__)
@@ -34,11 +35,19 @@ def _ensure_table(conn: sqlite3.Connection) -> None:
     """确保 client_storage 表存在，首次访问时自动创建。"""
     conn.execute(
         """
-        CREATE TABLE IF NOT EXISTS client_storage (
-            storage_key  TEXT PRIMARY KEY,
+        CREATE TABLE IF NOT EXISTS client_storage_entries (
+            owner_user_id TEXT NOT NULL,
+            storage_key  TEXT NOT NULL,
             value        TEXT NOT NULL,
-            updated_at   TEXT DEFAULT (datetime('now'))
+            updated_at   TEXT DEFAULT (datetime('now')),
+            PRIMARY KEY (owner_user_id, storage_key)
         )
+        """
+    )
+    conn.execute(
+        """
+        CREATE INDEX IF NOT EXISTS idx_client_storage_entries_owner_updated_at
+        ON client_storage_entries(owner_user_id, updated_at)
         """
     )
     conn.commit()
@@ -66,11 +75,12 @@ class StorageSetRequest(BaseModel):
 # ---------------------------------------------------------------------------
 
 @router.get("/{key}", summary="Read a stored value")
-def get_value(key: str):
+def get_value(key: str, current_user: User = Depends(get_current_user)):
     """读取指定 key 对应值；不存在返回 404。"""
     with _connect() as conn:
         row = conn.execute(
-            "SELECT value FROM client_storage WHERE storage_key = ?", [key]
+            "SELECT value FROM client_storage_entries WHERE owner_user_id = ? AND storage_key = ?",
+            [current_user.id, key],
         ).fetchone()
     if row is None:
         raise HTTPException(status_code=404, detail=f"Key '{key}' not found")
@@ -78,38 +88,42 @@ def get_value(key: str):
 
 
 @router.put("/{key}", summary="Create or update a stored value")
-def set_value(key: str, body: StorageSetRequest):
+def set_value(key: str, body: StorageSetRequest, current_user: User = Depends(get_current_user)):
     """创建或更新 key 对应值。"""
     with _connect() as conn:
         conn.execute(
             """
-            INSERT INTO client_storage (storage_key, value, updated_at)
-                 VALUES (?, ?, datetime('now'))
-            ON CONFLICT(storage_key)
+            INSERT INTO client_storage_entries (owner_user_id, storage_key, value, updated_at)
+                 VALUES (?, ?, ?, datetime('now'))
+            ON CONFLICT(owner_user_id, storage_key)
               DO UPDATE SET value = excluded.value,
                             updated_at = excluded.updated_at
             """,
-            [key, body.value],
+            [current_user.id, key, body.value],
         )
         conn.commit()
     return {"key": key}
 
 
 @router.delete("/{key}", summary="Delete a single stored value")
-def delete_value(key: str):
+def delete_value(key: str, current_user: User = Depends(get_current_user)):
     """删除指定 key（幂等）。"""
     with _connect() as conn:
         conn.execute(
-            "DELETE FROM client_storage WHERE storage_key = ?", [key]
+            "DELETE FROM client_storage_entries WHERE owner_user_id = ? AND storage_key = ?",
+            [current_user.id, key],
         )
         conn.commit()
     return {"ok": True}
 
 
 @router.delete("", summary="Wipe all stored values")
-def clear_all():
+def clear_all(current_user: User = Depends(get_current_user)):
     """清空 client_storage 全部数据（常用于重置设置）。"""
     with _connect() as conn:
-        cur = conn.execute("DELETE FROM client_storage")
+        cur = conn.execute(
+            "DELETE FROM client_storage_entries WHERE owner_user_id = ?",
+            [current_user.id],
+        )
         conn.commit()
     return {"cleared": cur.rowcount}

@@ -5,6 +5,7 @@ V2 API router composition.
 from fastapi import APIRouter
 
 from .analytics_routes import router as analytics_router
+from .auth_routes import router as auth_router
 from .lorebook_routes import router as lorebook_router
 from .memory_routes import router as memory_router
 from .provider_routes import router as provider_router
@@ -15,6 +16,7 @@ from .world_story_routes import router as world_story_router
 
 # FastAPI 路由注册器，用于挂载本模块接口。
 router = APIRouter()
+router.include_router(auth_router)
 router.include_router(story_router)
 router.include_router(world_story_router)
 router.include_router(script_design_router)

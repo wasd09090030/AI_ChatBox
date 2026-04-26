@@ -289,6 +289,7 @@ def _select_explicit_contexts(
     lorebook_manager: Any,
     selected_entry_ids: List[str],
     world_id: Optional[str],
+    owner_user_id: Optional[str],
     allowed_entry_ids: Optional[set[str]],
 ) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]], set]:
     """按用户显式选择的 entry id 组装上下文。
@@ -298,7 +299,11 @@ def _select_explicit_contexts(
     if not selected_entry_ids:
         return [], [], set()
 
-    explicit_entries = lorebook_manager.get_entries_by_ids(selected_entry_ids, world_id=world_id)
+    explicit_entries = lorebook_manager.get_entries_by_ids(
+        selected_entry_ids,
+        world_id=world_id,
+        owner_user_id=owner_user_id,
+    )
     if allowed_entry_ids is not None:
         explicit_entries = [
             item for item in explicit_entries if _normalize_entry_id(item) in allowed_entry_ids
@@ -333,6 +338,7 @@ def _select_vector_contexts(
     lorebook_manager: Any,
     query: str,
     world_id: Optional[str],
+    owner_user_id: Optional[str],
     retrieval_budget: int,
     selected_entry_ids: set,
     all_entries: Optional[List[Dict[str, Any]]] = None,
@@ -344,6 +350,14 @@ def _select_vector_contexts(
         return [], []
 
     fetch_k = max(retrieval_budget * 2, 10)
+    effective_allowed_entry_ids = set(allowed_entry_ids or set())
+    if all_entries:
+        effective_allowed_entry_ids.update(
+            _normalize_entry_id(item)
+            for item in all_entries
+            if _normalize_entry_id(item)
+        )
+    normalized_allowed_entry_ids = effective_allowed_entry_ids or None
 
     # ── 向量检索 ──
     vector_results = lorebook_manager.search_relevant_entries(
@@ -357,7 +371,7 @@ def _select_vector_contexts(
     for item in vector_results:
         eid = _entry_identity(item)
         normalized_id = _normalize_entry_id(item)
-        if allowed_entry_ids is not None and normalized_id not in allowed_entry_ids:
+        if normalized_allowed_entry_ids is not None and normalized_id not in normalized_allowed_entry_ids:
             continue
         if eid not in selected_entry_ids:
             vector_map[eid] = item
@@ -372,7 +386,7 @@ def _select_vector_contexts(
             entry = all_entries[idx]
             eid = _entry_identity(entry)
             normalized_id = _normalize_entry_id(entry)
-            if allowed_entry_ids is not None and normalized_id not in allowed_entry_ids:
+            if normalized_allowed_entry_ids is not None and normalized_id not in normalized_allowed_entry_ids:
                 continue
             if eid not in selected_entry_ids:
                 bm25_ranked.append((eid, score))
@@ -426,6 +440,7 @@ def retrieve_rag_context(
     context: Any,
     lorebook_manager: Any,
     history_manager: Optional[Any],
+    owner_user_id: Optional[str] = None,
     recent_message_count: int,
     history_k: int,
     history_score_threshold: Optional[float] = None,
@@ -466,6 +481,7 @@ def retrieve_rag_context(
         lorebook_manager=lorebook_manager,
         selected_entry_ids=list(getattr(request, "selected_context_entry_ids", []) or []),
         world_id=world_id,
+        owner_user_id=owner_user_id,
         allowed_entry_ids=allowed_entry_ids,
     )
     activation_logs.extend(explicit_logs)
@@ -474,9 +490,9 @@ def retrieve_rag_context(
     all_entries: List[Dict[str, Any]] = []
     try:
         all_entries = (
-            lorebook_manager.get_entries_by_world(world_id)
+            lorebook_manager.get_entries_by_world(world_id, owner_user_id=owner_user_id)
             if world_id
-            else lorebook_manager.get_all_entries()
+            else lorebook_manager.get_all_entries(owner_user_id=owner_user_id)
         )
         if allowed_entry_ids is not None:
             all_entries = [
@@ -497,6 +513,7 @@ def retrieve_rag_context(
         lorebook_manager=lorebook_manager,
         query=query,
         world_id=world_id,
+        owner_user_id=owner_user_id,
         retrieval_budget=retrieval_budget,
         selected_entry_ids=selected_entry_ids,
         all_entries=all_entries,

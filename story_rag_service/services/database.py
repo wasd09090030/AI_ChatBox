@@ -49,6 +49,11 @@ class Database:
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS users (
                     user_id TEXT PRIMARY KEY,
+                    login_identifier TEXT UNIQUE,
+                    display_name TEXT,
+                    password_hash TEXT,
+                    status TEXT DEFAULT 'active',
+                    last_login_at TIMESTAMP DEFAULT NULL,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
@@ -80,7 +85,9 @@ class Database:
                 )
             """)
             # 迁移旧数据库：缺失列时增量补齐。
+            self._migrate_users_columns(cursor)
             self._migrate_user_settings_columns(cursor)
+            self._ensure_auth_session_schema(cursor)
             
             # 为 Alembic 接管前创建的旧库补齐运行期必需表。
             self._ensure_story_session_schema(cursor)
@@ -88,6 +95,27 @@ class Database:
             self._ensure_memory_update_journal_schema(cursor)
             self._ensure_story_runtime_schema(cursor)
             self._ensure_entity_state_event_schema(cursor)
+
+    def _migrate_users_columns(self, cursor) -> None:
+        """为 users 增量补齐认证相关字段（幂等迁移）。"""
+        cursor.execute("PRAGMA table_info(users)")
+        existing_columns = {row["name"] for row in cursor.fetchall()}
+
+        new_columns = [
+            ("login_identifier", "TEXT"),
+            ("display_name", "TEXT"),
+            ("password_hash", "TEXT"),
+            ("status", "TEXT DEFAULT 'active'"),
+            ("last_login_at", "TIMESTAMP DEFAULT NULL"),
+        ]
+
+        for col_name, col_type in new_columns:
+            if col_name not in existing_columns:
+                cursor.execute(f"ALTER TABLE users ADD COLUMN {col_name} {col_type}")
+
+        cursor.execute(
+            "CREATE UNIQUE INDEX IF NOT EXISTS idx_users_login_identifier ON users(login_identifier)"
+        )
 
     def _migrate_user_settings_columns(self, cursor) -> None:
         """为 user_settings 增量补齐新列（幂等迁移）。"""
@@ -119,11 +147,37 @@ class Database:
                     f"ALTER TABLE user_settings ADD COLUMN {col_name} {col_type}"
                 )
 
+    def _ensure_auth_session_schema(self, cursor) -> None:
+        """创建认证会话表与索引。"""
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS auth_sessions (
+                session_id TEXT PRIMARY KEY,
+                user_id TEXT NOT NULL,
+                session_token_hash TEXT NOT NULL UNIQUE,
+                expires_at TIMESTAMP NOT NULL,
+                revoked_at TIMESTAMP DEFAULT NULL,
+                created_ip TEXT DEFAULT NULL,
+                user_agent TEXT DEFAULT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                last_seen_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+            )
+        """)
+        cursor.execute("""
+            CREATE INDEX IF NOT EXISTS idx_auth_sessions_user_id
+            ON auth_sessions(user_id)
+        """)
+        cursor.execute("""
+            CREATE INDEX IF NOT EXISTS idx_auth_sessions_expires_at
+            ON auth_sessions(expires_at)
+        """)
+
     def _ensure_story_session_schema(self, cursor) -> None:
         """为旧数据库补齐故事会话表与索引。"""
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS story_sessions (
                 session_id TEXT PRIMARY KEY,
+                owner_user_id TEXT DEFAULT NULL,
                 world_id TEXT,
                 character_card_id TEXT,
                 persona_id TEXT,
@@ -137,6 +191,7 @@ class Database:
             CREATE TABLE IF NOT EXISTS story_session_messages (
                 id TEXT PRIMARY KEY,
                 session_id TEXT NOT NULL,
+                owner_user_id TEXT DEFAULT NULL,
                 role TEXT NOT NULL,
                 content TEXT NOT NULL,
                 timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -145,9 +200,21 @@ class Database:
                 FOREIGN KEY (session_id) REFERENCES story_sessions(session_id) ON DELETE CASCADE
             )
         """)
+        cursor.execute("PRAGMA table_info(story_sessions)")
+        existing_session_columns = {row["name"] for row in cursor.fetchall()}
+        if "owner_user_id" not in existing_session_columns:
+            cursor.execute("ALTER TABLE story_sessions ADD COLUMN owner_user_id TEXT DEFAULT NULL")
+        cursor.execute("PRAGMA table_info(story_session_messages)")
+        existing_message_columns = {row["name"] for row in cursor.fetchall()}
+        if "owner_user_id" not in existing_message_columns:
+            cursor.execute("ALTER TABLE story_session_messages ADD COLUMN owner_user_id TEXT DEFAULT NULL")
         cursor.execute("""
             CREATE INDEX IF NOT EXISTS idx_story_sessions_world_id
             ON story_sessions(world_id)
+        """)
+        cursor.execute("""
+            CREATE INDEX IF NOT EXISTS idx_story_sessions_owner_user_id
+            ON story_sessions(owner_user_id)
         """)
         cursor.execute("""
             CREATE INDEX IF NOT EXISTS idx_story_sessions_last_active
@@ -156,6 +223,10 @@ class Database:
         cursor.execute("""
             CREATE INDEX IF NOT EXISTS idx_ssm_session_id
             ON story_session_messages(session_id)
+        """)
+        cursor.execute("""
+            CREATE INDEX IF NOT EXISTS idx_ssm_owner_user_id
+            ON story_session_messages(owner_user_id)
         """)
         cursor.execute("""
             CREATE INDEX IF NOT EXISTS idx_ssm_timestamp
@@ -171,6 +242,7 @@ class Database:
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS lorebook_entries (
                 id TEXT PRIMARY KEY,
+                owner_user_id TEXT DEFAULT NULL,
                 world_id TEXT NOT NULL,
                 type TEXT,
                 name TEXT NOT NULL,
@@ -187,9 +259,17 @@ class Database:
                 raw_metadata TEXT DEFAULT NULL
             )
         """)
+        cursor.execute("PRAGMA table_info(lorebook_entries)")
+        existing_lorebook_columns = {row["name"] for row in cursor.fetchall()}
+        if "owner_user_id" not in existing_lorebook_columns:
+            cursor.execute("ALTER TABLE lorebook_entries ADD COLUMN owner_user_id TEXT DEFAULT NULL")
         cursor.execute("""
             CREATE INDEX IF NOT EXISTS idx_lorebook_world_id
             ON lorebook_entries(world_id)
+        """)
+        cursor.execute("""
+            CREATE INDEX IF NOT EXISTS idx_lorebook_owner_user_id
+            ON lorebook_entries(owner_user_id)
         """)
         cursor.execute("""
             CREATE INDEX IF NOT EXISTS idx_lorebook_world_enabled
@@ -297,6 +377,7 @@ class Database:
             CREATE TABLE IF NOT EXISTS story_runtime_states (
                 id TEXT PRIMARY KEY,
                 story_id TEXT NOT NULL UNIQUE,
+                owner_user_id TEXT DEFAULT NULL,
                 session_id TEXT NOT NULL,
                 world_id TEXT DEFAULT NULL,
                 script_design_id TEXT NOT NULL,
@@ -304,9 +385,17 @@ class Database:
                 payload TEXT NOT NULL
             )
         """)
+        cursor.execute("PRAGMA table_info(story_runtime_states)")
+        existing_runtime_columns = {row["name"] for row in cursor.fetchall()}
+        if "owner_user_id" not in existing_runtime_columns:
+            cursor.execute("ALTER TABLE story_runtime_states ADD COLUMN owner_user_id TEXT DEFAULT NULL")
         cursor.execute("""
             CREATE INDEX IF NOT EXISTS idx_story_runtime_story_id
             ON story_runtime_states(story_id)
+        """)
+        cursor.execute("""
+            CREATE INDEX IF NOT EXISTS idx_story_runtime_owner_user_id
+            ON story_runtime_states(owner_user_id)
         """)
         cursor.execute("""
             CREATE INDEX IF NOT EXISTS idx_story_runtime_session_id

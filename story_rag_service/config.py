@@ -78,6 +78,14 @@ class Settings(BaseSettings):
     api_host: str = "0.0.0.0"
     api_port: int = 8000
     api_reload: bool = True
+    cors_allowed_origins: str = "http://localhost:5175,http://127.0.0.1:5175"
+
+    # Auth 配置
+    auth_cookie_name: str = "storybox_session"
+    auth_cookie_secure: bool = False
+    auth_cookie_samesite: str = "lax"
+    auth_session_ttl_hours: int = 168
+    auth_claim_unowned_enabled: bool = True
 
     # LangGraph Checkpointer 配置
     langgraph_checkpoint_backend: str = "sqlite"  # sqlite | memory
@@ -104,6 +112,11 @@ class Settings(BaseSettings):
         if path.is_absolute():
             return str(path)
         return str((BASE_DIR / path).resolve())
+
+    @property
+    def cors_origin_list(self) -> list[str]:
+        """将逗号分隔的 origin 配置解析为列表。"""
+        return [item.strip() for item in self.cors_allowed_origins.split(",") if item.strip()]
     
     class Config:
         """Pydantic Settings 配置：指定环境变量文件与大小写策略。"""

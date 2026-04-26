@@ -37,21 +37,30 @@ class LorebookManager:
         """兼容旧接口：返回 SQLite 连接。"""
         return self._sqlite.connect()
 
-    def _write_sqlite(self, entry: LorebookEntry, chroma_ref: Optional[str] = None) -> None:
+    def _write_sqlite(
+        self,
+        entry: LorebookEntry,
+        chroma_ref: Optional[str] = None,
+        owner_user_id: Optional[str] = None,
+    ) -> None:
         """兼容旧接口：写入/覆盖 SQLite 条目。"""
-        self._sqlite.upsert_entry(entry, chroma_ref=chroma_ref)
+        self._sqlite.upsert_entry(entry, chroma_ref=chroma_ref, owner_user_id=owner_user_id)
 
-    def _delete_sqlite(self, entry_id: str) -> None:
+    def _delete_sqlite(self, entry_id: str, owner_user_id: Optional[str] = None) -> None:
         """兼容旧接口：删除 SQLite 条目。"""
-        self._sqlite.delete_entry(entry_id)
+        self._sqlite.delete_entry(entry_id, owner_user_id=owner_user_id)
 
-    def _get_sqlite_metadata(self, entry_id: str) -> Dict[str, Any]:
+    def _get_sqlite_metadata(self, entry_id: str, owner_user_id: Optional[str] = None) -> Dict[str, Any]:
         """兼容旧接口：读取 SQLite 中的启用/优先级元数据。"""
-        return self._sqlite.get_metadata(entry_id)
+        return self._sqlite.get_metadata(entry_id, owner_user_id=owner_user_id)
 
-    def _list_sqlite_by_world(self, world_id: Optional[str] = None) -> List[Dict[str, Any]]:
+    def _list_sqlite_by_world(
+        self,
+        world_id: Optional[str] = None,
+        owner_user_id: Optional[str] = None,
+    ) -> List[Dict[str, Any]]:
         """兼容旧接口：按世界枚举 SQLite 条目。"""
-        return self._sqlite.list_entries(world_id)
+        return self._sqlite.list_entries(world_id, owner_user_id=owner_user_id)
 
     def _rebuild_vector_store_from_sqlite_if_needed(self) -> None:
         """在向量库异常恢复后，以 SQLite 为真值重建向量索引。"""
@@ -83,7 +92,7 @@ class LorebookManager:
         rebuilt_count = self.vector_store.rebuild_entries(entries)
         logger.info("Rebuilt Chroma index from SQLite with %d entries", rebuilt_count)
 
-    def create_entry(self, entry: LorebookEntry) -> str:
+    def create_entry(self, entry: LorebookEntry, owner_user_id: Optional[str] = None) -> str:
         """创建 lorebook 条目并执行双写。
 
         主流程先写向量库，再尝试写 SQLite；SQLite 失败仅告警，不阻断请求。
@@ -92,32 +101,47 @@ class LorebookManager:
             entry.id = str(uuid4())
         doc_id = self.vector_store.add_entry(entry)
         try:
-            self._sqlite.upsert_entry(entry, chroma_ref=doc_id)
+            self._sqlite.upsert_entry(entry, chroma_ref=doc_id, owner_user_id=owner_user_id)
         except Exception as exc:
             # 双写中的 SQLite 失败不应影响主链路可用性。
             logger.warning(f"SQLite write for entry {entry.id} failed: {exc}")
         logger.info(f"Created lorebook entry: {entry.name} ({entry.type})")
         return entry.id
 
-    def create_character(self, character: Character, world_id: Optional[str] = None) -> str:
+    def create_character(
+        self,
+        character: Character,
+        world_id: Optional[str] = None,
+        owner_user_id: Optional[str] = None,
+    ) -> str:
         """将角色对象转换为 lorebook 条目后创建。"""
         target_world_id = world_id or "global"
         entry = character.to_lorebook_entry(target_world_id)
-        return self.create_entry(entry)
+        return self.create_entry(entry, owner_user_id=owner_user_id)
 
-    def create_location(self, location: Location, world_id: Optional[str] = None) -> str:
+    def create_location(
+        self,
+        location: Location,
+        world_id: Optional[str] = None,
+        owner_user_id: Optional[str] = None,
+    ) -> str:
         """将地点对象转换为 lorebook 条目后创建。"""
         target_world_id = world_id or "global"
         entry = location.to_lorebook_entry(target_world_id)
-        return self.create_entry(entry)
+        return self.create_entry(entry, owner_user_id=owner_user_id)
 
-    def create_event(self, event: Event, world_id: Optional[str] = None) -> str:
+    def create_event(
+        self,
+        event: Event,
+        world_id: Optional[str] = None,
+        owner_user_id: Optional[str] = None,
+    ) -> str:
         """将事件对象转换为 lorebook 条目后创建。"""
         target_world_id = world_id or "global"
         entry = event.to_lorebook_entry(target_world_id)
-        return self.create_entry(entry)
+        return self.create_entry(entry, owner_user_id=owner_user_id)
 
-    def batch_create_entries(self, entries: List[LorebookEntry]) -> List[str]:
+    def batch_create_entries(self, entries: List[LorebookEntry], owner_user_id: Optional[str] = None) -> List[str]:
         """批量创建条目并执行批量向量写入。"""
         for entry in entries:
             if not entry.id:
@@ -126,7 +150,7 @@ class LorebookManager:
         self.vector_store.add_entries(entries)
         for entry in entries:
             try:
-                self._sqlite.upsert_entry(entry)
+                self._sqlite.upsert_entry(entry, owner_user_id=owner_user_id)
             except Exception as exc:
                 logger.warning(f"SQLite batch write for {entry.id} failed: {exc}")
 
@@ -183,10 +207,14 @@ class LorebookManager:
         logger.info(f"Found {len(formatted_results)} relevant entries for query: {query[:50]}...")
         return formatted_results
 
-    def get_all_entries(self, world_id: Optional[str] = None) -> List[Dict[str, Any]]:
+    def get_all_entries(
+        self,
+        world_id: Optional[str] = None,
+        owner_user_id: Optional[str] = None,
+    ) -> List[Dict[str, Any]]:
         """获取条目全量列表，优先 SQLite，失败时回退 Chroma。"""
         try:
-            entries = self._sqlite.list_entries(world_id)
+            entries = self._sqlite.list_entries(world_id, owner_user_id=owner_user_id)
             if entries:
                 return entries
         except Exception as exc:
@@ -215,29 +243,34 @@ class LorebookManager:
                 entries.append(entry)
         return entries
 
-    def update_entry(self, entry_id: str, new_entry: LorebookEntry) -> bool:
+    def update_entry(self, entry_id: str, new_entry: LorebookEntry, owner_user_id: Optional[str] = None) -> bool:
         """覆盖更新条目（删除旧向量后重建）。"""
         self.vector_store.delete_entry(entry_id)
         new_entry.id = entry_id
         doc_id = self.vector_store.add_entry(new_entry)
         try:
-            self._sqlite.upsert_entry(new_entry, chroma_ref=doc_id)
+            self._sqlite.upsert_entry(new_entry, chroma_ref=doc_id, owner_user_id=owner_user_id)
         except Exception as exc:
             logger.warning(f"SQLite update for entry {entry_id} failed: {exc}")
         logger.info(f"Updated lorebook entry: {entry_id}")
         return True
 
-    def get_entries_by_world(self, world_id: str) -> List[Dict[str, Any]]:
+    def get_entries_by_world(self, world_id: str, owner_user_id: Optional[str] = None) -> List[Dict[str, Any]]:
         """按世界筛选 lorebook 条目。"""
-        return self.get_all_entries(world_id=world_id)
+        return self.get_all_entries(world_id=world_id, owner_user_id=owner_user_id)
 
-    def get_entries_by_ids(self, entry_ids: List[str], world_id: Optional[str] = None) -> List[Dict[str, Any]]:
+    def get_entries_by_ids(
+        self,
+        entry_ids: List[str],
+        world_id: Optional[str] = None,
+        owner_user_id: Optional[str] = None,
+    ) -> List[Dict[str, Any]]:
         """按显式 id 顺序解析条目列表。"""
         normalized_ids = [str(entry_id).strip() for entry_id in entry_ids if str(entry_id).strip()]
         if not normalized_ids:
             return []
 
-        entries = self.get_all_entries(world_id=world_id)
+        entries = self.get_all_entries(world_id=world_id, owner_user_id=owner_user_id)
         entry_lookup = {
             str(entry.get("id") or "").strip(): entry
             for entry in entries
@@ -249,11 +282,11 @@ class LorebookManager:
             logger.info("Skipped %d explicit lorebook entries not found in world=%s", len(missing_ids), world_id)
         return resolved
 
-    def delete_entry(self, entry_id: str) -> bool:
+    def delete_entry(self, entry_id: str, owner_user_id: Optional[str] = None) -> bool:
         """删除单条条目（向量库+SQLite）。"""
         success = self.vector_store.delete_entry(entry_id)
         try:
-            self._sqlite.delete_entry(entry_id)
+            self._sqlite.delete_entry(entry_id, owner_user_id=owner_user_id)
         except Exception as exc:
             logger.warning(f"SQLite delete for entry {entry_id} failed: {exc}")
         if success:
@@ -271,13 +304,13 @@ class LorebookManager:
             logger.info("Cleared all lorebook entries")
         return success
 
-    def delete_entries_by_world(self, world_id: str) -> int:
+    def delete_entries_by_world(self, world_id: str, owner_user_id: Optional[str] = None) -> int:
         """删除指定世界下的全部条目，返回删除计数。"""
-        entries = self.get_all_entries(world_id=world_id)
+        entries = self.get_all_entries(world_id=world_id, owner_user_id=owner_user_id)
         deleted_count = 0
         for entry in entries:
             entry_id = entry.get("id")
-            if entry_id and self.delete_entry(entry_id):
+            if entry_id and self.delete_entry(entry_id, owner_user_id=owner_user_id):
                 deleted_count += 1
         logger.info(f"Deleted {deleted_count} lorebook entries from world: {world_id}")
         return deleted_count

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // 文件说明：前端可复用界面组件。
-import { useRoute, RouterLink } from 'vue-router'
+import { useRoute, RouterLink, useRouter } from 'vue-router'
 import {
   BookOpen,
   Settings,
@@ -14,13 +14,17 @@ import {
   Coins,
   History,
   BrainCircuit,
+  LogOut,
 } from 'lucide-vue-next'
 import { ref } from 'vue'
 import { cn } from '@/lib/utils'
 import { useSidebarCollapse } from '@/lib/useSidebarCollapse'
+import { useAuthStore } from '@/stores/auth'
 
 // 当前路由对象。
 const route = useRoute()
+const router = useRouter()
+const authStore = useAuthStore()
 
 // featureGroupOpen 相关状态。
 const featureGroupOpen = ref(true)
@@ -66,6 +70,11 @@ const navGroups = [
 /** 处理 isActive 相关逻辑。 */
 function isActive(path: string): boolean {
   return route.path === path || route.path.startsWith(path + '/')
+}
+
+async function handleLogout() {
+  await authStore.logout()
+  await router.push({ name: 'login' })
 }
 </script>
 
@@ -139,6 +148,31 @@ function isActive(path: string): boolean {
 
     <!-- Footer -->
     <div :class="cn('border-t border-sidebar-border shrink-0', sidebarCollapsed ? 'px-2 py-2' : 'px-4 py-3')">
+      <div
+        v-if="!sidebarCollapsed && authStore.user"
+        class="mb-2 rounded-lg border border-sidebar-border bg-sidebar-accent/40 px-3 py-2"
+      >
+        <p class="truncate text-sm font-medium text-sidebar-accent-foreground">
+          {{ authStore.user.display_name }}
+        </p>
+        <p class="truncate text-xs text-muted-foreground">
+          {{ authStore.user.login_identifier }}
+        </p>
+      </div>
+      <button
+        v-if="authStore.user"
+        title="退出登录"
+        :class="
+          cn(
+            'mb-2 flex w-full items-center rounded-md text-sm text-muted-foreground transition-colors hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground',
+            sidebarCollapsed ? 'justify-center px-0 py-2' : 'gap-2 px-2 py-2',
+          )
+        "
+        @click="handleLogout"
+      >
+        <LogOut class="w-4 h-4 shrink-0" />
+        <span v-if="!sidebarCollapsed">退出登录</span>
+      </button>
       <button
         :title="sidebarCollapsed ? '展开侧边栏' : '收起侧边栏'"
         :class="

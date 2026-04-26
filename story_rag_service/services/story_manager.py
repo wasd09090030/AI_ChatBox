@@ -73,7 +73,12 @@ class StoryManager:
             self.primary_repo.save(story)
         logger.info("Migrated %s stories from JSON to SQLite", len(stories))
 
-    def create_story(self, story_data: StoryCreate, world_name: str) -> StoredStory:
+    def create_story(
+        self,
+        story_data: StoryCreate,
+        world_name: str,
+        owner_user_id: Optional[str] = None,
+    ) -> StoredStory:
         """
         创建新故事
         
@@ -91,12 +96,12 @@ class StoryManager:
             metadata=story_data.metadata
         )
 
-        self.primary_repo.save(story)
+        self.primary_repo.save(story, owner_user_id=owner_user_id)
         
         logger.info(f"Created story: {story.title} (ID: {story.id})")
         return story
     
-    def get_story(self, story_id: str) -> Optional[StoredStory]:
+    def get_story(self, story_id: str, owner_user_id: Optional[str] = None) -> Optional[StoredStory]:
         """
         获取故事
         
@@ -106,15 +111,19 @@ class StoryManager:
         Returns:
             故事对象,如果不存在返回None
         """
-        return self.primary_repo.get(story_id)
+        return self.primary_repo.get(story_id, owner_user_id=owner_user_id)
 
-    def save_story(self, story: StoredStory) -> StoredStory:
+    def save_story(self, story: StoredStory, owner_user_id: Optional[str] = None) -> StoredStory:
         """持久化完整故事对象，并刷新更新时间。"""
         story.updated_at = datetime.now().isoformat()
-        self.primary_repo.save(story)
+        self.primary_repo.save(story, owner_user_id=owner_user_id)
         return story
     
-    def list_stories(self, world_id: Optional[str] = None) -> List[StoredStory]:
+    def list_stories(
+        self,
+        world_id: Optional[str] = None,
+        owner_user_id: Optional[str] = None,
+    ) -> List[StoredStory]:
         """
         列出故事
         
@@ -124,9 +133,14 @@ class StoryManager:
         Returns:
             故事列表
         """
-        return self.primary_repo.list_all(world_id=world_id)
+        return self.primary_repo.list_all(world_id=world_id, owner_user_id=owner_user_id)
     
-    def update_story(self, story_id: str, update_data: StoryUpdate) -> Optional[StoredStory]:
+    def update_story(
+        self,
+        story_id: str,
+        update_data: StoryUpdate,
+        owner_user_id: Optional[str] = None,
+    ) -> Optional[StoredStory]:
         """
         更新故事
         
@@ -137,7 +151,7 @@ class StoryManager:
         Returns:
             更新后的故事,如果不存在返回None
         """
-        story = self.primary_repo.get(story_id)
+        story = self.primary_repo.get(story_id, owner_user_id=owner_user_id)
         if not story:
             return None
         
@@ -149,12 +163,12 @@ class StoryManager:
         
         story.updated_at = datetime.now().isoformat()
         
-        self.primary_repo.save(story)
+        self.primary_repo.save(story, owner_user_id=owner_user_id)
         
         logger.info(f"Updated story: {story.id}")
         return story
     
-    def delete_story(self, story_id: str) -> bool:
+    def delete_story(self, story_id: str, owner_user_id: Optional[str] = None) -> bool:
         """
         删除故事
         
@@ -164,12 +178,17 @@ class StoryManager:
         Returns:
             是否成功删除
         """
-        deleted = self.primary_repo.delete(story_id)
+        deleted = self.primary_repo.delete(story_id, owner_user_id=owner_user_id)
         if deleted:
             logger.info(f"Deleted story: {story_id}")
         return deleted
     
-    def add_segment(self, story_id: str, segment_data: StorySegmentCreate) -> Optional[StoredStory]:
+    def add_segment(
+        self,
+        story_id: str,
+        segment_data: StorySegmentCreate,
+        owner_user_id: Optional[str] = None,
+    ) -> Optional[StoredStory]:
         """
         添加故事片段
         
@@ -180,7 +199,7 @@ class StoryManager:
         Returns:
             更新后的故事,如果不存在返回None
         """
-        story = self.primary_repo.get(story_id)
+        story = self.primary_repo.get(story_id, owner_user_id=owner_user_id)
         if not story:
             return None
         
@@ -199,14 +218,14 @@ class StoryManager:
         if len(story.segments) == 1 and story.title == "未命名故事":
             story.title = segment.prompt[:30] + ("..." if len(segment.prompt) > 30 else "")
         
-        self.primary_repo.save(story)
+        self.primary_repo.save(story, owner_user_id=owner_user_id)
         
         logger.info(f"Added segment to story: {story.id}")
         return story
 
-    def remove_last_segment(self, story_id: str) -> Optional[StoredStory]:
+    def remove_last_segment(self, story_id: str, owner_user_id: Optional[str] = None) -> Optional[StoredStory]:
         """删除最后一个已持久化的故事片段。"""
-        story = self.primary_repo.get(story_id)
+        story = self.primary_repo.get(story_id, owner_user_id=owner_user_id)
         if not story:
             return None
         if not story.segments:
@@ -214,7 +233,7 @@ class StoryManager:
 
         story.segments.pop()
         story.updated_at = datetime.now().isoformat()
-        self.primary_repo.save(story)
+        self.primary_repo.save(story, owner_user_id=owner_user_id)
         logger.info("Removed last segment from story: %s", story.id)
         return story
 
@@ -222,9 +241,10 @@ class StoryManager:
         self,
         story_id: str,
         updates: List[object],
+        owner_user_id: Optional[str] = None,
     ) -> Optional[StoredStory]:
         """批量更新已存在片段的正文内容。"""
-        story = self.primary_repo.get(story_id)
+        story = self.primary_repo.get(story_id, owner_user_id=owner_user_id)
         if not story:
             return None
 
@@ -254,18 +274,23 @@ class StoryManager:
             raise ValueError(f"Unknown segment ids: {', '.join(missing_ids)}")
 
         story.updated_at = datetime.now().isoformat()
-        self.primary_repo.save(story)
+        self.primary_repo.save(story, owner_user_id=owner_user_id)
         logger.info("Updated %d segments in story: %s", len(touched_segment_ids), story.id)
         return story
 
-    def update_story_progress(self, story_id: str, progress_data: StoryProgressUpdate | dict) -> Optional[StoredStory]:
+    def update_story_progress(
+        self,
+        story_id: str,
+        progress_data: StoryProgressUpdate | dict,
+        owner_user_id: Optional[str] = None,
+    ) -> Optional[StoredStory]:
         """显式更新故事剧本推进状态。
 
         仅更新 `progress_data.model_fields_set` 中出现的字段：
         - 传入 `None` 表示删除对应 metadata 键；
         - 传入具体值表示写入/覆盖对应键。
         """
-        story = self.primary_repo.get(story_id)
+        story = self.primary_repo.get(story_id, owner_user_id=owner_user_id)
         if not story:
             return None
 
@@ -306,12 +331,12 @@ class StoryManager:
 
         story.metadata = metadata
         story.updated_at = datetime.now().isoformat()
-        self.primary_repo.save(story)
+        self.primary_repo.save(story, owner_user_id=owner_user_id)
 
         logger.info(f"Updated story progress: {story.id}")
         return story
     
-    def delete_stories_by_world(self, world_id: str) -> int:
+    def delete_stories_by_world(self, world_id: str, owner_user_id: Optional[str] = None) -> int:
         """
         删除某个世界的所有故事
         
@@ -321,7 +346,7 @@ class StoryManager:
         Returns:
             删除的故事数量
         """
-        deleted_count = self.primary_repo.delete_by_world(world_id)
+        deleted_count = self.primary_repo.delete_by_world(world_id, owner_user_id=owner_user_id)
         if deleted_count > 0:
             logger.info(f"Deleted {deleted_count} stories from world: {world_id}")
 

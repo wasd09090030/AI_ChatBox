@@ -7,15 +7,12 @@ import { ZodError } from 'zod'
 import { createAppError, normalizeApiError } from '@/services/errors'
 import { V2GenerateResponseSchema } from '@/services/schemas'
 import { API_PREFIX } from '@/utils/constants'
-import { getUserId } from '@/domains/user/api/userIdentity'
 
 const MAX_CHOICES = 3
 
 /** 处理 getStoryHeaders 相关逻辑。 */
 function getStoryHeaders(contentType = true): Record<string, string> {
-  const headers: Record<string, string> = {
-    'X-User-ID': getUserId(),
-  }
+  const headers: Record<string, string> = {}
   if (contentType) {
     headers['Content-Type'] = 'application/json'
   }
@@ -333,6 +330,7 @@ export async function* streamStoryV2(
   const url = `${API_PREFIX}/story/generate/stream`
   const response = await fetch(url, {
     method: 'POST',
+    credentials: 'include',
     headers: getStoryHeaders(true),
     body: JSON.stringify(payload),
     signal,

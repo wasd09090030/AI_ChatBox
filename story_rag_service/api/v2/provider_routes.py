@@ -9,10 +9,12 @@ import time
 from typing import Optional
 
 import httpx
-from fastapi import APIRouter, Header, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 
+from api.dependencies.auth import get_current_user
 from api.service_context import get_container
 from models.user import UserSettingsUpdate
+from models.user import User
 from services.ai_proxy_service import AIProxyService, PROVIDER_REGISTRY, _resolve_base_url
 
 from .provider_schemas import (
@@ -44,11 +46,11 @@ def _get_user_manager():
 
 
 @router.get("/providers")
-async def get_available_providers(user_id: str = Header(..., alias="X-User-ID")):
+async def get_available_providers(current_user: User = Depends(get_current_user)):
     """获取当前用户可用的提供商列表及可用状态。"""
     try:
         proxy = AIProxyService(_get_user_manager())
-        return {"providers": proxy.get_providers_info(user_id)}
+        return {"providers": proxy.get_providers_info(current_user.id)}
     except HTTPException:
         raise
     except Exception as exc:
@@ -59,21 +61,21 @@ async def get_available_providers(user_id: str = Header(..., alias="X-User-ID"))
 @router.post("/providers/config")
 async def update_provider_config(
     update: ProviderConfigUpdate,
-    user_id: str = Header(..., alias="X-User-ID"),
+    current_user: User = Depends(get_current_user),
 ):
     """更新提供商配置（API Key 与自定义 Base URL）。"""
     try:
         user_manager = _get_user_manager()
-        user_manager.get_or_create_user(user_id)
+        user_manager.get_or_create_user(current_user.id)
 
         if update.api_key is not None:
             if update.api_key.strip():
-                user_manager.update_api_key(user_id, update.provider, update.api_key.strip())
+                user_manager.update_api_key(current_user.id, update.provider, update.api_key.strip())
             else:
-                user_manager.delete_api_key(user_id, update.provider)
+                user_manager.delete_api_key(current_user.id, update.provider)
 
         if update.base_url is not None:
-            user_manager.update_base_url(user_id, update.provider, update.base_url.strip())
+            user_manager.update_base_url(current_user.id, update.provider, update.base_url.strip())
 
         return {"success": True, "provider": update.provider}
     except HTTPException:
@@ -88,13 +90,13 @@ async def update_provider_config(
 @router.post("/providers/test-connection")
 async def test_provider_connection(
     request: TestConnectionRequest,
-    user_id: str = Header(..., alias="X-User-ID"),
+    current_user: User = Depends(get_current_user),
 ):
     """使用用户配置探测提供商连接可用性。"""
     user_manager = _get_user_manager()
     proxy = AIProxyService(user_manager)
 
-    api_key = user_manager.get_decrypted_api_key(user_id, request.provider)
+    api_key = user_manager.get_decrypted_api_key(current_user.id, request.provider)
     if not api_key:
         return {
             "success": False,
@@ -110,7 +112,7 @@ async def test_provider_connection(
             "message": f"未知提供商: {request.provider}",
         }
 
-    user_base_url = proxy.user_manager.get_base_url(user_id, request.provider)
+    user_base_url = proxy.user_manager.get_base_url(current_user.id, request.provider)
     try:
         base_url = _resolve_base_url(cfg, user_base_url, request.base_url)
     except ValueError as exc:
@@ -184,11 +186,11 @@ async def test_provider_connection(
 
 
 @router.get("/providers/default-selection", response_model=DefaultProviderSelection)
-async def get_default_provider_selection(user_id: str = Header(..., alias="X-User-ID")):
+async def get_default_provider_selection(current_user: User = Depends(get_current_user)):
     """获取用户全局默认 provider/model 选择。"""
     try:
         user_manager = _get_user_manager()
-        return DefaultProviderSelection(**user_manager.get_default_provider_selection(user_id))
+        return DefaultProviderSelection(**user_manager.get_default_provider_selection(current_user.id))
     except HTTPException:
         raise
     except Exception as exc:
@@ -199,13 +201,13 @@ async def get_default_provider_selection(user_id: str = Header(..., alias="X-Use
 @router.put("/providers/default-selection", response_model=DefaultProviderSelection)
 async def update_default_provider_selection(
     update: DefaultProviderSelection,
-    user_id: str = Header(..., alias="X-User-ID"),
+    current_user: User = Depends(get_current_user),
 ):
     """保存用户全局默认 provider/model 选择。"""
     try:
         user_manager = _get_user_manager()
         user = user_manager.update_user_settings(
-            user_id,
+            current_user.id,
             UserSettingsUpdate(
                 default_provider=update.provider,
                 default_model=update.model.strip(),
@@ -225,12 +227,12 @@ async def update_default_provider_selection(
 
 
 @router.get("/providers/scene-models", response_model=SceneModelPreferencesResponse)
-async def get_scene_model_preferences(user_id: str = Header(..., alias="X-User-ID")):
+async def get_scene_model_preferences(current_user: User = Depends(get_current_user)):
     """获取用户分场景模型偏好配置。"""
     try:
         user_manager = _get_user_manager()
-        user = user_manager.get_or_create_user(user_id)
-        preferences = user_manager.get_scene_model_preferences(user_id)
+        user = user_manager.get_or_create_user(current_user.id)
+        preferences = user_manager.get_scene_model_preferences(current_user.id)
         preferences["fallback"] = {
             "default_provider": user.settings.default_provider,
             "default_model": user.settings.default_model,
@@ -246,20 +248,20 @@ async def get_scene_model_preferences(user_id: str = Header(..., alias="X-User-I
 @router.put("/providers/scene-models", response_model=SceneModelPreferencesResponse)
 async def update_scene_model_preferences(
     update: SceneModelPreferencesUpdate,
-    user_id: str = Header(..., alias="X-User-ID"),
+    current_user: User = Depends(get_current_user),
 ):
     """更新用户分场景模型偏好配置。"""
     try:
         user_manager = _get_user_manager()
         user = user_manager.update_scene_model_preferences(
-            user_id,
+            current_user.id,
             {
                 "story_generation": update.story_generation.model_dump(),
                 "input_enhancement": update.input_enhancement.model_dump(),
                 "story_adjustment": update.story_adjustment.model_dump(),
             },
         )
-        preferences = user_manager.get_scene_model_preferences(user_id)
+        preferences = user_manager.get_scene_model_preferences(current_user.id)
         preferences["fallback"] = {
             "default_provider": user.settings.default_provider,
             "default_model": user.settings.default_model,
@@ -277,13 +279,13 @@ async def update_scene_model_preferences(
 @router.get("/providers/{provider}/models")
 async def list_provider_models(
     provider: str,
-    user_id: str = Header(..., alias="X-User-ID"),
+    current_user: User = Depends(get_current_user),
     base_url: Optional[str] = Query(None, description="覆盖默认 Base URL"),
 ):
     """拉取提供商模型列表，失败时回退预置模型。"""
     user_manager = _get_user_manager()
 
-    api_key = user_manager.get_decrypted_api_key(user_id, provider)
+    api_key = user_manager.get_decrypted_api_key(current_user.id, provider)
     if not api_key:
         raise HTTPException(status_code=400, detail=f"未找到 {provider} 的 API Key")
 
@@ -291,7 +293,7 @@ async def list_provider_models(
     if not cfg:
         raise HTTPException(status_code=400, detail=f"未知提供商: {provider}")
 
-    user_base_url = user_manager.get_base_url(user_id, provider)
+    user_base_url = user_manager.get_base_url(current_user.id, provider)
     try:
         resolved = _resolve_base_url(cfg, user_base_url, base_url)
     except ValueError as exc:

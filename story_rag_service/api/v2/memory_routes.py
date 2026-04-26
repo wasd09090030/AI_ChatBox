@@ -9,6 +9,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
+from api.dependencies.auth import get_current_user
 from api.dependencies.memory import StoryMemoryDependencies, get_story_memory_dependencies
 from api.v2.schemas import (
     MemorySessionTimelineResponse,
@@ -18,6 +19,7 @@ from api.v2.schemas import (
     StoryMemorySnapshotResponse,
 )
 from application.memory.journal import list_memory_update_events
+from models.user import User
 
 # FastAPI 路由注册器，用于挂载本模块接口。
 router = APIRouter()
@@ -86,12 +88,14 @@ async def get_memory_updates(
     date_to: Optional[str] = Query(default=None),
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=50, ge=1, le=200),
+    current_user: User = Depends(get_current_user),
 ):
     """按多条件分页查询记忆更新日志。"""
     return MemoryUpdateJournalListResponse(
         **list_memory_update_events(
             session_id=_normalize_optional_query(session_id),
             world_id=_normalize_optional_query(world_id),
+            owner_user_id=current_user.id,
             source=_normalize_optional_query(source),
             memory_layer=_normalize_optional_query(memory_layer),
             status=_normalize_optional_query(status),
@@ -112,15 +116,20 @@ async def get_session_memory_updates(
     session_id: str,
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=100, ge=1, le=200),
+    current_user: User = Depends(get_current_user),
     memory_services: StoryMemoryDependencies = Depends(get_story_memory_dependencies),
 ):
     """查询单会话的记忆时间线，并附带当前摘要状态。"""
     result = list_memory_update_events(
         session_id=session_id,
+        owner_user_id=current_user.id,
         page=page,
         page_size=page_size,
     )
-    metadata = memory_services.session_manager.get_session_metadata(session_id)
+    metadata = memory_services.session_manager.get_session_metadata(
+        session_id,
+        owner_user_id=current_user.id,
+    )
     if not metadata and not result["items"]:
         raise HTTPException(status_code=404, detail=f"Session '{session_id}' not found")
 
@@ -147,14 +156,19 @@ async def get_story_memory_snapshot(
     story_id: Optional[str] = Query(default=None),
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=50, ge=1, le=200),
+    current_user: User = Depends(get_current_user),
     memory_services: StoryMemoryDependencies = Depends(get_story_memory_dependencies),
 ):
     """读取单会话统一故事记忆快照。"""
-    metadata = memory_services.session_manager.get_session_metadata(session_id)
+    metadata = memory_services.session_manager.get_session_metadata(
+        session_id,
+        owner_user_id=current_user.id,
+    )
     snapshot = memory_services.story_memory_service.get_story_memory_snapshot(
         session_id=session_id,
         story_id=_normalize_optional_query(story_id),
         world_id=(metadata or {}).get("world_id"),
+        owner_user_id=current_user.id,
         timeline_page=page,
         timeline_page_size=page_size,
     )

@@ -25,9 +25,23 @@ const REMOTE_BASE = API_BASE_URL
 
 class StorageService {
   private prefix = 'chatbox_'
+  private userScope = 'guest'
+
+  setUserScope(userId: string | null) {
+    const normalized = (userId ?? '').trim()
+    this.userScope = normalized ? normalized.replace(/[^a-zA-Z0-9_-]/g, '_') : 'guest'
+  }
+
+  getUserScope() {
+    return this.userScope
+  }
 
   private fullKey(key: string): string {
-    return this.prefix + key
+    return `${this.prefix}${this.userScope}_${key}`
+  }
+
+  private legacyKey(key: string): string {
+    return `${this.prefix}${key}`
   }
 
   private isRemoteSyncable(key: string): boolean {
@@ -37,7 +51,14 @@ class StorageService {
   // ── READ — localStorage first, no network request ──────────────────────
   async getStorage(key: string): Promise<string | null> {
     const localKey = this.fullKey(key)
-    const value = localStorage.getItem(localKey)
+    let value = localStorage.getItem(localKey)
+    if (value === null) {
+      const legacyValue = localStorage.getItem(this.legacyKey(key))
+      if (legacyValue !== null) {
+        localStorage.setItem(localKey, legacyValue)
+        value = legacyValue
+      }
+    }
     if (import.meta.env.DEV) {
       console.log(`[Storage] GET ${localKey} ← localStorage (${value ? value.length + 'b' : 'null'})`)
     }
@@ -53,7 +74,9 @@ class StorageService {
     if (!this.isRemoteSyncable(key)) return null
     const localKey = this.fullKey(key)
     try {
-      const res = await fetch(`${REMOTE_BASE}/${encodeURIComponent(localKey)}`)
+      const res = await fetch(`${REMOTE_BASE}/${encodeURIComponent(localKey)}`, {
+        credentials: 'include',
+      })
       if (res.ok) {
         const data = await res.json()
         localStorage.setItem(localKey, data.value)
@@ -83,6 +106,7 @@ class StorageService {
     if (this.isRemoteSyncable(key)) {
       fetch(`${REMOTE_BASE}/${encodeURIComponent(localKey)}`, {
         method: 'PUT',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ value }),
       }).catch(() => { /* backend optional */ })
@@ -100,7 +124,10 @@ class StorageService {
     localStorage.removeItem(localKey)
 
     if (this.isRemoteSyncable(key)) {
-      fetch(`${REMOTE_BASE}/${encodeURIComponent(localKey)}`, { method: 'DELETE' })
+      fetch(`${REMOTE_BASE}/${encodeURIComponent(localKey)}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      })
         .catch(() => {})
     }
 
@@ -112,19 +139,21 @@ class StorageService {
 
   // ── CLEAR ALL ──────────────────────────────────────────────────────────
   async clearAll(): Promise<boolean> {
-    const keys = Object.keys(localStorage).filter((k) => k.startsWith(this.prefix))
+    const scopedPrefix = `${this.prefix}${this.userScope}_`
+    const keys = Object.keys(localStorage).filter((k) => k.startsWith(scopedPrefix))
     keys.forEach((k) => localStorage.removeItem(k))
-    fetch(`${REMOTE_BASE}`, { method: 'DELETE' }).catch(() => {})
+    fetch(`${REMOTE_BASE}`, { method: 'DELETE', credentials: 'include' }).catch(() => {})
     console.log(`[Storage] Cleared ${keys.length} local items + queued remote clear`)
     return true
   }
 
   // ── HELPERS ────────────────────────────────────────────────────────────
   getAllKeys(): string[] {
+    const scopedPrefix = `${this.prefix}${this.userScope}_`
     try {
       return Object.keys(localStorage)
-        .filter((key) => key.startsWith(this.prefix))
-        .map((key) => key.substring(this.prefix.length))
+        .filter((key) => key.startsWith(scopedPrefix))
+        .map((key) => key.substring(scopedPrefix.length))
     } catch {
       return []
     }
@@ -139,10 +168,11 @@ class StorageService {
   }
 
   getStorageSize(): number {
+    const scopedPrefix = `${this.prefix}${this.userScope}_`
     try {
       let total = 0
       Object.keys(localStorage)
-        .filter((key) => key.startsWith(this.prefix))
+        .filter((key) => key.startsWith(scopedPrefix))
         .forEach((key) => {
           const v = localStorage.getItem(key)
           if (v) total += key.length + v.length

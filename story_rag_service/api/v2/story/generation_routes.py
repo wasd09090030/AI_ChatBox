@@ -14,7 +14,7 @@ import re
 import time
 from typing import AsyncGenerator, List, Optional, Tuple
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
 
 from application.memory.events import build_memory_operation_id
@@ -26,6 +26,7 @@ from application.story_generation import (
     record_generation_failure,
     record_generation_success,
 )
+from api.dependencies.auth import get_current_user
 from api.dependencies.generation import StoryGenerationDependencies, get_story_generation_dependencies
 from api.v2.schemas import (
     V2GenerateRequest,
@@ -33,6 +34,7 @@ from api.v2.schemas import (
     V2InputEnhancementPreviewRequest,
     V2InputEnhancementPreviewResponse,
 )
+from models.user import User
 
 # 模块日志记录器，用于输出运行诊断信息。
 logger = logging.getLogger(__name__)
@@ -41,24 +43,6 @@ router = APIRouter()
 # 统一匹配 choices 模式输出中的候选项标记，并在响应层截断为前 3 项。
 _MAX_CHOICES = 3
 _CHOICE_LINE_RE = re.compile(r"^\[(?:选项\s*\d+|[A-Z])\]\s*(.+)$")
-
-
-def _validate_user_header_for_generation(user_id: Optional[str], *, provider: Optional[str], model: Optional[str]) -> None:
-    """校验生成请求是否必须携带 X-User-ID。
-
-    当请求显式指定 provider，或未指定 model（可能依赖用户默认模型）时，
-    必须提供用户作用域标识，避免跨用户配置歧义。
-    """
-    # 显式 provider 或未传 model 时，可能依赖用户默认配置，必须携带用户作用域。
-    if not user_id and (provider is not None or not (model or "").strip()):
-        raise HTTPException(
-            status_code=400,
-            detail=(
-                "X-User-ID header is required for story generation when provider is specified "
-                "or model is omitted."
-            ),
-        )
-
 
 def _extract_choices_and_text(raw_text: str) -> Tuple[List[str], str]:
     """从文本中提取候选项，并返回去标记后的正文。"""
@@ -130,14 +114,13 @@ async def _inject_choices_for_stream(
 async def generate_story_v2(
     http_request: Request,
     request: V2GenerateRequest,
-    user_id: Optional[str] = Header(None, alias="X-User-ID"),
+    current_user: User = Depends(get_current_user),
     generation_services: StoryGenerationDependencies = Depends(get_story_generation_dependencies),
 ):
     """非流式故事生成入口（v2）。
 
     路由层仅负责：请求校验、调用图执行、记录观测/分析事件、返回标准响应。
     """
-    _validate_user_header_for_generation(user_id, provider=request.provider, model=request.model)
     start_time = time.perf_counter()
     thread_id = request.thread_id or request.session_id
     request_id = getattr(http_request.state, "request_id", "-")
@@ -161,7 +144,7 @@ async def generate_story_v2(
         response = await execute_story_graph_generation(
             request_payload=request_payload,
             thread_id=thread_id,
-            user_id=user_id,
+            user_id=current_user.id,
         )
         request_total_time = time.perf_counter() - start_time
 
@@ -195,7 +178,7 @@ async def generate_story_v2(
 @router.post("/story/input-enhancement/preview", response_model=V2InputEnhancementPreviewResponse)
 async def preview_input_enhancement(
     request: V2InputEnhancementPreviewRequest,
-    user_id: Optional[str] = Header(None, alias="X-User-ID"),
+    current_user: User = Depends(get_current_user),
     generation_services: StoryGenerationDependencies = Depends(get_story_generation_dependencies),
 ):
     """预览输入增强结果，不执行正式故事生成。"""
@@ -207,6 +190,7 @@ async def preview_input_enhancement(
             "character_card_id": request.character_card_id,
             "persona_id": request.persona_id,
         },
+        owner_user_id=current_user.id,
     )
 
     internal_request = build_story_generation_request(
@@ -214,21 +198,23 @@ async def preview_input_enhancement(
         session_context=session_context,
         enhance_input=True,
     )
-    preview = await generation_services.story_generator.preview_enhanced_input(internal_request, user_id=user_id)
+    preview = await generation_services.story_generator.preview_enhanced_input(
+        internal_request,
+        user_id=current_user.id,
+    )
     return V2InputEnhancementPreviewResponse(**preview)
 
 
 @router.post("/story/generate/stream")
 async def generate_story_stream_v2(
     request: V2GenerateRequest,
-    user_id: Optional[str] = Header(None, alias="X-User-ID"),
+    current_user: User = Depends(get_current_user),
     generation_services: StoryGenerationDependencies = Depends(get_story_generation_dependencies),
 ):
     """流式故事生成入口（SSE）。
 
     由 StoryGenerator 输出增量事件，并在 choices 模式下做最终事件重写。
     """
-    _validate_user_header_for_generation(user_id, provider=request.provider, model=request.model)
     thread_id = request.thread_id or request.session_id
 
     session_context = load_or_create_story_session_context(
@@ -239,6 +225,7 @@ async def generate_story_stream_v2(
             "character_card_id": request.character_card_id,
             "persona_id": request.persona_id,
         },
+        owner_user_id=current_user.id,
     )
 
     operation_id = build_memory_operation_id("generate")
@@ -250,7 +237,10 @@ async def generate_story_stream_v2(
         memory_operation_sequence_start=1,
     )
 
-    stream = generation_services.story_generator.generate_story_stream(internal_request, user_id=user_id)
+    stream = generation_services.story_generator.generate_story_stream(
+        internal_request,
+        user_id=current_user.id,
+    )
     return StreamingResponse(
         _inject_choices_for_stream(stream, request.mode),
         media_type="text/event-stream",

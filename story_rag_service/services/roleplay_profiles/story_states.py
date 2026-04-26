@@ -19,15 +19,29 @@ class StoryStateStore:
         """注入底层 SQLite 存储对象。"""
         self._db = db
 
-    def get(self, session_id: str) -> Optional[StoryState]:
+    def get(self, session_id: str, owner_user_id: Optional[str] = None) -> Optional[StoryState]:
         """按会话 ID 查询剧情状态。"""
         with self._db.connect() as conn:
-            row = conn.execute("SELECT * FROM story_states WHERE session_id = ?", (session_id,)).fetchone()
+            if owner_user_id is None:
+                row = conn.execute(
+                    "SELECT * FROM story_states WHERE session_id = ?",
+                    (session_id,),
+                ).fetchone()
+            else:
+                row = conn.execute(
+                    "SELECT * FROM story_states WHERE session_id = ? AND owner_user_id = ?",
+                    (session_id, owner_user_id),
+                ).fetchone()
         return row_to_story_state(row) if row else None
 
-    def upsert(self, session_id: str, data: StoryStateUpdate) -> StoryState:
+    def upsert(
+        self,
+        session_id: str,
+        data: StoryStateUpdate,
+        owner_user_id: Optional[str] = None,
+    ) -> StoryState:
         """新增或更新会话剧情状态并返回最新快照。"""
-        existing = self.get(session_id)
+        existing = self.get(session_id, owner_user_id=owner_user_id)
         payload = data.model_dump(exclude_unset=True)
 
         if existing is None:
@@ -45,12 +59,13 @@ class StoryStateStore:
                 conn.execute(
                     """
                     INSERT INTO story_states (
-                        session_id, chapter, objective, conflict,
+                        session_id, owner_user_id, chapter, objective, conflict,
                         clues, relationship_arcs, metadata, updated_at
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """,
                     (
                         state.session_id,
+                        owner_user_id,
                         state.chapter,
                         state.objective,
                         state.conflict,
@@ -67,24 +82,45 @@ class StoryStateStore:
         merged.updated_at = datetime.now()
 
         with self._db.connect() as conn:
-            conn.execute(
-                """
-                UPDATE story_states
-                SET chapter = ?, objective = ?, conflict = ?, clues = ?,
-                    relationship_arcs = ?, metadata = ?, updated_at = ?
-                WHERE session_id = ?
-                """,
-                (
-                    merged.chapter,
-                    merged.objective,
-                    merged.conflict,
-                    json.dumps(merged.clues, ensure_ascii=False),
-                    json.dumps(merged.relationship_arcs, ensure_ascii=False),
-                    json.dumps(merged.metadata, ensure_ascii=False),
-                    merged.updated_at.isoformat(),
-                    session_id,
-                ),
-            )
+            if owner_user_id is None:
+                conn.execute(
+                    """
+                    UPDATE story_states
+                    SET chapter = ?, objective = ?, conflict = ?, clues = ?,
+                        relationship_arcs = ?, metadata = ?, updated_at = ?
+                    WHERE session_id = ?
+                    """,
+                    (
+                        merged.chapter,
+                        merged.objective,
+                        merged.conflict,
+                        json.dumps(merged.clues, ensure_ascii=False),
+                        json.dumps(merged.relationship_arcs, ensure_ascii=False),
+                        json.dumps(merged.metadata, ensure_ascii=False),
+                        merged.updated_at.isoformat(),
+                        session_id,
+                    ),
+                )
+            else:
+                conn.execute(
+                    """
+                    UPDATE story_states
+                    SET chapter = ?, objective = ?, conflict = ?, clues = ?,
+                        relationship_arcs = ?, metadata = ?, updated_at = ?
+                    WHERE session_id = ? AND owner_user_id = ?
+                    """,
+                    (
+                        merged.chapter,
+                        merged.objective,
+                        merged.conflict,
+                        json.dumps(merged.clues, ensure_ascii=False),
+                        json.dumps(merged.relationship_arcs, ensure_ascii=False),
+                        json.dumps(merged.metadata, ensure_ascii=False),
+                        merged.updated_at.isoformat(),
+                        session_id,
+                        owner_user_id,
+                    ),
+                )
             conn.commit()
 
         return merged

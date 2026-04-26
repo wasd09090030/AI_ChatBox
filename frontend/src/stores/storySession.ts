@@ -153,6 +153,18 @@ export const useStorySessionStore = defineStore('storySession', () => {
   /** Prevents watchers from writing empty state before loadFromStorage finishes */
   const _loaded = ref(false)
 
+  function resetSessionState() {
+    summaryMap.value = {}
+    runtimeMemoryEventsBySession.value = {}
+    entityStateMap.value = {}
+    entityUpdateMap.value = {}
+    worldUpdateMap.value = {}
+    storyMemorySessionMap.value = {}
+    runtimeSummaryStateBySession.value = {}
+    branchTrees.value = {}
+    _loaded.value = false
+  }
+
   // ── Persistence ───────────────────────────────────────────────────────────
 
   /**
@@ -162,6 +174,8 @@ export const useStorySessionStore = defineStore('storySession', () => {
    * Call once in App.vue `onMounted`.
    */
   async function loadFromStorage() {
+    resetSessionState()
+
     let summaryRaw  = await storage.getStorage(STORAGE_KEYS.summaryMap)
     let eventsRaw   = await storage.getStorage(STORAGE_KEYS.memoryEvents)
     let entityStatesRaw = await storage.getStorage(STORAGE_KEYS.entityStates)
@@ -768,14 +782,7 @@ export const useStorySessionStore = defineStore('storySession', () => {
   }
 
   async function clearAll() {
-    summaryMap.value  = {}
-    runtimeMemoryEventsBySession.value = {}
-    entityStateMap.value = {}
-    entityUpdateMap.value = {}
-    worldUpdateMap.value = {}
-    storyMemorySessionMap.value = {}
-    runtimeSummaryStateBySession.value = {}
-    branchTrees.value = {}
+    resetSessionState()
     await Promise.all([
       storage.deleteStorage(STORAGE_KEYS.summaryMap),
       storage.deleteStorage(STORAGE_KEYS.memoryEvents),
@@ -899,5 +906,6 @@ export const useStorySessionStore = defineStore('storySession', () => {
     rollbackBranchNode,
     getBranchTree,
     buildEChartsTree,
+    resetSessionState,
   }
 })

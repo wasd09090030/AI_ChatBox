@@ -7,7 +7,6 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { API_PREFIX } from '@/utils/constants'
 import { useConfigStore } from '@/stores/config'
-import { getUserId } from '@/domains/user/api/userIdentity'
 
 /** 处理 asRecord 相关逻辑。 */
 function asRecord(value: unknown): Record<string, unknown> {
@@ -131,7 +130,7 @@ export const useRagStoryStore = defineStore('ragStory', () => {
   const configStore = useConfigStore()
 
   function getRequestHeaders(contentType = true): Record<string, string> {
-    const headers: Record<string, string> = { 'X-User-ID': getUserId() }
+    const headers: Record<string, string> = {}
     if (contentType) {
       headers['Content-Type'] = 'application/json'
     }
@@ -175,7 +174,7 @@ export const useRagStoryStore = defineStore('ragStory', () => {
     error.value = null
     
     try {
-      const response = await fetch(`${API_BASE}/worlds`)
+      const response = await fetch(`${API_BASE}/worlds`, { credentials: 'include' })
       if (!response.ok) throw new Error('Failed to load worlds')
       
       const data = await response.json()
@@ -201,6 +200,7 @@ export const useRagStoryStore = defineStore('ragStory', () => {
     try {
       const response = await fetch(`${API_BASE}/worlds`, {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(worldData)
       })
@@ -227,7 +227,8 @@ export const useRagStoryStore = defineStore('ragStory', () => {
     
     try {
       const response = await fetch(`${API_BASE}/worlds/${worldId}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        credentials: 'include',
       })
       
       if (!response.ok) throw new Error('Failed to delete world')
@@ -255,6 +256,7 @@ export const useRagStoryStore = defineStore('ragStory', () => {
     try {
       const response = await fetch(`${API_BASE}/worlds/${worldId}`, {
         method: 'PUT',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(worldData)
       })
@@ -297,6 +299,7 @@ export const useRagStoryStore = defineStore('ragStory', () => {
     try {
       const response = await fetch(`${API_BASE}/stories`, {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           world_id: worldId,
@@ -337,6 +340,7 @@ export const useRagStoryStore = defineStore('ragStory', () => {
     try {
       const response = await fetch(`${API_BASE}/stories/${storyId}`, {
         method: 'PUT',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updateData)
       })
@@ -359,6 +363,7 @@ export const useRagStoryStore = defineStore('ragStory', () => {
     try {
       const response = await fetch(`${API_BASE}/stories/${storyId}/segments`, {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           prompt,
@@ -382,7 +387,7 @@ export const useRagStoryStore = defineStore('ragStory', () => {
 
     try {
       const url = worldId ? `${API_BASE}/stories?world_id=${worldId}` : `${API_BASE}/stories`
-      const response = await fetch(url)
+      const response = await fetch(url, { credentials: 'include' })
 
       if (!response.ok) throw new Error('Failed to load stories')
 
@@ -438,6 +443,7 @@ export const useRagStoryStore = defineStore('ragStory', () => {
     try {
       const response = await fetch(`${API_BASE}/story/generate`, {
         method: 'POST',
+        credentials: 'include',
         headers: getRequestHeaders(true),
         body: JSON.stringify({
           session_id: currentStoryId.value,
@@ -550,7 +556,8 @@ export const useRagStoryStore = defineStore('ragStory', () => {
   async function deleteStory(storyId: string) {
     try {
       const response = await fetch(`${API_BASE}/stories/${storyId}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        credentials: 'include',
       })
 
       if (response.ok) {

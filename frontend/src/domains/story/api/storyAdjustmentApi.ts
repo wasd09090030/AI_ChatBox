@@ -3,13 +3,11 @@
  */
 
 import api from '@/services/api'
-import { getUserId } from '@/domains/user/api/userIdentity'
 
 /** 处理 getStoryHeaders 相关逻辑。 */
 function getStoryHeaders(): Record<string, string> {
   return {
     'Content-Type': 'application/json',
-    'X-User-ID': getUserId(),
   }
 }
 

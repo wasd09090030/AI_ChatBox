@@ -52,6 +52,7 @@ class StoryConsistencyRebuildService:
         *,
         story,
         session_id: str,
+        owner_user_id: Optional[str] = None,
         source: str = "story_adjustment_commit",
         operation_id: Optional[str] = None,
         sequence_start: int = 1,
@@ -66,7 +67,11 @@ class StoryConsistencyRebuildService:
         3. 历史索引重建；
         4. 可选实体状态重建。
         """
-        self.session_manager.get_or_create_session(session_id, world_id=story.world_id)
+        self.session_manager.get_or_create_session(
+            session_id,
+            world_id=story.world_id,
+            owner_user_id=owner_user_id,
+        )
         memory_updates: list[dict[str, Any]] = []
 
         now = datetime.now()
@@ -103,8 +108,16 @@ class StoryConsistencyRebuildService:
                 )
                 cached_messages.append(Message(role="assistant", content=content_text, timestamp=assistant_time))
 
-        self.session_manager.replace_session_messages(session_id, persisted_messages)
-        self.session_manager.set_first_message_sent(session_id, bool(persisted_messages))
+        self.session_manager.replace_session_messages(
+            session_id,
+            persisted_messages,
+            owner_user_id=owner_user_id,
+        )
+        self.session_manager.set_first_message_sent(
+            session_id,
+            bool(persisted_messages),
+            owner_user_id=owner_user_id,
+        )
         self.session_manager.rebuild_cached_context(session_id, cached_messages)
         memory_updates.append(
             build_memory_update_event(
@@ -172,7 +185,10 @@ class StoryConsistencyRebuildService:
         if self.entity_state_manager is not None or self.entity_state_fallback_service is not None:
             runtime_state = None
             if self.story_runtime_manager is not None:
-                runtime_state = self.story_runtime_manager.get_runtime_state(story.id)
+                runtime_state = self.story_runtime_manager.get_runtime_state(
+                    story.id,
+                    owner_user_id=owner_user_id,
+                )
             try:
                 if (
                     prefer_event_replay

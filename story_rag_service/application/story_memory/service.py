@@ -37,6 +37,7 @@ class StoryMemoryService:
         session_id: str,
         story_id: Optional[str] = None,
         world_id: Optional[str] = None,
+        owner_user_id: Optional[str] = None,
         timeline_page: int = 1,
         timeline_page_size: int = 50,
     ) -> Dict[str, Any]:
@@ -49,9 +50,12 @@ class StoryMemoryService:
         - memory_update_journal: timeline 层。
         """
         resolved_story_id = self._resolve_story_id(session_id=session_id, explicit_story_id=story_id)
-        session_metadata = self._load_session_metadata(session_id)
+        session_metadata = self._load_session_metadata(session_id, owner_user_id=owner_user_id)
         summary_snapshot = self._load_summary_snapshot(session_id)
-        runtime_snapshot = self._load_runtime_snapshot(resolved_story_id)
+        runtime_snapshot = self._load_runtime_snapshot(
+            resolved_story_id,
+            owner_user_id=owner_user_id,
+        )
         resolved_world_id = world_id or (session_metadata or {}).get("world_id") or runtime_snapshot.get("world_id")
         entity_snapshot = self._load_entity_snapshot(
             story_id=resolved_story_id,
@@ -59,6 +63,7 @@ class StoryMemoryService:
         )
         timeline_result = list_memory_update_events(
             session_id=session_id,
+            owner_user_id=owner_user_id,
             page=timeline_page,
             page_size=timeline_page_size,
         )
@@ -97,11 +102,19 @@ class StoryMemoryService:
             return self.story_runtime_manager.derive_story_id(session_id)
         return None
 
-    def _load_session_metadata(self, session_id: str) -> Optional[Dict[str, Any]]:
+    def _load_session_metadata(
+        self,
+        session_id: str,
+        *,
+        owner_user_id: Optional[str] = None,
+    ) -> Optional[Dict[str, Any]]:
         """读取会话元数据（如 world_id）。"""
         if not self.session_manager:
             return None
-        return self.session_manager.get_session_metadata(session_id)
+        return self.session_manager.get_session_metadata(
+            session_id,
+            owner_user_id=owner_user_id,
+        )
 
     def _load_summary_snapshot(self, session_id: str) -> Optional[Dict[str, Any]]:
         """读取摘要记忆快照。"""
@@ -109,11 +122,19 @@ class StoryMemoryService:
             return None
         return self.summary_memory_manager.get_summary(session_id)
 
-    def _load_runtime_snapshot(self, story_id: Optional[str]) -> Dict[str, Any]:
+    def _load_runtime_snapshot(
+        self,
+        story_id: Optional[str],
+        *,
+        owner_user_id: Optional[str] = None,
+    ) -> Dict[str, Any]:
         """读取剧本运行时快照并转为 JSON 结构。"""
         if not story_id or not self.story_runtime_manager:
             return {}
-        runtime_state = self.story_runtime_manager.get_runtime_state(story_id)
+        runtime_state = self.story_runtime_manager.get_runtime_state(
+            story_id,
+            owner_user_id=owner_user_id,
+        )
         if runtime_state is None:
             return {}
         return runtime_state.model_dump(mode="json")

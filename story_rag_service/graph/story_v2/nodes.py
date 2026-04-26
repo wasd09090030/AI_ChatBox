@@ -31,6 +31,7 @@ async def prepare_request_node(state: StoryGraphState) -> Dict[str, Any]:
     context = load_or_create_story_session_context(
         session_store=services.session_manager,
         payload=payload,
+        owner_user_id=state.get("user_id"),
     )
     internal_request = build_story_generation_request_from_payload(
         payload=payload,
@@ -53,6 +54,7 @@ async def update_story_state_node(state: StoryGraphState) -> Dict[str, Any]:
         user_input=internal_request.user_input,
         story_state_mode=internal_request.story_state_mode,
         story_state_enabled=feature_flags.rp_story_state_enabled,
+        owner_user_id=state.get("user_id"),
     )
     return {"story_state_snapshot": story_state_snapshot} if story_state_snapshot is not None else {}
 
@@ -79,6 +81,7 @@ async def persist_session_node(state: StoryGraphState) -> Dict[str, Any]:
         session_store=services.session_manager,
         session_id=internal_request.session_id,
         updated_context=internal_response.updated_context,
+        owner_user_id=state.get("user_id"),
     )
     return {}
 

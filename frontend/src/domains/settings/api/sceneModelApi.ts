@@ -3,7 +3,6 @@
  */
 
 import api from '@/services/api'
-import { getUserHeaders } from '@/domains/user/api/userIdentity'
 import type { SceneModelPreference, SceneModelPreferences } from '@/utils/types'
 
 interface SceneModelPreferencesResponse {
@@ -36,9 +35,7 @@ export function createEmptySceneModelPreferences(): SceneModelPreferences {
 
 /** 处理 fetchSceneModelPreferences 相关逻辑。 */
 export async function fetchSceneModelPreferences(): Promise<SceneModelPreferences> {
-  const response = await api.get<SceneModelPreferencesResponse>('/providers/scene-models', {
-    headers: getUserHeaders(),
-  })
+  const response = await api.get<SceneModelPreferencesResponse>('/providers/scene-models')
 
   return {
     story_generation: normalizePreference(response.data.story_generation),
@@ -51,13 +48,7 @@ export async function fetchSceneModelPreferences(): Promise<SceneModelPreference
 export async function saveSceneModelPreferences(
   preferences: SceneModelPreferences,
 ): Promise<SceneModelPreferences> {
-  const response = await api.put<SceneModelPreferencesResponse>(
-    '/providers/scene-models',
-    preferences,
-    {
-      headers: getUserHeaders(),
-    },
-  )
+  const response = await api.put<SceneModelPreferencesResponse>('/providers/scene-models', preferences)
 
   return {
     story_generation: normalizePreference(response.data.story_generation),

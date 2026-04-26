@@ -57,6 +57,7 @@ class MemoryOrchestrator:
         *,
         request: StoryGenerationRequest,
         context: StoryContext,
+        owner_user_id: Optional[str] = None,
         history_k: int = 5,
         history_score_threshold: Optional[float] = None,
         assistant_weight: Optional[float] = None,
@@ -75,6 +76,7 @@ class MemoryOrchestrator:
             context=context,
             lorebook_manager=self.lorebook_manager,
             history_manager=self.history_manager,
+            owner_user_id=owner_user_id,
             recent_message_count=self.recent_message_count,
             history_k=history_k,
             history_score_threshold=history_score_threshold,
@@ -83,13 +85,26 @@ class MemoryOrchestrator:
         )
 
         # 第二步：按层加载可选快照。各层缺失不抛错，保持 bundle 结构稳定。
-        world_config = load_world_config(self.world_manager, world_id, log_prefix=log_prefix)
-        profile_snapshot = self._load_profile_snapshot(request)
+        world_config = load_world_config(
+            self.world_manager,
+            world_id,
+            log_prefix=log_prefix,
+            owner_user_id=owner_user_id,
+        )
+        profile_snapshot = self._load_profile_snapshot(request, owner_user_id=owner_user_id)
         dialogue_controls = self._build_dialogue_controls(request)
         summary_memory = self._load_summary_memory(request.session_id, activation_logs)
-        script_guidance = self._load_script_guidance(request, activation_logs)
+        script_guidance = self._load_script_guidance(
+            request,
+            activation_logs,
+            owner_user_id=owner_user_id,
+        )
         story_id = self._resolve_story_id(request.session_id, getattr(request, "story_id", None))
-        runtime_snapshot = self._load_runtime_snapshot(story_id, activation_logs)
+        runtime_snapshot = self._load_runtime_snapshot(
+            story_id,
+            activation_logs,
+            owner_user_id=owner_user_id,
+        )
         entity_memory = self._load_entity_memory(
             story_id=story_id,
             session_id=request.session_id,
@@ -162,10 +177,19 @@ class MemoryOrchestrator:
             "activation_logs": activation_logs,
         }
 
-    def _load_profile_snapshot(self, request: StoryGenerationRequest) -> Dict[str, Any]:
+    def _load_profile_snapshot(
+        self,
+        request: StoryGenerationRequest,
+        *,
+        owner_user_id: Optional[str] = None,
+    ) -> Dict[str, Any]:
         """加载 profile 层快照（persona/character_card/story_state）。"""
         try:
-            return load_profile_snapshot(self.roleplay_manager, request)
+            return load_profile_snapshot(
+                self.roleplay_manager,
+                request,
+                owner_user_id=owner_user_id,
+            )
         except Exception:
             return {}
 
@@ -178,10 +202,16 @@ class MemoryOrchestrator:
         self,
         request: StoryGenerationRequest,
         activation_logs: List[Dict[str, Any]],
+        *,
+        owner_user_id: Optional[str] = None,
     ) -> Dict[str, Any]:
         """加载 script guidance，并在命中时写 activation_logs。"""
         try:
-            script_guidance = load_script_guidance(self.script_design_app, request)
+            script_guidance = load_script_guidance(
+                self.script_design_app,
+                request,
+                owner_user_id=owner_user_id,
+            )
         except Exception:
             return {}
 
@@ -238,11 +268,16 @@ class MemoryOrchestrator:
         self,
         story_id: Optional[str],
         activation_logs: List[Dict[str, Any]],
+        *,
+        owner_user_id: Optional[str] = None,
     ) -> Optional[Dict[str, Any]]:
         """加载 runtime 层快照，并将主线定位信息写入激活日志。"""
         if not story_id or not self.story_runtime_manager:
             return None
-        runtime_state = self.story_runtime_manager.get_runtime_state(story_id)
+        runtime_state = self.story_runtime_manager.get_runtime_state(
+            story_id,
+            owner_user_id=owner_user_id,
+        )
         if runtime_state:
             activation_logs.append(
                 {

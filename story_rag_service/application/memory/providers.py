@@ -34,7 +34,12 @@ def _build_default_self_persona() -> Dict[str, Any]:
     ).model_dump()
 
 
-def load_profile_snapshot(roleplay_manager, request: StoryGenerationRequest) -> Dict[str, Any]:
+def load_profile_snapshot(
+    roleplay_manager,
+    request: StoryGenerationRequest,
+    *,
+    owner_user_id: Optional[str] = None,
+) -> Dict[str, Any]:
     """加载角色画像层快照。
 
     返回字段约定：
@@ -55,7 +60,10 @@ def load_profile_snapshot(roleplay_manager, request: StoryGenerationRequest) -> 
     try:
         # persona 的优先级：显式 persona_id > 默认“你自己”。
         if request.persona_id:
-            persona = roleplay_manager.get_persona(request.persona_id)
+            persona = roleplay_manager.get_persona(
+                request.persona_id,
+                owner_user_id=owner_user_id,
+            )
             if persona is not None:
                 snapshot["persona"] = persona.model_dump()
         else:
@@ -63,7 +71,10 @@ def load_profile_snapshot(roleplay_manager, request: StoryGenerationRequest) -> 
 
         # 仅在 story_state_mode 开启时读取长期状态，避免无谓 I/O。
         if (request.story_state_mode or "off") != "off":
-            state = roleplay_manager.get_story_state(request.session_id)
+            state = roleplay_manager.get_story_state(
+                request.session_id,
+                owner_user_id=owner_user_id,
+            )
             if state is not None:
                 snapshot["story_state"] = state.model_dump()
     except Exception as exc:
@@ -88,7 +99,12 @@ def build_dialogue_controls(request: StoryGenerationRequest) -> Dict[str, Any]:
     }
 
 
-def load_script_guidance(script_design_app, request: StoryGenerationRequest) -> Dict[str, Any]:
+def load_script_guidance(
+    script_design_app,
+    request: StoryGenerationRequest,
+    *,
+    owner_user_id: Optional[str] = None,
+) -> Dict[str, Any]:
     """读取并裁剪剧本引导快照。
 
     激活条件：request 同时提供 script_design_id 且 follow_script_design 为真。
@@ -102,7 +118,10 @@ def load_script_guidance(script_design_app, request: StoryGenerationRequest) -> 
         return {}
 
     try:
-        script_design = script_design_app.get_script_design(script_design_id)
+        script_design = script_design_app.get_script_design(
+            script_design_id,
+            owner_user_id=owner_user_id,
+        )
     except Exception as exc:
         logger.warning("Failed to load script design: %s", exc)
         return {}

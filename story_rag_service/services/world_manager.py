@@ -59,25 +59,30 @@ class WorldManager:
             self.primary_repo.save(world)
         logger.info("Migrated %s worlds from JSON to SQLite", len(worlds))
 
-    def create_world(self, world_create: WorldCreate) -> World:
+    def create_world(self, world_create: WorldCreate, owner_user_id: Optional[str] = None) -> World:
         """创建新世界。"""
         world = World(**world_create.model_dump())
-        self.primary_repo.save(world)
+        self.primary_repo.save(world, owner_user_id=owner_user_id)
 
         logger.info(f"Created world: {world.name} (ID: {world.id})")
         return world
     
-    def get_world(self, world_id: str) -> Optional[World]:
+    def get_world(self, world_id: str, owner_user_id: Optional[str] = None) -> Optional[World]:
         """按 world_id 获取世界。"""
-        return self.primary_repo.get(world_id)
+        return self.primary_repo.get(world_id, owner_user_id=owner_user_id)
     
-    def list_worlds(self) -> List[World]:
+    def list_worlds(self, owner_user_id: Optional[str] = None) -> List[World]:
         """列出全部世界。"""
-        return self.primary_repo.list_all()
+        return self.primary_repo.list_all(owner_user_id=owner_user_id)
     
-    def update_world(self, world_id: str, world_update: WorldUpdate) -> Optional[World]:
+    def update_world(
+        self,
+        world_id: str,
+        world_update: WorldUpdate,
+        owner_user_id: Optional[str] = None,
+    ) -> Optional[World]:
         """更新世界信息。"""
-        world = self.primary_repo.get(world_id)
+        world = self.primary_repo.get(world_id, owner_user_id=owner_user_id)
         if not world:
             return None
         
@@ -89,22 +94,22 @@ class WorldManager:
         from datetime import datetime
         world.updated_at = datetime.now()
         
-        self.primary_repo.save(world)
+        self.primary_repo.save(world, owner_user_id=owner_user_id)
 
         logger.info(f"Updated world: {world.name} (ID: {world_id})")
         return world
     
-    def delete_world(self, world_id: str) -> bool:
+    def delete_world(self, world_id: str, owner_user_id: Optional[str] = None) -> bool:
         """删除世界。"""
-        world = self.primary_repo.get(world_id)
+        world = self.primary_repo.get(world_id, owner_user_id=owner_user_id)
         if not world:
             return False
 
-        deleted = self.primary_repo.delete(world_id)
+        deleted = self.primary_repo.delete(world_id, owner_user_id=owner_user_id)
         if deleted:
             logger.info(f"Deleted world: {world.name} (ID: {world_id})")
         return deleted
     
-    def world_exists(self, world_id: str) -> bool:
+    def world_exists(self, world_id: str, owner_user_id: Optional[str] = None) -> bool:
         """判断世界是否存在。"""
-        return self.primary_repo.exists(world_id)
+        return self.primary_repo.exists(world_id, owner_user_id=owner_user_id)

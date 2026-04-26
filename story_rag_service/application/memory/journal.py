@@ -197,6 +197,7 @@ def list_memory_update_events(
     *,
     session_id: Optional[str] = None,
     world_id: Optional[str] = None,
+    owner_user_id: Optional[str] = None,
     source: Optional[str] = None,
     memory_layer: Optional[str] = None,
     status: Optional[str] = None,
@@ -222,6 +223,9 @@ def list_memory_update_events(
     if world_id:
         where_clauses.append("s.world_id = ?")
         params.append(world_id)
+    if owner_user_id:
+        where_clauses.append("s.owner_user_id = ?")
+        params.append(owner_user_id)
     if source:
         where_clauses.append("j.source = ?")
         params.append(source)

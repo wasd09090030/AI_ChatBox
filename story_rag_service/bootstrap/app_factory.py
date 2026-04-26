@@ -17,6 +17,7 @@ from application.story_generation import shutdown_story_graph_runtime
 from bootstrap.config_resolver import resolve_bootstrap_runtime_config
 from bootstrap.container import init_services, reset_container
 from bootstrap.modules.core import create_database, create_user_manager, ensure_upload_directory
+from config import settings
 
 logging.basicConfig(
     level=logging.INFO,
@@ -61,10 +62,16 @@ def create_app() -> FastAPI:
 
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],
+        allow_origins=settings.cors_origin_list,
         allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
+        allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+        allow_headers=[
+            "Content-Type",
+            "Accept",
+            "X-Request-ID",
+            "X-User-ID",
+            "X-Legacy-User-ID",
+        ],
     )
 
     @app.middleware("http")

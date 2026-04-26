@@ -2,32 +2,20 @@
  * 文件说明：前端业务域逻辑与接口封装。
  */
 
-const CURRENT_USER_ID_KEY = 'storybox_user_id'
-// 常量 LEGACY_USER_ID_KEY。
-const LEGACY_USER_ID_KEY = 'chatbox_user_id'
+const LEGACY_USER_ID_KEYS = ['storybox_user_id', 'chatbox_user_id'] as const
 
-/** 处理 getUserId 相关逻辑。 */
-export function getUserId(): string {
-  const currentUserId = localStorage.getItem(CURRENT_USER_ID_KEY)
-  if (currentUserId) {
-    return currentUserId
+/** 读取旧匿名身份标记，仅用于一次性认领迁移。 */
+export function getLegacyUserId(): string | null {
+  for (const key of LEGACY_USER_ID_KEYS) {
+    const value = localStorage.getItem(key)
+    if (value) {
+      return value
+    }
   }
-
-  const legacyUserId = localStorage.getItem(LEGACY_USER_ID_KEY)
-  if (legacyUserId) {
-    localStorage.setItem(CURRENT_USER_ID_KEY, legacyUserId)
-    localStorage.removeItem(LEGACY_USER_ID_KEY)
-    return legacyUserId
-  }
-
-  const createdUserId = `user_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`
-  localStorage.setItem(CURRENT_USER_ID_KEY, createdUserId)
-  return createdUserId
+  return null
 }
 
-/** 处理 getUserHeaders 相关逻辑。 */
-export function getUserHeaders(): Record<string, string> {
-  return {
-    'X-User-ID': getUserId(),
-  }
+/** 清理旧匿名身份标记，避免其继续参与后续流程。 */
+export function clearLegacyUserId() {
+  LEGACY_USER_ID_KEYS.forEach((key) => localStorage.removeItem(key))
 }

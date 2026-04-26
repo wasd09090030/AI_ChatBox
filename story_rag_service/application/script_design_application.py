@@ -37,24 +37,34 @@ class ScriptDesignApplicationService:
         self,
         world_id: Optional[str] = None,
         status: Optional[ScriptDesignStatus] = None,
+        owner_user_id: Optional[str] = None,
     ) -> List[ScriptDesign]:
         """按可选 world/status 过滤列出剧本设计。"""
-        return self.script_design_repository.list_all(world_id=world_id, status=status)
+        return self.script_design_repository.list_all(
+            world_id=world_id,
+            status=status,
+            owner_user_id=owner_user_id,
+        )
 
-    def create_script_design(self, data: ScriptDesignCreate) -> ScriptDesign:
+    def create_script_design(self, data: ScriptDesignCreate, owner_user_id: Optional[str] = None) -> ScriptDesign:
         """创建剧本设计并执行结构规范化校验。"""
-        self._ensure_world_exists(data.world_id)
+        self._ensure_world_exists(data.world_id, owner_user_id=owner_user_id)
         script_design = ScriptDesign(**data.model_dump())
         normalized = self._normalize_and_validate(script_design)
-        return self.script_design_repository.save(normalized)
+        return self.script_design_repository.save(normalized, owner_user_id=owner_user_id)
 
-    def get_script_design(self, script_design_id: str) -> Optional[ScriptDesign]:
+    def get_script_design(self, script_design_id: str, owner_user_id: Optional[str] = None) -> Optional[ScriptDesign]:
         """按 id 获取剧本设计。"""
-        return self.script_design_repository.get(script_design_id)
+        return self.script_design_repository.get(script_design_id, owner_user_id=owner_user_id)
 
-    def update_script_design(self, script_design_id: str, data: ScriptDesignUpdate) -> Optional[ScriptDesign]:
+    def update_script_design(
+        self,
+        script_design_id: str,
+        data: ScriptDesignUpdate,
+        owner_user_id: Optional[str] = None,
+    ) -> Optional[ScriptDesign]:
         """更新剧本设计并自动递增版本号。"""
-        existing = self.script_design_repository.get(script_design_id)
+        existing = self.script_design_repository.get(script_design_id, owner_user_id=owner_user_id)
         if existing is None:
             return None
 
@@ -64,18 +74,18 @@ class ScriptDesignApplicationService:
         merged_data["version"] = existing.version + 1
         merged_data["updated_at"] = datetime.now()
         normalized = self._normalize_and_validate(ScriptDesign(**merged_data))
-        return self.script_design_repository.save(normalized)
+        return self.script_design_repository.save(normalized, owner_user_id=owner_user_id)
 
-    def delete_script_design(self, script_design_id: str) -> Optional[dict]:
+    def delete_script_design(self, script_design_id: str, owner_user_id: Optional[str] = None) -> Optional[dict]:
         """删除剧本设计。
 
         若仍有故事绑定，则返回阻断信息而不执行删除。
         """
-        existing = self.script_design_repository.get(script_design_id)
+        existing = self.script_design_repository.get(script_design_id, owner_user_id=owner_user_id)
         if existing is None:
             return None
 
-        bindings = self.list_story_bindings(script_design_id)
+        bindings = self.list_story_bindings(script_design_id, owner_user_id=owner_user_id)
         if bindings:
             return {
                 "deleted": False,
@@ -84,7 +94,7 @@ class ScriptDesignApplicationService:
                 "script_design_id": script_design_id,
             }
 
-        deleted = self.script_design_repository.delete(script_design_id)
+        deleted = self.script_design_repository.delete(script_design_id, owner_user_id=owner_user_id)
         return {
             "deleted": deleted,
             "blocked": False,
@@ -92,13 +102,13 @@ class ScriptDesignApplicationService:
             "script_design_id": script_design_id,
         }
 
-    def delete_script_designs_by_world(self, world_id: str) -> int:
+    def delete_script_designs_by_world(self, world_id: str, owner_user_id: Optional[str] = None) -> int:
         """按 world_id 批量删除剧本设计。"""
-        return self.script_design_repository.delete_by_world(world_id)
+        return self.script_design_repository.delete_by_world(world_id, owner_user_id=owner_user_id)
 
-    def list_story_bindings(self, script_design_id: str) -> List[dict]:
+    def list_story_bindings(self, script_design_id: str, owner_user_id: Optional[str] = None) -> List[dict]:
         """列出与指定剧本设计绑定的故事摘要信息。"""
-        stories = self.story_manager.list_stories()
+        stories = self.story_manager.list_stories(owner_user_id=owner_user_id)
         bindings = []
         for story in stories:
             bound_id = story.metadata.get("script_design_id") if story.metadata else None
@@ -115,9 +125,9 @@ class ScriptDesignApplicationService:
             )
         return bindings
 
-    def _ensure_world_exists(self, world_id: str) -> None:
+    def _ensure_world_exists(self, world_id: str, owner_user_id: Optional[str] = None) -> None:
         """确保 world_id 有效，不存在则抛出异常。"""
-        if not self.world_manager.world_exists(world_id):
+        if not self.world_manager.world_exists(world_id, owner_user_id=owner_user_id):
             raise ValueError("World not found")
 
     def _normalize_and_validate(self, script_design: ScriptDesign) -> ScriptDesign:

@@ -52,26 +52,31 @@ class StoryRuntimeManager:
             return text[len("story-"):-len("-v2")]
         return None
 
-    def get_runtime_state(self, story_id: str) -> Optional[ScriptRuntimeState]:
+    def get_runtime_state(self, story_id: str, owner_user_id: Optional[str] = None) -> Optional[ScriptRuntimeState]:
         """按 story_id 读取运行时状态。"""
-        return self.repository.get_by_story_id(story_id)
+        return self.repository.get_by_story_id(story_id, owner_user_id=owner_user_id)
 
-    def save_runtime_state(self, runtime_state: ScriptRuntimeState) -> ScriptRuntimeState:
+    def save_runtime_state(
+        self,
+        runtime_state: ScriptRuntimeState,
+        owner_user_id: Optional[str] = None,
+    ) -> ScriptRuntimeState:
         """持久化运行时状态，并刷新 `updated_at`。"""
         runtime_state.updated_at = datetime.now()
-        return self.repository.save(runtime_state)
+        return self.repository.save(runtime_state, owner_user_id=owner_user_id)
 
     def update_runtime_state(
         self,
         story_id: str,
         update: ScriptRuntimeStateUpdate,
+        owner_user_id: Optional[str] = None,
     ) -> Optional[ScriptRuntimeState]:
         """增量更新运行时状态。
 
         当 `script_design_id` 发生变化时，会重置事件推进与伏笔兑现相关字段，
         以避免旧剧本状态污染新剧本。
         """
-        state = self.get_runtime_state(story_id)
+        state = self.get_runtime_state(story_id, owner_user_id=owner_user_id)
         if state is None:
             return None
 
@@ -79,7 +84,10 @@ class StoryRuntimeManager:
         script_design_id = update_data.pop("script_design_id", None)
 
         if script_design_id is not None and script_design_id != state.script_design_id:
-            script_design = self.script_design_app.get_script_design(script_design_id)
+            script_design = self.script_design_app.get_script_design(
+                script_design_id,
+                owner_user_id=owner_user_id,
+            )
             if script_design is None:
                 raise ValueError("Script design not found")
 
@@ -102,7 +110,7 @@ class StoryRuntimeManager:
         for key, value in update_data.items():
             setattr(state, key, value)
         state.updated_at = datetime.now()
-        return self.repository.save(state)
+        return self.repository.save(state, owner_user_id=owner_user_id)
 
     def ensure_runtime_state(
         self,
@@ -112,6 +120,7 @@ class StoryRuntimeManager:
         world_id: Optional[str],
         script_design_id: str,
         creation_mode: str,
+        owner_user_id: Optional[str] = None,
         preferred_stage_id: Optional[str] = None,
         preferred_event_id: Optional[str] = None,
     ) -> ScriptRuntimeState:
@@ -119,7 +128,7 @@ class StoryRuntimeManager:
 
         若已存在，则按入参修正关键字段；若不存在，则基于剧本设计创建初始状态。
         """
-        existing = self.repository.get_by_story_id(story_id)
+        existing = self.repository.get_by_story_id(story_id, owner_user_id=owner_user_id)
         if existing is not None:
             changed = False
             if existing.script_design_id != script_design_id:
@@ -141,10 +150,10 @@ class StoryRuntimeManager:
                 existing.current_event_id = preferred_event_id
                 changed = True
             if changed:
-                return self.save_runtime_state(existing)
+                return self.save_runtime_state(existing, owner_user_id=owner_user_id)
             return existing
 
-        script_design = self.script_design_app.get_script_design(script_design_id)
+        script_design = self.script_design_app.get_script_design(script_design_id, owner_user_id=owner_user_id)
         if script_design is None:
             raise ValueError("Script design not found")
 
@@ -163,13 +172,14 @@ class StoryRuntimeManager:
                 item.id for item in script_design.foreshadows if item.status != "paid_off"
             ],
         )
-        return self.save_runtime_state(state)
+        return self.save_runtime_state(state, owner_user_id=owner_user_id)
 
     def restore_runtime_state(
         self,
         *,
         story: StoredStory,
         runtime_snapshot: Optional[Dict[str, Any]] = None,
+        owner_user_id: Optional[str] = None,
     ) -> Optional[ScriptRuntimeState]:
         """从快照或故事元数据恢复运行时状态。
 
@@ -179,7 +189,7 @@ class StoryRuntimeManager:
         3. 基于 metadata/script_design 的推导恢复；
         4. 若无法推导则返回现有状态。
         """
-        existing = self.get_runtime_state(story.id)
+        existing = self.get_runtime_state(story.id, owner_user_id=owner_user_id)
 
         if runtime_snapshot:
             restored_payload = dict(runtime_snapshot)
@@ -190,12 +200,16 @@ class StoryRuntimeManager:
                 restored_payload.setdefault("created_at", existing.created_at)
             restored_payload["story_id"] = story.id
             restored = ScriptRuntimeState(**restored_payload)
-            return self.save_runtime_state(restored)
+            return self.save_runtime_state(restored, owner_user_id=owner_user_id)
 
         metadata = dict(story.metadata or {})
         initial_snapshot = metadata.get("runtime_initial_snapshot")
         if isinstance(initial_snapshot, dict) and initial_snapshot:
-            return self.restore_runtime_state(story=story, runtime_snapshot=initial_snapshot)
+            return self.restore_runtime_state(
+                story=story,
+                runtime_snapshot=initial_snapshot,
+                owner_user_id=owner_user_id,
+            )
 
         script_design_id = None
         if isinstance(metadata.get("script_design_id"), str):
@@ -206,7 +220,7 @@ class StoryRuntimeManager:
         if not script_design_id:
             return existing
 
-        script_design = self.script_design_app.get_script_design(script_design_id)
+        script_design = self.script_design_app.get_script_design(script_design_id, owner_user_id=owner_user_id)
         if script_design is None:
             raise ValueError("Script design not found")
 
@@ -244,7 +258,7 @@ class StoryRuntimeManager:
         )
         if existing is not None:
             restored.id = existing.id
-        return self.save_runtime_state(restored)
+        return self.save_runtime_state(restored, owner_user_id=owner_user_id)
 
     def build_round_contract(
         self,
@@ -395,7 +409,7 @@ class StoryRuntimeManager:
 
         return self.save_runtime_state(runtime_state)
 
-    def sync_story_metadata(self, runtime_state: ScriptRuntimeState) -> None:
+    def sync_story_metadata(self, runtime_state: ScriptRuntimeState, owner_user_id: Optional[str] = None) -> None:
         """将运行时关键信息回写到故事元数据，供 UI/查询侧消费。"""
         progress_payload = {
             "script_design_id": runtime_state.script_design_id,
@@ -405,7 +419,11 @@ class StoryRuntimeManager:
             "creation_mode": runtime_state.creation_mode,
             "runtime_state_id": runtime_state.id,
         }
-        self.story_manager.update_story_progress(runtime_state.story_id, progress_payload)  # type: ignore[arg-type]
+        self.story_manager.update_story_progress(
+            runtime_state.story_id,
+            progress_payload,
+            owner_user_id=owner_user_id,
+        )  # type: ignore[arg-type]
 
     def _resolve_stage(
         self,

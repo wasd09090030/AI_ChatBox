@@ -66,12 +66,18 @@ class SessionManager:
         self._cache.move_to_end(session_id)
         return self._cache[session_id]
 
-    def _db_get(self, session_id: str) -> Optional[Dict[str, Any]]:
+    def _db_get(self, session_id: str, owner_user_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
         """从 `story_sessions` 读取会话元信息。"""
         with self._connect() as conn:
-            row = conn.execute(
-                "SELECT * FROM story_sessions WHERE session_id = ?", (session_id,)
-            ).fetchone()
+            if owner_user_id is None:
+                row = conn.execute(
+                    "SELECT * FROM story_sessions WHERE session_id = ?", (session_id,)
+                ).fetchone()
+            else:
+                row = conn.execute(
+                    "SELECT * FROM story_sessions WHERE session_id = ? AND owner_user_id = ?",
+                    (session_id, owner_user_id),
+                ).fetchone()
         return dict(row) if row else None
 
     def _db_insert(self, session_id: str, **kwargs) -> None:
@@ -81,12 +87,13 @@ class SessionManager:
             conn.execute(
                 """
                 INSERT OR IGNORE INTO story_sessions
-                    (session_id, world_id, character_card_id, persona_id,
+                    (session_id, owner_user_id, world_id, character_card_id, persona_id,
                      first_message_sent, created_at, last_active_at, metadata)
-                VALUES (?, ?, ?, ?, 0, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, 0, ?, ?, ?)
                 """,
                 (
                     session_id,
+                    kwargs.get("owner_user_id"),
                     kwargs.get("world_id"),
                     kwargs.get("character_card_id"),
                     kwargs.get("persona_id"),
@@ -97,13 +104,19 @@ class SessionManager:
             )
             conn.commit()
 
-    def _db_touch(self, session_id: str) -> None:
+    def _db_touch(self, session_id: str, owner_user_id: Optional[str] = None) -> None:
         """刷新会话 `last_active_at`，用于最近活跃排序。"""
         with self._connect() as conn:
-            conn.execute(
-                "UPDATE story_sessions SET last_active_at = ? WHERE session_id = ?",
-                (datetime.now().isoformat(), session_id),
-            )
+            if owner_user_id is None:
+                conn.execute(
+                    "UPDATE story_sessions SET last_active_at = ? WHERE session_id = ?",
+                    (datetime.now().isoformat(), session_id),
+                )
+            else:
+                conn.execute(
+                    "UPDATE story_sessions SET last_active_at = ? WHERE session_id = ? AND owner_user_id = ?",
+                    (datetime.now().isoformat(), session_id, owner_user_id),
+                )
             conn.commit()
 
     # ------------------------------------------------------------------
@@ -119,11 +132,12 @@ class SessionManager:
         if ctx is not None:
             return ctx
 
-        row = self._db_get(session_id)
+        owner_user_id = kwargs.get("owner_user_id")
+        row = self._db_get(session_id, owner_user_id=owner_user_id)
         if row:
             ctx = StoryContext(session_id=session_id, messages=[])
             self._cache_put(session_id, ctx)
-            self._db_touch(session_id)
+            self._db_touch(session_id, owner_user_id=owner_user_id)
             logger.info("Restored session from DB: %s", session_id)
             return ctx
 
@@ -133,51 +147,93 @@ class SessionManager:
         logger.info("Created new session: %s", session_id)
         return ctx
 
-    def update_session(self, session_id: str, context: StoryContext) -> None:
+    def update_session(self, session_id: str, context: StoryContext, owner_user_id: Optional[str] = None) -> None:
         """更新内存上下文并刷新数据库活跃时间。"""
         self._cache_put(session_id, context)
-        self._db_touch(session_id)
+        self._db_touch(session_id, owner_user_id=owner_user_id)
         logger.debug("Updated session: %s messages=%d", session_id, len(context.messages))
 
-    def delete_session(self, session_id: str) -> bool:
+    def delete_session(self, session_id: str, owner_user_id: Optional[str] = None) -> bool:
         """从缓存与数据库删除会话；若会话存在则返回 True。"""
-        found = session_id in self._cache or self._db_get(session_id) is not None
+        found = session_id in self._cache or self._db_get(session_id, owner_user_id=owner_user_id) is not None
         self._cache.pop(session_id, None)
         with self._connect() as conn:
-            conn.execute("DELETE FROM story_sessions WHERE session_id = ?", (session_id,))
+            if owner_user_id is None:
+                conn.execute("DELETE FROM story_sessions WHERE session_id = ?", (session_id,))
+            else:
+                conn.execute(
+                    "DELETE FROM story_sessions WHERE session_id = ? AND owner_user_id = ?",
+                    (session_id, owner_user_id),
+                )
             conn.commit()
         if found:
             logger.info("Deleted session: %s", session_id)
         return found
 
-    def list_sessions(self, limit: int = 50, offset: int = 0) -> List[Dict[str, Any]]:
+    def list_sessions(
+        self,
+        limit: int = 50,
+        offset: int = 0,
+        owner_user_id: Optional[str] = None,
+    ) -> List[Dict[str, Any]]:
         """按最近活跃时间倒序列出会话。"""
         with self._connect() as conn:
-            rows = conn.execute(
-                """
-                SELECT session_id, world_id, character_card_id, persona_id,
-                       first_message_sent, created_at, last_active_at, metadata
-                FROM story_sessions
-                ORDER BY last_active_at DESC
-                LIMIT ? OFFSET ?
-                """,
-                (limit, offset),
-            ).fetchall()
+            if owner_user_id is None:
+                rows = conn.execute(
+                    """
+                    SELECT session_id, owner_user_id, world_id, character_card_id, persona_id,
+                           first_message_sent, created_at, last_active_at, metadata
+                    FROM story_sessions
+                    ORDER BY last_active_at DESC
+                    LIMIT ? OFFSET ?
+                    """,
+                    (limit, offset),
+                ).fetchall()
+            else:
+                rows = conn.execute(
+                    """
+                    SELECT session_id, owner_user_id, world_id, character_card_id, persona_id,
+                           first_message_sent, created_at, last_active_at, metadata
+                    FROM story_sessions
+                    WHERE owner_user_id = ?
+                    ORDER BY last_active_at DESC
+                    LIMIT ? OFFSET ?
+                    """,
+                    (owner_user_id, limit, offset),
+                ).fetchall()
         return [dict(r) for r in rows]
 
-    def load_session_messages(self, session_id: str, limit: int = 50) -> List[Message]:
+    def load_session_messages(
+        self,
+        session_id: str,
+        limit: int = 50,
+        owner_user_id: Optional[str] = None,
+    ) -> List[Message]:
         """加载最近未归档消息并转换为 Message 对象。"""
         with self._connect() as conn:
-            rows = conn.execute(
-                """
-                SELECT role, content, timestamp
-                FROM story_session_messages
-                WHERE session_id = ? AND archived = 0
-                ORDER BY timestamp ASC
-                LIMIT ?
-                """,
-                (session_id, limit),
-            ).fetchall()
+            if owner_user_id is None:
+                rows = conn.execute(
+                    """
+                    SELECT role, content, timestamp
+                    FROM story_session_messages
+                    WHERE session_id = ? AND archived = 0
+                    ORDER BY timestamp ASC
+                    LIMIT ?
+                    """,
+                    (session_id, limit),
+                ).fetchall()
+            else:
+                rows = conn.execute(
+                    """
+                    SELECT m.role, m.content, m.timestamp
+                    FROM story_session_messages m
+                    JOIN story_sessions s ON s.session_id = m.session_id
+                    WHERE m.session_id = ? AND m.archived = 0 AND s.owner_user_id = ?
+                    ORDER BY m.timestamp ASC
+                    LIMIT ?
+                    """,
+                    (session_id, owner_user_id, limit),
+                ).fetchall()
         messages: List[Message] = []
         for r in rows:
             try:
@@ -187,29 +243,29 @@ class SessionManager:
             messages.append(Message(role=r["role"], content=r["content"], timestamp=ts))
         return messages
 
-    def get_session_metadata(self, session_id: str) -> Optional[Dict[str, Any]]:
+    def get_session_metadata(self, session_id: str, owner_user_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
         """按 session_id 读取持久化会话元数据。"""
-        return self._story_session_repo.get_session(session_id)
+        return self._story_session_repo.get_session(session_id, owner_user_id=owner_user_id)
 
-    def mark_first_message_sent(self, session_id: str) -> bool:
+    def mark_first_message_sent(self, session_id: str, owner_user_id: Optional[str] = None) -> bool:
         """将会话首条消息发送标记置为已发送。"""
-        return self._story_session_repo.mark_first_message_sent(session_id)
+        return self._story_session_repo.mark_first_message_sent(session_id, owner_user_id=owner_user_id)
 
-    def set_first_message_sent(self, session_id: str, sent: bool) -> bool:
+    def set_first_message_sent(self, session_id: str, sent: bool, owner_user_id: Optional[str] = None) -> bool:
         """将首条消息发送标记设置为指定布尔值。"""
-        return self._story_session_repo.set_first_message_sent(session_id, sent)
+        return self._story_session_repo.set_first_message_sent(session_id, sent, owner_user_id=owner_user_id)
 
-    def delete_last_message(self, session_id: str) -> Optional[str]:
+    def delete_last_message(self, session_id: str, owner_user_id: Optional[str] = None) -> Optional[str]:
         """删除会话最后一条消息（不限角色）。"""
-        return self._story_session_repo.delete_last_message(session_id)
+        return self._story_session_repo.delete_last_message(session_id, owner_user_id=owner_user_id)
 
-    def delete_last_assistant_message(self, session_id: str) -> Optional[str]:
+    def delete_last_assistant_message(self, session_id: str, owner_user_id: Optional[str] = None) -> Optional[str]:
         """删除会话最后一条 assistant 消息。"""
-        return self._story_session_repo.delete_last_assistant_message(session_id)
+        return self._story_session_repo.delete_last_assistant_message(session_id, owner_user_id=owner_user_id)
 
-    def get_last_user_message(self, session_id: str) -> Optional[str]:
+    def get_last_user_message(self, session_id: str, owner_user_id: Optional[str] = None) -> Optional[str]:
         """读取会话历史中最后一条 user 消息内容。"""
-        return self._story_session_repo.get_last_user_message(session_id)
+        return self._story_session_repo.get_last_user_message(session_id, owner_user_id=owner_user_id)
 
     def remove_last_assistant_from_cache(self, session_id: str) -> None:
         """在数据库侧回滚后，同步修正内存缓存中的最后 assistant 消息。"""
@@ -219,9 +275,18 @@ class SessionManager:
         if ctx_obj.messages and ctx_obj.messages[-1].role == "assistant":
             ctx_obj.messages.pop()
 
-    def replace_session_messages(self, session_id: str, messages: List[Dict[str, Any]]) -> int:
+    def replace_session_messages(
+        self,
+        session_id: str,
+        messages: List[Dict[str, Any]],
+        owner_user_id: Optional[str] = None,
+    ) -> int:
         """替换会话全部持久化消息。"""
-        return self._story_session_repo.replace_session_messages(session_id, messages)
+        return self._story_session_repo.replace_session_messages(
+            session_id,
+            messages,
+            owner_user_id=owner_user_id,
+        )
 
     def rebuild_cached_context(self, session_id: str, messages: List[Message]) -> None:
         """外部重建后，用新消息列表替换缓存上下文。"""

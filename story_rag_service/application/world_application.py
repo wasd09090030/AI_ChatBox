@@ -35,43 +35,51 @@ class WorldApplicationService:
         self.story_manager = story_manager
         self.script_design_app = script_design_app
 
-    def create_world(self, world_data: WorldCreate) -> World:
+    def create_world(self, world_data: WorldCreate, owner_user_id: Optional[str] = None) -> World:
         """创建世界并同步写入世界设定 RAG 条目。"""
-        world = self.world_manager.create_world(world_data)
-        self._upsert_world_rag_entry(world)
+        world = self.world_manager.create_world(world_data, owner_user_id=owner_user_id)
+        self._upsert_world_rag_entry(world, owner_user_id=owner_user_id)
         return world
 
-    def list_worlds(self) -> List[World]:
+    def list_worlds(self, owner_user_id: Optional[str] = None) -> List[World]:
         """列出全部世界。"""
-        return self.world_manager.list_worlds()
+        return self.world_manager.list_worlds(owner_user_id=owner_user_id)
 
-    def get_world(self, world_id: str) -> Optional[World]:
+    def get_world(self, world_id: str, owner_user_id: Optional[str] = None) -> Optional[World]:
         """按 world_id 获取世界。"""
-        return self.world_manager.get_world(world_id)
+        return self.world_manager.get_world(world_id, owner_user_id=owner_user_id)
 
-    def update_world(self, world_id: str, world_data: WorldUpdate) -> Optional[World]:
+    def update_world(
+        self,
+        world_id: str,
+        world_data: WorldUpdate,
+        owner_user_id: Optional[str] = None,
+    ) -> Optional[World]:
         """更新世界并刷新对应世界设定 RAG 条目。"""
-        world = self.world_manager.update_world(world_id, world_data)
+        world = self.world_manager.update_world(world_id, world_data, owner_user_id=owner_user_id)
         if world is None:
             return None
-        self._upsert_world_rag_entry(world)
+        self._upsert_world_rag_entry(world, owner_user_id=owner_user_id)
         return world
 
-    def delete_world(self, world_id: str) -> Optional[Dict[str, Any]]:
+    def delete_world(self, world_id: str, owner_user_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
         """删除世界及其关联数据。
 
         级联范围包含：故事、lorebook 条目、可选剧本设计。
         """
-        if not self.world_manager.world_exists(world_id):
+        if not self.world_manager.world_exists(world_id, owner_user_id=owner_user_id):
             return None
 
-        deleted_story_count = self.story_manager.delete_stories_by_world(world_id)
-        deleted_lorebook_count = self.lorebook_manager.delete_entries_by_world(world_id)
+        deleted_story_count = self.story_manager.delete_stories_by_world(world_id, owner_user_id=owner_user_id)
+        deleted_lorebook_count = self.lorebook_manager.delete_entries_by_world(world_id, owner_user_id=owner_user_id)
         deleted_script_design_count = 0
         if self.script_design_app is not None:
-            deleted_script_design_count = self.script_design_app.delete_script_designs_by_world(world_id)
+            deleted_script_design_count = self.script_design_app.delete_script_designs_by_world(
+                world_id,
+                owner_user_id=owner_user_id,
+            )
 
-        success = self.world_manager.delete_world(world_id)
+        success = self.world_manager.delete_world(world_id, owner_user_id=owner_user_id)
         if not success:
             return None
 
@@ -83,12 +91,21 @@ class WorldApplicationService:
             "deleted_script_designs": deleted_script_design_count,
         }
 
-    def create_character_in_world(self, world_id: str, character: Character) -> Optional[Dict[str, Any]]:
+    def create_character_in_world(
+        self,
+        world_id: str,
+        character: Character,
+        owner_user_id: Optional[str] = None,
+    ) -> Optional[Dict[str, Any]]:
         """在指定世界下创建角色条目。"""
-        if not self.world_manager.world_exists(world_id):
+        if not self.world_manager.world_exists(world_id, owner_user_id=owner_user_id):
             return None
 
-        entry_id = self.lorebook_manager.create_character(character, world_id=world_id)
+        entry_id = self.lorebook_manager.create_character(
+            character,
+            world_id=world_id,
+            owner_user_id=owner_user_id,
+        )
         return {
             "success": True,
             "entry_id": entry_id,
@@ -96,12 +113,21 @@ class WorldApplicationService:
             "message": f"Character '{character.name}' created in world '{world_id}'",
         }
 
-    def create_location_in_world(self, world_id: str, location: Location) -> Optional[Dict[str, Any]]:
+    def create_location_in_world(
+        self,
+        world_id: str,
+        location: Location,
+        owner_user_id: Optional[str] = None,
+    ) -> Optional[Dict[str, Any]]:
         """在指定世界下创建地点条目。"""
-        if not self.world_manager.world_exists(world_id):
+        if not self.world_manager.world_exists(world_id, owner_user_id=owner_user_id):
             return None
 
-        entry_id = self.lorebook_manager.create_location(location, world_id=world_id)
+        entry_id = self.lorebook_manager.create_location(
+            location,
+            world_id=world_id,
+            owner_user_id=owner_user_id,
+        )
         return {
             "success": True,
             "entry_id": entry_id,
@@ -109,12 +135,21 @@ class WorldApplicationService:
             "message": f"Location '{location.name}' created in world '{world_id}'",
         }
 
-    def create_event_in_world(self, world_id: str, event: Event) -> Optional[Dict[str, Any]]:
+    def create_event_in_world(
+        self,
+        world_id: str,
+        event: Event,
+        owner_user_id: Optional[str] = None,
+    ) -> Optional[Dict[str, Any]]:
         """在指定世界下创建事件条目。"""
-        if not self.world_manager.world_exists(world_id):
+        if not self.world_manager.world_exists(world_id, owner_user_id=owner_user_id):
             return None
 
-        entry_id = self.lorebook_manager.create_event(event, world_id=world_id)
+        entry_id = self.lorebook_manager.create_event(
+            event,
+            world_id=world_id,
+            owner_user_id=owner_user_id,
+        )
         return {
             "success": True,
             "entry_id": entry_id,
@@ -122,12 +157,12 @@ class WorldApplicationService:
             "message": f"Event '{event.name}' created in world '{world_id}'",
         }
 
-    def get_world_entries(self, world_id: str) -> Optional[Dict[str, Any]]:
+    def get_world_entries(self, world_id: str, owner_user_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
         """获取指定世界下的全部 lorebook 条目。"""
-        if not self.world_manager.world_exists(world_id):
+        if not self.world_manager.world_exists(world_id, owner_user_id=owner_user_id):
             return None
 
-        entries = self.lorebook_manager.get_entries_by_world(world_id)
+        entries = self.lorebook_manager.get_entries_by_world(world_id, owner_user_id=owner_user_id)
         return {
             "success": True,
             "world_id": world_id,
@@ -135,10 +170,10 @@ class WorldApplicationService:
             "entries": entries,
         }
 
-    def _upsert_world_rag_entry(self, world: World) -> None:
+    def _upsert_world_rag_entry(self, world: World, owner_user_id: Optional[str] = None) -> None:
         """将世界信息投影为统一 lorebook 条目并覆盖写入。"""
         try:
-            self.lorebook_manager.delete_entry(f"world_{world.id}")
+            self.lorebook_manager.delete_entry(f"world_{world.id}", owner_user_id=owner_user_id)
         except Exception:
             pass
 
@@ -165,4 +200,4 @@ class WorldApplicationService:
             },
             created_at=world.created_at,
         )
-        self.lorebook_manager.create_entry(world_entry)
+        self.lorebook_manager.create_entry(world_entry, owner_user_id=owner_user_id)

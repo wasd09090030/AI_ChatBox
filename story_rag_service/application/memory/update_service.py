@@ -41,17 +41,37 @@ class MemoryUpdateService:
         self.summary_memory_manager = summary_memory_manager
         self.recent_message_count = recent_message_count
 
-    def persist_message(self, session_id: str, role: str, content: str) -> None:
+    def persist_message(
+        self,
+        session_id: str,
+        role: str,
+        content: str,
+        *,
+        owner_user_id: Optional[str] = None,
+    ) -> None:
         """将单条消息写入数据库，异常时仅记录告警不打断主流程。"""
         try:
-            persist_message_to_db(settings.database_path, session_id, role, content)
+            persist_message_to_db(
+                settings.database_path,
+                session_id,
+                role,
+                content,
+                owner_user_id=owner_user_id,
+            )
         except Exception as exc:
             logger.warning("Failed to persist message to DB: %s", exc)
 
-    def persist_turn(self, *, session_id: str, user_input: str, assistant_output: str) -> None:
+    def persist_turn(
+        self,
+        *,
+        session_id: str,
+        user_input: str,
+        assistant_output: str,
+        owner_user_id: Optional[str] = None,
+    ) -> None:
         """按一问一答写入当前轮次消息。"""
-        self.persist_message(session_id, "user", user_input)
-        self.persist_message(session_id, "assistant", assistant_output)
+        self.persist_message(session_id, "user", user_input, owner_user_id=owner_user_id)
+        self.persist_message(session_id, "assistant", assistant_output, owner_user_id=owner_user_id)
 
     def update_episodic_index(
         self,
@@ -120,6 +140,7 @@ class MemoryUpdateService:
         *,
         session_id: str,
         world_id: Optional[str],
+        owner_user_id: Optional[str] = None,
         context,
         user_input: str,
         assistant_output: str,
@@ -145,6 +166,7 @@ class MemoryUpdateService:
             session_id=session_id,
             user_input=user_input,
             assistant_output=assistant_output,
+            owner_user_id=owner_user_id,
         )
         memory_updates.append(
             build_memory_update_event(

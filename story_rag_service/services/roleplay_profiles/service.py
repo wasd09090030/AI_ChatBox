@@ -8,7 +8,7 @@
 from __future__ import annotations
 
 import sqlite3
-from typing import Optional
+from typing import List, Optional
 
 from models.roleplay import PersonaProfile, PersonaProfileCreate, PersonaProfileUpdate, StoryState, StoryStateUpdate
 from services.roleplay_profiles.db import RoleplaySQLiteStore
@@ -40,31 +40,45 @@ class RoleplayProfileManager:
         return RoleplaySQLiteStore.parse_json(value, fallback)
 
     # 人设档案 CRUD
-    def list_personas(self) -> List[PersonaProfile]:
+    def list_personas(self, owner_user_id: Optional[str] = None) -> List[PersonaProfile]:
         """查询全部人格卡档案。"""
-        return self._personas.list()
+        return self._personas.list(owner_user_id=owner_user_id)
 
-    def get_persona(self, persona_id: str) -> Optional[PersonaProfile]:
+    def get_persona(self, persona_id: str, owner_user_id: Optional[str] = None) -> Optional[PersonaProfile]:
         """按 ID 获取人格卡。"""
-        return self._personas.get(persona_id)
+        return self._personas.get(persona_id, owner_user_id=owner_user_id)
 
-    def create_persona(self, data: PersonaProfileCreate) -> PersonaProfile:
+    def create_persona(
+        self,
+        data: PersonaProfileCreate,
+        owner_user_id: Optional[str] = None,
+    ) -> PersonaProfile:
         """创建新的人格卡档案。"""
-        return self._personas.create(data)
+        return self._personas.create(data, owner_user_id=owner_user_id)
 
-    def update_persona(self, persona_id: str, data: PersonaProfileUpdate) -> Optional[PersonaProfile]:
+    def update_persona(
+        self,
+        persona_id: str,
+        data: PersonaProfileUpdate,
+        owner_user_id: Optional[str] = None,
+    ) -> Optional[PersonaProfile]:
         """更新指定人格卡（局部更新）。"""
-        return self._personas.update(persona_id, data)
+        return self._personas.update(persona_id, data, owner_user_id=owner_user_id)
 
-    def delete_persona(self, persona_id: str) -> bool:
+    def delete_persona(self, persona_id: str, owner_user_id: Optional[str] = None) -> bool:
         """删除指定人格卡。"""
-        return self._personas.delete(persona_id)
+        return self._personas.delete(persona_id, owner_user_id=owner_user_id)
 
     # 故事状态
-    def get_story_state(self, session_id: str) -> Optional[StoryState]:
+    def get_story_state(self, session_id: str, owner_user_id: Optional[str] = None) -> Optional[StoryState]:
         """获取会话级剧情状态。"""
-        return self._story_states.get(session_id)
+        return self._story_states.get(session_id, owner_user_id=owner_user_id)
 
-    def upsert_story_state(self, session_id: str, data: StoryStateUpdate) -> StoryState:
+    def upsert_story_state(
+        self,
+        session_id: str,
+        data: StoryStateUpdate,
+        owner_user_id: Optional[str] = None,
+    ) -> StoryState:
         """新增或更新会话级剧情状态。"""
-        return self._story_states.upsert(session_id, data)
+        return self._story_states.upsert(session_id, data, owner_user_id=owner_user_id)
