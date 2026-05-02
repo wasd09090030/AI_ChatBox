@@ -11,12 +11,40 @@
 AI_ChatBox/
 ├── frontend/                  # Vue 3 + TypeScript + Vite 前端工作台
 ├── story_rag_service/         # FastAPI 后端，负责故事生成、RAG、持久化、流式输出
-├── doc/                       # 仓库级论文写作与阶段性说明文档
+├── doc/                       # 仓库级论文写作章节草稿与阶段性说明文档
 ├── README.md                  # 面向人的项目介绍
 ├── AGENTS.md                  # 轻量协作约束
 ├── CLAUDE.md                  # 更完整的仓库事实与架构说明
 └── PROJECT_STRUCTURE.md       # 本文档
 ```
+
+`doc/` 当前还包含第4章系统设计文档配套的 drawio 图源与 SVG 导出图，主要用于论文/PDF 排版引用：
+
+- `chapter-01-introduction.md`：第1章绪论，说明研究背景、研究意义、研究现状、主要内容和论文结构。
+- `chapter-02-related-technologies.md`：第2章相关技术介绍，围绕项目实际使用的前后端、检索增强、模型调用和数据存储技术展开。
+- `chapter-03-requirements-analysis.md`：第3章需求分析，说明系统面向的用户、功能需求、非功能需求与可行性。
+- `chapter-04-architecture-overview.*`：系统总体架构概览图。
+- `chapter-04-architecture-overview.png`：由同名 SVG 转出的 Word 嵌入用栅格图。
+- `chapter-04-persistence-strategy.*`：数据持久化策略图。
+- `chapter-04-streaming-sequence.*`：流式故事生成主链路时序图。
+- `chapter-04-system-design-and-implementation.md`：第4章系统设计与实现，围绕架构、接口、数据库和关键链路进行说明。
+- `chapter-05-system-testing-and-validation.md`：第5章测试与验证草稿，承接第4章实现内容，聚焦基础接口烟雾测试与“上古卷轴”世界多轮故事生成验证，并记录测试所用 Lorebook 实体数据列表。
+- `chapter-06-conclusion-and-outlook.md`：第6章总结与展望，总结本文工作、当前不足与后续改进方向。
+- `references.md`：论文参考文献，整理自仓库根目录 `毕设参考文献/` 下的本地文献材料。
+- `thesis-merged-draft.md`：第1至第6章与参考文献合并后的论文正文草稿。
+- `thesis-merged-draft.docx`：由合并后的 Markdown 草稿生成的 Word 版本，正文使用宋体五号、1.5 倍行距，标题使用黑体四号/五号样式。
+- `thesis-merged-draft.audit.*`：Word 草稿的 OOXML 结构审计输出，用于检查样式、标题缩进与章节设置风险。
+- `thesis-merged-draft-condensed.docx`：按精简要求重写第2、3、5、6章后导出的精简版 Word 文档。
+- `thesis-merged-draft-condensed.audit.*`：精简版 Word 文档的 OOXML 结构审计输出。
+- `thesis-merged-draft-revised.docx`：在精简版基础上进一步调整第2、3、6章结构后的修订版 Word 文档。
+- `thesis-merged-draft-revised.audit.*`：修订版 Word 文档的 OOXML 结构审计输出。
+- `thesis-merged-draft-toc-optimized.docx`：进一步优化目录样式后的 Word 文档，目录章级条目为四号黑体，节级条目为五号黑体并带两格缩进。
+- `thesis-merged-draft-toc-optimized.audit.*`：目录优化版 Word 文档的 OOXML 结构审计输出。
+- `thesis-merged-draft-toc-paged.docx`：采用 Word 自动目录域实现页码点线对齐的版本，目录样式保持章级四号黑体、节级五号黑体并带两格缩进。
+- `thesis-merged-draft-toc-paged.audit.*`：自动目录页码版 Word 文档的 OOXML 结构审计输出。
+- `2026-05-01_functional-smoke-test.md`：2026-05-01 的基础功能烟雾测试记录，覆盖健康检查、认证、会话、Provider 连通性与最小故事输出闭环。
+
+第4章核心数据 ER 图直接以内联 Mermaid 写在 `doc/chapter-04-system-design-and-implementation.md` 中，便于论文源文档维护。
 
 ## 2. 协作判断基线
 
@@ -50,6 +78,7 @@ AI_ChatBox/
   - 仅在已登录后调用 `useStorySessionStore().loadFromStorage()`
 - 路由入口：`frontend/src/router/index.ts`
   - `/login` 是独立登录页，使用 `publicOnly` / `hideChrome` meta
+  - 登录页视觉层复用全局 `background/card/border/sidebar` 主题 token，避免与登录后工作台割裂
   - 其他工作台路由默认要求登录，守卫会保留原始 `fullPath` 作为回跳目标
   - `/story/improv` 和 `/story/scripted` 共用 `StoryView.vue`
   - `story-adjustment` 对应独立故事调整页
@@ -519,6 +548,7 @@ story_rag_service/
   - `smoke_story_memory_plan_20260410.py`
   - `smoke_all_api_functional_attempt_20260410.py`
   - `smoke_auth_story_runtime.py`
+  - `smoke_tes_world_validation.py`
 - `smoke_all_api_functional_attempt_20260410.py`
   - 基于 OpenAPI 遍历接口
   - 会先准备共享业务夹具，并对破坏性 `DELETE` 探测使用临时资源，避免后续接口因为夹具被提前删除而出现假 `404`
@@ -527,6 +557,10 @@ story_rag_service/
   - 面向登录后的真实运行链路
   - 会跑 `auth -> provider test -> worlds -> stories -> story/session -> story/generate -> stories/{id}/segments`
   - 最后直接查 SQLite 验证 owner 隔离是否正确
+- `smoke_tes_world_validation.py`
+  - 面向数据库现有“上古卷轴”世界的运行级验证脚本
+  - 会在隔离数据库副本上自动启动本地 `uvicorn`、创建临时账号、重绑定目标 world/lorebook、执行不超过 6 轮真实故事生成
+  - 会自动输出 `docs/TestResult/TESWorld_Validation_Run_*.json` 与 `TESWorld_Validation_Report_*.md`
 
 #### `story_rag_service/docs/`
 

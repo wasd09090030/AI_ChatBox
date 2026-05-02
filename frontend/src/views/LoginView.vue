@@ -90,56 +90,47 @@ async function handleSubmit() {
     <div class="relative mx-auto flex min-h-screen max-w-7xl flex-col px-4 py-5 sm:px-6 lg:px-8">
       <div class="grid flex-1 gap-5 lg:grid-cols-[minmax(0,1.45fr)_minmax(24rem,30rem)]">
         <section
-          class="login-panel relative overflow-hidden rounded-[2rem] border border-border/70 bg-card/95 px-6 py-8 shadow-[0_30px_120px_rgba(15,23,42,0.08)] backdrop-blur xl:px-10 xl:py-10"
+          class="login-panel relative flex flex-col justify-between overflow-hidden rounded-[2rem] border border-border/40 bg-card/40 px-8 py-10 shadow-sm backdrop-blur-md xl:px-12 xl:py-12"
         >
-          <div class="login-orb login-orb-primary" aria-hidden="true" />
-          <div class="login-orb login-orb-accent" aria-hidden="true" />
-          <div class="login-divider absolute inset-x-10 top-0 h-px" aria-hidden="true" />
+          <div class="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent" aria-hidden="true" />
+          <div class="absolute right-0 top-0 -mr-20 -mt-20 h-72 w-72 rounded-full bg-primary/5 blur-[4rem]" aria-hidden="true" />
+          <div class="absolute bottom-0 left-0 -mb-20 -ml-20 h-80 w-80 rounded-full bg-primary/10 blur-[5rem]" aria-hidden="true" />
 
-          <div class="relative flex h-full flex-col justify-center gap-8">
-            <div class="space-y-7">
+          <div class="relative z-10">
+            <div class="mb-12 inline-flex items-center gap-2.5 text-[0.65rem] font-medium tracking-[0.2em] text-muted-foreground uppercase">
+              <span class="flex h-6 w-6 items-center justify-center rounded-md bg-primary/10 text-primary">
+                <BookOpen class="h-3.5 w-3.5" />
+              </span>
+              Story Workshop
+            </div>
+
+            <h1 class="max-w-xl text-4xl font-light leading-tight tracking-tight sm:text-[3.25rem]">
+              构建连贯的
+              <br />
+              <span class="mt-2 block font-medium text-foreground">叙事宇宙。</span>
+            </h1>
+            <p class="mt-8 max-w-md text-base leading-relaxed text-muted-foreground/80 sm:text-lg">
+              将世界观、角色塑造与剧本推进自然融合。这是一个为了创作者专注故事本身而生的一体化工作台。
+            </p>
+          </div>
+
+          <div class="relative z-10 mt-16 md:mt-24">
+            <div class="mb-10 h-px w-10 bg-border/60"></div>
+            <div class="grid gap-x-8 gap-y-10 md:grid-cols-3">
               <div
-                class="inline-flex w-fit items-center gap-3 rounded-full border border-border/80 bg-background/85 px-3 py-2 text-xs uppercase tracking-[0.3em] text-muted-foreground shadow-sm"
+                v-for="item in featureHighlights"
+                :key="item.title"
+                class="group flex flex-col"
               >
-                <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-                  <BookOpen class="h-4 w-4" />
-                </span>
-                Story Workshop
-              </div>
-
-              <div class="max-w-3xl space-y-4">
-                <p class="text-sm uppercase tracking-[0.32em] text-muted-foreground">
-                  Story Design Workspace
-                </p>
-                <h1 class="max-w-2xl text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">
-                  从世界设定到剧情推进，
-                  <span class="text-primary">都在同一个故事工作台里完成。</span>
-                </h1>
-                <p class="max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg">
-                  这个项目聚焦故事设计与生成，不把世界观、角色、剧本、记忆和正文创作拆成互不相干的工具。
-                  登录页只保留这条主线，不再堆实现细节。
-                </p>
-              </div>
-
-              <div class="space-y-3">
-                <p class="text-xs uppercase tracking-[0.28em] text-muted-foreground">
-                  特色功能
-                </p>
-                <div class="grid gap-4 md:grid-cols-3">
-                  <article
-                    v-for="item in featureHighlights"
-                    :key="item.title"
-                    class="rounded-[1.5rem] border border-border/70 bg-background/80 p-5 shadow-[0_14px_40px_rgba(15,23,42,0.05)] backdrop-blur"
-                  >
-                    <div class="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                      <component :is="item.icon" class="h-5 w-5" />
-                    </div>
-                    <h3 class="mt-4 text-base font-semibold tracking-tight">{{ item.title }}</h3>
-                    <p class="mt-2 text-sm leading-6 text-muted-foreground">
-                      {{ item.description }}
-                    </p>
-                  </article>
+                <div class="mb-4 text-primary/70 transition-colors group-hover:text-primary">
+                  <component :is="item.icon" class="h-5 w-5" stroke-width="1.5" />
                 </div>
+                <h3 class="font-medium tracking-wide text-foreground/90 text-sm mb-2">
+                  {{ item.title }}
+                </h3>
+                <p class="text-sm leading-relaxed text-muted-foreground">
+                  {{ item.description }}
+                </p>
               </div>
             </div>
           </div>
@@ -299,31 +290,6 @@ async function handleSubmit() {
   background: linear-gradient(90deg, transparent, hsl(var(--border) / 0.9), transparent);
 }
 
-.login-orb {
-  position: absolute;
-  border-radius: 999px;
-  filter: blur(32px);
-  opacity: 0.75;
-  animation: login-drift 18s ease-in-out infinite;
-}
-
-.login-orb-primary {
-  top: -5rem;
-  right: 8%;
-  width: 15rem;
-  height: 15rem;
-  background: radial-gradient(circle, hsl(var(--primary) / 0.14), transparent 68%);
-}
-
-.login-orb-accent {
-  bottom: -7rem;
-  left: -4rem;
-  width: 18rem;
-  height: 18rem;
-  background: radial-gradient(circle, rgba(56, 189, 248, 0.18), transparent 72%);
-  animation-delay: -7s;
-}
-
 @keyframes login-rise {
   from {
     opacity: 0;
@@ -333,17 +299,6 @@ async function handleSubmit() {
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
-  }
-}
-
-@keyframes login-drift {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-
-  50% {
-    transform: translate3d(0, 18px, 0) scale(1.04);
   }
 }
 </style>
